@@ -7,7 +7,7 @@
 
 - **Traditional Tool:** Semgrep (Công cụ SAST gọn nhẹ, có khả năng quét lỗ hổng trực tiếp từ source code dựa trên ruleset OWASP Top-10).
 - **AI-Augmented Tool:** Semgrep Pro AI / ChatGPT & Claude (Kết hợp LLM để tự động lọc lỗi giả - AI triage, giải thích chi tiết lỗ hổng và tự động gợi ý code fix).
-- **Backup Tool:** OWASP ZAP (Công cụ quét DAST baseline khi hệ thống EShop đang được vận hành).
+- **Supplementary Tool (DAST):** OWASP ZAP (Công cụ DAST bổ trợ — quét trực tiếp trên các endpoint đang vận hành của EShop để xác minh runtime vulnerability mà SAST không phát hiện được).
 
 ## 2. MA TRẬN SO SÁNH (COMPARISON MATRIX)
 
@@ -27,6 +27,20 @@
 - **Tăng tốc độ viết mã khai thác (PoC Exploit):** Thay vì tester phải tự xây dựng payload thủ công, AI có thể dựa trên kết quả của Semgrep để tự động sinh ra các kịch bản khai thác thử (Proof of Concept), giúp nhóm dễ dàng đối chiếu và chứng minh lỗ hổng trên hệ thống thực.
 - **Tối ưu hóa quy trình vá lỗi:** Mang lại một luồng kiểm thử khép kín: Semgrep "phát hiện lỗi" -> AI "xác thực, giải thích và gợi ý bản vá" -> Dev áp dụng. Điều này đặc biệt phù hợp để xử lý các lỗ hổng mẫu (SQLi, weak hashing) tồn tại trong EShop một cách trực quan nhất.
 
-## 4. CÔNG BỐ SỬ DỤNG AI (AI DISCLOSURE)
+## 4. VAI TRÒ BỔ TRỢ CỦA OWASP ZAP (SUPPLEMENTARY TOOL ROLE)
+
+SAST (Semgrep) phân tích mã nguồn tĩnh — phát hiện lỗ hổng tiềm ẩn **trước khi chạy**. Tuy nhiên, nhiều lỗ hổng chỉ biểu hiện **lúc runtime** (ví dụ: misconfiguration server, broken authentication flow, CORS policy sai). OWASP ZAP bổ sung góc nhìn **DAST** — tấn công trực tiếp endpoint thực tế để kiểm chứng:
+
+| Lỗ hổng | Semgrep (SAST) phát hiện? | OWASP ZAP (DAST) phát hiện? |
+| :--- | :---: | :---: |
+| SQL Injection trong source code | ✅ Có | ✅ Có (qua payload injection) |
+| Weak password hashing (MD5/SHA1) | ✅ Có | ❌ Không |
+| Missing HTTP security headers | ❌ Không | ✅ Có |
+| Broken authentication / session | ❌ Khó | ✅ Có |
+| CORS misconfiguration | ❌ Không | ✅ Có |
+| CSRF token missing | ⚠️ Hạn chế | ✅ Có |
+| Open redirect | ⚠️ Hạn chế | ✅ Có |
+
+## 5. CÔNG BỐ SỬ DỤNG AI (AI DISCLOSURE)
 
 **Tuyên bố sử dụng AI:** Nhóm 06 có sử dụng các mô hình ngôn ngữ lớn (LLM - ChatGPT/Gemini) để hỗ trợ quá trình nghiên cứu tổng quan, xây dựng cấu trúc ma trận so sánh các công cụ và biên tập văn phong kỹ thuật. Tuy nhiên, để đảm bảo tính chính xác và tránh hiện tượng "ảo tưởng thông tin" (AI hallucination), toàn bộ các tính năng, chi phí bản quyền và khả năng tích hợp của công cụ đều được nhóm tra cứu chéo và kiểm chứng trực tiếp với các nguồn tài liệu chính thức từ nhà phát hành (Semgrep Documentation, OWASP Official Website, OWASP ZAP Docs) trước khi đưa vào báo cáo.
