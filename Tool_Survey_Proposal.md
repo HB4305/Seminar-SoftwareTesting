@@ -11,7 +11,7 @@
 
 ## 2. MA TRẬN SO SÁNH (COMPARISON MATRIX)
 
-| Tiêu chí | Semgrep (Traditional SAST) | Semgrep Pro AI / ChatGPT (AI-Augmented) | OWASP ZAP (Backup DAST) | Nguồn tham chiếu |
+| Tiêu chí | Semgrep (Traditional SAST) | Semgrep Pro AI / ChatGPT & Claude (AI-Augmented) | OWASP ZAP (Backup DAST) | Nguồn tham chiếu |
 | :--- | :--- | :--- | :--- | :--- |
 | **Licence cost** | Miễn phí (Mã nguồn mở, Community Edition hoàn toàn đủ cho sinh viên). | Semgrep Pro: Có phí. ChatGPT/Claude: Miễn phí hoặc có phí (bản Plus/Pro). | Miễn phí hoàn toàn (Mã nguồn mở). | [Semgrep Pricing](https://semgrep.dev/pricing), [ZAP FAQ](https://www.zaproxy.org/faq/) |
 | **Learning curve** | Thấp - Trung bình (Dễ cài đặt qua CLI, dễ đọc và tự viết rule tĩnh). | Thấp (Tương tác qua giao diện chat tự nhiên, AI tự phân tích ngữ cảnh). | Trung bình - Cao (Đòi hỏi hiểu biết về proxy, HTTP request/response). | [Semgrep Docs](https://semgrep.dev/docs/), [ZAP Getting Started](https://www.zaproxy.org/getting-started/) |
