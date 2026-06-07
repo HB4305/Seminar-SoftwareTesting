@@ -19,7 +19,7 @@
 | **AI capability** | Không có (Hoạt động dựa trên pattern-matching và ruleset có sẵn). | Rất cao (Có khả năng AI Triage, giải thích lỗi, gợi ý bản vá bảo mật tự động). | Thấp (Chưa tích hợp AI native mạnh mẽ, chủ yếu quét truyền thống). | [Semgrep AI](https://semgrep.dev/products/semgrep-assistant/), [OpenAI Docs](https://platform.openai.com/docs/) |
 | **Community size** | Lớn (Cộng đồng DevSecOps hoạt động mạnh, chia sẻ nhiều bộ ruleset mở). | Rất lớn (Cộng đồng sử dụng LLM cho Security Testing đang phát triển mạnh mẽ). | Rất lớn (Dự án flagship của OWASP, tài liệu phong phú, nhiều plugin). | [Semgrep Registry](https://semgrep.dev/explore), [OWASP ZAP Repo](https://github.com/zaproxy/zaproxy) |
 
-## 3. ĐỀ XUẤT LỰA CHỌN (RECOMMENDED PICK & RATIONALE)
+## 3. LÝ DO CHỌN CẶP CÔNG CỤ (RECOMMENDED PICK & RATIONALE)
 
 **Đề xuất lựa chọn:** Bộ ba Semgrep (Traditional) + OWASP ZAP (Backup/Supplementary) + ChatGPT/Claude (AI-Augmented)
 
