@@ -12,7 +12,7 @@
 
 ## 2. MA TRẬN SO SÁNH
 
-| Tiêu chí | Semgrep (SAST) | OWASP ZAP (DAST) | Burp Suite (DAST/Pentest) | Google Gemini API (AI) | Nguồn tham chiếu |
+| Tiêu chí | Semgrep (SAST) | OWASP ZAP (DAST) | Burp Suite (DAST/Pentest) | Google Gemini API (AI) | Nguồn tham khảo |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Licence cost** | Miễn phí (Bản Community). | Miễn phí hoàn toàn (Mã nguồn mở). | Miễn phí bản Community. Bản Pro $449/năm. | Miễn phí hoàn toàn (Sử dụng Free Tier của Google AI Studio dành cho Developer). | [Semgrep](https://semgrep.dev/pricing), [PortSwigger](https://portswigger.net/burp/pricing) |
 | **Learning curve** | Thấp - Trung bình (Dễ cài đặt qua CLI, dễ đọc rule). | Trung bình - Cao (Đòi hỏi hiểu biết cấu hình proxy, HTTP request). | Cao (Giao diện đồ sộ, cần kiến thức chuyên sâu về Web Security). | Thấp (Tương tác qua API/Prompt cực kỳ dễ dàng). | [Semgrep Docs](https://semgrep.dev/docs/), [Burp Academy](https://portswigger.net/web-security) |
