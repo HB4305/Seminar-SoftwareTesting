@@ -12,13 +12,13 @@
 
 ## 2. MA TRẬN SO SÁNH
 
-| Tiêu chí | Semgrep (SAST) | OWASP ZAP (DAST) | Burp Suite (DAST/Pentest) | Google Gemini API (AI) | Nguồn tham khảo |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **Licence cost** | Miễn phí (Bản Community). | Miễn phí hoàn toàn (Mã nguồn mở). | Miễn phí bản Community. Bản Pro $449/năm. | Miễn phí hoàn toàn (Sử dụng Free Tier của Google AI Studio dành cho Developer). | [Semgrep](https://semgrep.dev/pricing), [PortSwigger](https://portswigger.net/burp/pricing) |
-| **Learning curve** | Thấp - Trung bình (Dễ cài đặt qua CLI, dễ đọc rule). | Trung bình - Cao (Đòi hỏi hiểu biết cấu hình proxy, HTTP request). | Cao (Giao diện đồ sộ, cần kiến thức chuyên sâu về Web Security). | Thấp (Tương tác qua API/Prompt cực kỳ dễ dàng). | [Semgrep Docs](https://semgrep.dev/docs/), [Burp Academy](https://portswigger.net/web-security) |
-| **EShop fit** | Rất cao (Chỉ điểm chính xác dòng code lỗi SQLi trong source EShop). | Cao (Rà quét trực tiếp trên các endpoint thực tế khi EShop đang chạy). | Rất cao (Công cụ số 1 để thâm nhập sâu vào logic nghiệp vụ mua hàng của EShop). | Cao (Phân tích chuyên sâu bối cảnh code lỗi của EShop và hướng dẫn sửa). | [ZAP DAST](https://www.zaproxy.org/docs/desktop/) |
-| **AI capability** | Có hỗ trợ (Tích hợp Semgrep Assistant dùng AI để lọc lỗi và gợi ý bản vá). | Rất thấp (Chưa tích hợp AI native, chủ yếu quét truyền thống). | Đang phát triển (Có các extension như BurpGPT tích hợp LLM để phân tích HTTP). | Bản chất là nền tảng AI (Cung cấp API lõi để xây dựng tính năng Triage và tự động hóa bảo mật). | [Semgrep AI](https://semgrep.dev/products/semgrep-assistant/), [BurpGPT Repo](https://github.com/aress31/burpgpt) |
-| **Community size** | Lớn (Cộng đồng DevSecOps phát triển mạnh, chia sẻ nhiều ruleset). | Rất lớn (Dự án flagship của OWASP, tài liệu phong phú, nhiều plugin). | Khổng lồ (Tiêu chuẩn thực tế - de facto của ngành bảo mật web). | Rất lớn (Cộng đồng sử dụng LLM cho DevSecOps đang phát triển mạnh mẽ). | [OWASP ZAP Repo](https://github.com/zaproxy/zaproxy) |
+| Tiêu chí | Semgrep (SAST) | OWASP ZAP (DAST) | Burp Suite (DAST/Pentest) | Google Gemini API (AI) |
+| :--- | :--- | :--- | :--- | :--- |
+| **Licence cost** | Miễn phí (Bản Community). | Miễn phí hoàn toàn (Mã nguồn mở). | Miễn phí bản Community. Bản Pro $449/năm. | Miễn phí hoàn toàn (Sử dụng Free Tier của Google AI Studio dành cho Developer). |
+| **Learning curve** | Thấp - Trung bình (Dễ cài đặt qua CLI, dễ đọc rule). | Trung bình - Cao (Đòi hỏi hiểu biết cấu hình proxy, HTTP request). | Cao (Giao diện đồ sộ, cần kiến thức chuyên sâu về Web Security). | Thấp (Tương tác qua API/Prompt cực kỳ dễ dàng). |
+| **EShop fit** | Rất cao (Chỉ điểm chính xác dòng code lỗi SQLi trong source EShop). | Cao (Rà quét trực tiếp trên các endpoint thực tế khi EShop đang chạy). | Rất cao (Công cụ số 1 để thâm nhập sâu vào logic nghiệp vụ mua hàng của EShop). | Cao (Phân tích chuyên sâu bối cảnh code lỗi của EShop và hướng dẫn sửa). |
+| **AI capability** | Có hỗ trợ (Tích hợp Semgrep Assistant dùng AI để lọc lỗi và gợi ý bản vá). | Rất thấp (Chưa tích hợp AI native, chủ yếu quét truyền thống). | Đang phát triển (Có các extension như BurpGPT tích hợp LLM để phân tích HTTP). | Bản chất là nền tảng AI (Cung cấp API lõi để xây dựng tính năng Triage và tự động hóa bảo mật). |
+| **Community size** | Lớn (Cộng đồng DevSecOps phát triển mạnh, chia sẻ nhiều ruleset). | Rất lớn (Dự án flagship của OWASP, tài liệu phong phú, nhiều plugin). | Khổng lồ (Tiêu chuẩn thực tế - de facto của ngành bảo mật web). | Rất lớn (Cộng đồng sử dụng LLM cho DevSecOps đang phát triển mạnh mẽ). |
 
 ## 3. LÝ DO CHỌN TỔ HỢP CÔNG CỤ
 
