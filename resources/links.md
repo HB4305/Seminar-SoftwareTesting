@@ -1,0 +1,2 @@
+- Google Drive: https://drive.google.com/drive/folders/13fEgxO-26ThlJQS3BpiGbhgYvNjNR3H1?usp=drive_link
+- Seminar Github Repo: https://github.com/HB4305/Seminar-SoftwareTesting.git
