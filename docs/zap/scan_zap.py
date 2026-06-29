@@ -6,8 +6,12 @@ Kịch bản Tự động hóa Kiểm thử Bảo mật DAST với OWASP ZAP cho
 Cài đặt thư viện:
     pip install python-owasp-zap-v2.4
 
-Hướng dẫn khởi chạy ZAP (Daemon mode):
-    zap.sh -daemon -port 8090 -config api.disablekey=true
+Hướng dẫn khởi chạy ZAP (Docker):
+    docker run -u zap
+    --network host -d ghcr.io/zaproxy/zaproxy:stable zap.sh -daemon -port 8090 -host 0.0.0.0 -config api.disablekey=true
+        
+Chạy ứng dụng:
+    ./run_server.sh
 
 Cách chạy kịch bản quét cho các phân hệ của EShop:
     1. Quét Backend API (Mặc định):
