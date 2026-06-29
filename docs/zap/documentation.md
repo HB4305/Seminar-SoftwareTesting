@@ -286,20 +286,203 @@ OWASP Top 10 là một tài liệu nâng cao nhận thức tiêu chuẩn dành c
     - Encode output đúng ngữ cảnh HTML/attribute/JS/URL để chặn XSS.
     - Bổ sung SAST, DAST và fuzzing trong CI/CD cho các bề mặt nhập liệu chính.
 ## 6. A06:2025 - Insecure Design
+1. Vị trí và Tầm quan trọng
+    - Xếp hạng: Giảm 2 bậc từ vị trí số 4 (2021) xuống số 6 trong OWASP Top 10:2025 (do A02 và A03 vượt lên).
+    - Dữ liệu nền: Ngành công nghiệp đã có những bước tiến đáng kể về mô hình hóa mối đe dọa (threat modeling) và chú trọng hơn vào thiết kế an toàn. Các CWE nổi bật được ánh xạ bao gồm CWE-256 (Unprotected Storage of Credentials), CWE-269 (Improper Privilege Management), CWE-434 (Unrestricted Upload of File with Dangerous Type), CWE-501 (Trust Boundary Violation), và CWE-522 (Insufficiently Protected Credentials).
+    - Định hướng: Nhấn mạnh sự cần thiết phải dịch chuyển vượt ra ngoài khái niệm "shift-left" trong giai đoạn lập trình (coding) để tiến tới các hoạt động trước khi viết code như khảo sát yêu cầu và thiết kế kiến trúc theo nguyên tắc Secure by Design.
+2. Bản chất
+    - Insecure Design là một danh mục rộng đại diện cho các điểm yếu mang tính "thiếu sót hoặc thiết kế biện pháp kiểm soát không hiệu quả" (missing or ineffective control design).
+    - Phân biệt Rạch ròi: Có sự khác biệt cốt lõi giữa Thiết kế không an toàn (Insecure Design) và Triển khai không an toàn (Insecure Implementation). Một thiết kế an toàn vẫn có thể bị lỗi triển khai; nhưng một thiết kế không an toàn thì không thể khắc phục bằng một bản code hoàn hảo, do các biện pháp bảo mật cần thiết ban đầu đã không được thiết kế để phòng thủ trước các kịch bản tấn công.
+    - Nguyên nhân gốc rễ: Thiếu việc lập hồ sơ rủi ro nghiệp vụ (business risk profiling) cho hệ thống, dẫn đến việc không xác định đúng mức độ thiết kế bảo mật cần thiết. Bao gồm 3 khía cạnh chính: Quản lý yêu cầu & tài nguyên, Thiết kế an toàn, và Vòng đời phát triển an toàn (SDLC).
+3. Kịch bản và Tác động
+    - Kịch bản 1 (Quy trình khôi phục danh tính): Luồng khôi phục tài khoản sử dụng "câu hỏi và câu trả lời bảo mật". Cơ chế này bị NIST 800-63b, OWASP ASVS cấm vì nhiều người có thể biết hoặc đoán được câu trả lời. Tác động: Chiếm đoạt tài khoản trái phép.
+    - Kịch bản 2 (Lỗi logic nghiệp vụ trong đặt chỗ): Chuỗi rạp chiếu phim cho phép giảm giá đặt vé nhóm (tối đa 15 người mới cần đặt cọc). Kẻ tấn công lợi dụng lỗ hổng trong logic nghiệp vụ để đặt đồng loạt 600 ghế ở tất cả các rạp trong vài request mà không thanh toán. Tác động: Chiếm dụng tài nguyên, gây thất thoát doanh thu khổng lồ.
+    - Kịch bản 3 (Thiếu kiểm soát luồng tự động/bot): Trang web thương mại điện tử không có cơ chế chống bot/scalper mua vét các sản phẩm giới hạn (như card đồ họa cao cấp) để bán lại. Tác động: Ảnh hưởng nghiêm trọng đến uy tín thương hiệu và làm mất niềm tin của khách hàng.
+4. Cơ chế Zap phát hiện
+    - Do bản chất của Insecure Design nằm ở khâu thiết kế kiến trúc và logic nghiệp vụ, các công cụ quét tự động như `zap-baseline.py` hay DAST thông thường không thể trực tiếp hiểu được luồng logic nghiệp vụ hoặc tự động đánh giá được toàn bộ kiến trúc hệ thống.
+    - Tuy nhiên, ZAP có thể phát hiện các triệu chứng hoặc chỉ dấu gián tiếp của thiết kế kém thông qua các rule passive/active:
+      - Thiếu kiểm soát luồng/chống tự động hóa: Phát hiện việc thiếu CSRF token, thiếu security headers hoặc kiểm tra giới hạn tần suất (rate limiting) thông qua Fuzzer / Active Scan.
+      - Vi phạm ranh giới tin cậy (Trust boundary): Phát hiện việc lộ lọt thông tin nhạy cảm hoặc truyền tham số quản trị/quyền qua client-side (ví dụ: `10031` User Controllable HTML Attribute, `10027` Information Disclosure).
+    - Để phát hiện hiệu quả A06, kiểm thử viên cần sử dụng ZAP như một công cụ hỗ trợ kiểm thử thủ công (Mô hình MitM Proxy Intercept) kết hợp Fuzzing để thử nghiệm các kịch bản thao tác sai logic nghiệp vụ hoặc vượt rào quy trình.
+5. Cấu hình baseline
+    - Mặc dù baseline scan tập trung vào cấu hình và passive scan, ta có thể thiết lập để rà soát các chỉ dấu bề mặt của thiết kế thiếu an toàn:
+      - Đặt mức cảnh báo `WARN` hoặc `FAIL` cho các rule liên quan đến rò rỉ thông tin hoặc thiếu biện pháp bảo vệ luồng:
+        - `100202 WARN` hoặc `FAIL` cho `CSRF Countermeasures` (chỉ dấu thiếu kiểm soát luồng thao tác)
+        - `10027 INFO` hoặc `WARN` cho `Information Disclosure`
+        - `10040 FAIL` cho `Mixed Content` và `10011 FAIL` cho `Cookie Secure Flag` (thiết kế luồng truyền tải thiếu đồng nhất)
+    - Cần ghi nhận rõ trong quy trình CI/CD rằng baseline scan chỉ mang tính chất rà soát bề mặt, không thể thay thế cho Threat Modeling và kiểm thử logic nghiệp vụ chuyên sâu.
+6. Sàng lọc cảnh báo (Triage)
+    - Phân biệt rõ giữa cảnh báo về lỗi cấu hình thông thường (A02) và dấu hiệu của lỗ hổng thiết kế (A06). Ví dụ: Việc thiếu CSRF token trên một form tìm kiếm công khai là False Positive, nhưng trên form chuyển khoản hoặc đổi mật khẩu thì là lỗ hổng thiết kế/logic nghiêm trọng.
+    - Đánh giá theo góc nhìn mô hình hóa mối đe dọa (Threat Modeling): Khi phân tích gói tin ZAP, kiểm tra xem API có đang tin tưởng mù quáng vào dữ liệu từ client (như giá tiền, số lượng, trạng thái thanh toán) mà không kiểm tra tính hợp lệ (plausibility check) ở backend hay không.
+    - Đánh giá khả năng chống lạm dụng (abuse): Nếu endpoint không có cảnh báo lỗi tự động nhưng có thể bị gửi request hàng nghìn lần mà không bị chặn (thiếu rate limiting/bot protection), đó là lỗ hổng thiết kế thực sự.
+7. Cách khắc phục
+    - Thiết lập và duy trì Vòng đời phát triển phần mềm an toàn (Secure Development Lifecycle - SDLC) với sự tham gia của các chuyên gia AppSec ngay từ giai đoạn khảo sát yêu cầu và thiết kế kiến trúc.
+    - Tích hợp mô hình hóa mối đe dọa (Threat Modeling) cho các thành phần quan trọng như xác thực, phân quyền, logic nghiệp vụ và các luồng dữ liệu then chốt.
+    - Sử dụng thư viện các mẫu thiết kế an toàn (secure design patterns) hoặc các thành phần chuẩn hóa đã được kiểm chứng (paved-road components).
+    - Bổ sung các biện pháp kiểm tra tính hợp lệ (plausibility checks) ở từng tầng (tier) của ứng dụng, từ frontend đến backend.
+    - Phân lập các tầng hệ thống và mạng (segregate tier layers) tùy theo nhu cầu bảo vệ; phân tách rõ ràng dữ liệu giữa các tenant (tenant segregation) ngay trong thiết kế kiến trúc.
+    - Đưa các yêu cầu bảo mật vào User Story; viết các bài kiểm thử unit và integration test dựa trên các use-case và misuse-case để kiểm chứng khả năng chống chịu của hệ thống trước các kịch bản tấn công.
 ## 7. A07:2025 - Authentication Failures
+1. Vị trí và Tầm quan trọng
+    - Xếp hạng: Giữ nguyên vị trí số 7 trong OWASP Top 10:2025 (tương tự bản 2021).
+    - Tên gọi và Phạm vi: Có sự điều chỉnh nhẹ trong tên gọi (Authentication Failures thay vì Identification and Authentication Failures) để phản ánh chính xác hơn 36 CWE thuộc nhóm này.
+    - Các CWE nổi bật: CWE-259 (Use of Hard-coded Password), CWE-297 (Improper Validation of Certificate with Host Mismatch), CWE-287 (Improper Authentication), CWE-384 (Session Fixation), và CWE-798 (Use of Hard-coded Credentials).
+2. Bản chất
+    - Lỗi xảy ra khi kẻ tấn công có thể đánh lừa hệ thống công nhận một user không hợp lệ hoặc sai danh tính thành user hợp lệ.
+    - Các nguyên nhân và biểu hiện chính:
+      - Cho phép tấn công tự động như credential stuffing (nhồi thông tin xác thực bị lộ) hoặc tấn công kết hợp/password spray (thử nghiệm các biến thể mật khẩu phổ biến như `Password1!`, `Password2!`).
+      - Không có cơ chế chặn brute force hoặc các script tấn công tự động nhanh chóng.
+      - Cho phép đặt hoặc giữ mật khẩu mặc định, yếu, hoặc dễ đoán (như `admin`/`admin`, `Password1`).
+      - Cho phép đăng ký tài khoản mới với mật khẩu đã từng bị lộ lọt (breached credentials).
+      - Quy trình khôi phục danh tính/quên mật khẩu yếu kém (ví dụ: dùng "câu hỏi bảo mật").
+      - Mật khẩu lưu trữ dạng plaintext hoặc băm yếu (liên quan A04).
+      - Thiếu xác thực đa yếu tố (MFA) hoặc cơ chế dự phòng (fallback) không an toàn khi MFA gặp sự cố.
+      - Xử lý phiên (Session) kém: Lộ Session ID trên URL hoặc hidden field, tái sử dụng Session ID sau khi đăng nhập (Session Fixation), không hủy hoàn toàn session/SSO token khi logout hoặc hết hạn, không xác minh chính xác scope/audience của thông tin xác thực (như `aud`, `iss` trong JWT).
+3. Kịch bản và Tác động
+    - Kịch bản 1 (Credential stuffing & Password spray): Kẻ tấn công sử dụng danh sách tài khoản bị lộ lọt hoặc thử các chuỗi tăng tiến (ví dụ: đổi `Winter2025` thành `Winter2026`). Nếu ứng dụng thiếu cơ chế chặn tự động/bot, nó sẽ bị lợi dụng làm "bài kiểm tra mật khẩu" (password oracle) để dò danh tính hợp lệ. Tác động: Chiếm đoạt tài khoản hàng loạt.
+    - Kịch bản 2 (Lạm dụng mật khẩu làm yếu tố xác thực duy nhất): Đòi hỏi đổi mật khẩu thường xuyên (password rotation) và độ phức tạp cao khiến user có xu hướng tái sử dụng hoặc chọn mật khẩu yếu theo quy luật. Tác động: Hệ thống bị tổn thương trước các cuộc tấn công dò mật khẩu; NIST 800-63 khuyến cáo dừng ép buộc đổi mật khẩu định kỳ và chuyển sang bắt buộc dùng MFA.
+    - Kịch bản 3 (Quản lý phiên & Single Sign-On yếu kém): User sử dụng máy tính công cộng, thay vì chọn "logout", họ chỉ đóng tab trình duyệt. Hoặc hệ thống SSO không hỗ trợ Single Logout (SLO) (đăng xuất khỏi hệ thống hiện tại nhưng vẫn còn phiên ở ứng dụng mail, tài liệu). Khi người khác dùng tiếp trình duyệt hoặc máy tính đó, họ có thể truy cập tài khoản của nạn nhân. Tác động: Chiếm đoạt phiên làm việc trái phép.
+4. Cơ chế Zap phát hiện
+    - ZAP có thể hỗ trợ kiểm tra xác thực và quản lý phiên thông qua các cơ chế quét tự động và thủ công:
+      - ZAP Passive Scan phát hiện các dấu hiệu quản lý phiên kém an toàn: Lộ Session ID trên URL (`Session ID in URL Rewrite`), Cookie thiếu cờ an toàn (`10011` Cookie No Secure Flag, `10010` Cookie No HttpOnly Flag, `10054` Cookie SameSite Attribute), hoặc thiếu tiêu đề bảo mật.
+      - ZAP Active Scan & Fuzzing:
+        - Fuzzing form đăng nhập với danh sách mật khẩu phổ biến để kiểm tra cơ chế chống Brute Force / Account Lockout.
+        - ZAP Forced User / Authentication Add-on: Kiểm tra cơ chế xử lý phiên, cụ thể là kiểm tra lỗi Session Fixation (xác nhận xem Session ID có được làm mới sau khi đăng nhập thành công hay không).
+      - Kiểm thử thủ công (MitM Proxy): Can thiệp và chỉnh sửa các token JWT (sửa claim `aud`, `iss`, `sub` hoặc hạ thuật toán `alg: none`) để kiểm tra backend có xác minh tính hợp lệ của token hay không.
+5. Cấu hình baseline
+    - Baseline Scan là công cụ giám sát cấu hình bảo mật phiên hiệu quả trong quy trình CI/CD:
+      - Thiết lập mức `FAIL` đối với các rule quản lý Cookie và Session:
+        - `10010 FAIL` cho `Cookie No HttpOnly Flag` (phòng chống trộm cookie qua XSS)
+        - `10011 FAIL` cho `Cookie No Secure Flag` (bảo vệ cookie trên đường truyền HTTPS)
+        - `10054 WARN` hoặc `FAIL` cho `Cookie SameSite Attribute` (giảm thiểu rủi ro CSRF)
+        - `3 FAIL` cho `Session ID in URL Rewrite` (chặn rò rỉ Session ID qua URL/Referer)
+    - Với kiểm tra Brute Force hay xác minh JWT, baseline scan không thực hiện tự động; cần tích hợp thêm ZAP Fuzzer hoặc kịch bản kiểm thử API chuyên biệt.
+6. Sàng lọc cảnh báo (Triage)
+    - Phân biệt cờ Cookie trên tài nguyên tĩnh/tracking với Cookie định danh: Nếu ZAP báo lỗi thiếu `HttpOnly`/`Secure` trên một cookie quảng cáo hoặc tùy chọn giao diện (UI preference), đó là False Positive. Nhưng nếu thiếu trên `JSESSIONID`, `PHPSESSID`, hoặc `access_token`, đó là lỗ hổng nghiêm trọng.
+    - Xác minh cơ chế hết hạn phiên (Session Expiration): Kiểm tra xem việc logout hoặc hết hạn phiên chỉ đơn thuần là xóa token ở client-side (trình duyệt) hay backend thực sự đã thu hồi/đánh dấu vô hiệu hóa (revoke) token đó.
+    - Kiểm tra cơ chế chống dò thông báo (Account Enumeration): Phân tích phản hồi từ API đăng nhập/khôi phục mật khẩu. Nếu API trả về thông báo khác nhau giữa "Tài khoản không tồn tại" và "Sai mật khẩu", đó là lỗ hổng cho phép dò quét danh sách tài khoản.
+7. Cách khắc phục
+    - Triển khai Xác thực đa yếu tố (MFA): Bắt buộc áp dụng MFA để ngăn chặn hiệu quả các cuộc tấn công credential stuffing, brute force và tái sử dụng thông tin xác thực.
+    - Tuân thủ tiêu chuẩn mật khẩu hiện đại (NIST 800-63B): Bỏ yêu cầu đổi mật khẩu định kỳ (trừ khi nghi ngờ lộ lọt); kiểm tra và chặn đăng ký/đổi mật khẩu với danh sách mật khẩu yếu hoặc đã bị lộ (ví dụ: tích hợp API HaveIBeenPwned); khuyến khích sử dụng trình quản lý mật khẩu.
+    - Chống dò quét danh tính & Cấu hình hạn chế truy cập: Chuẩn hóa thông báo trả về chung chung (ví dụ: "Tài khoản hoặc mật khẩu không chính xác"); triển khai cơ chế rate limiting, captcha hoặc account lockout sau nhiều lần đăng nhập thất bại; ghi log và cảnh báo quản trị viên khi phát hiện tấn công.
+    - Quản lý phiên an toàn phía Server: Sử dụng trình quản lý phiên chuẩn của framework, tạo Session ID mới với độ ngẫu nhiên cao sau khi đăng nhập thành công. Lưu Session ID trong Cookie an toàn (`HttpOnly`, `Secure`, `SameSite`), tuyệt đối không để trên URL.
+    - Huỷ phiên triệt để & Quản lý Single Sign-On (SLO): Huỷ hiệu lực phiên làm việc ở backend khi user logout, hết thời gian chờ (idle timeout) hoặc hết thời gian sống tuyệt đối (absolute timeout). Triển khai Single Logout cho các hệ thống SSO.
+    - Xác minh chặt chẽ JWT/Token: Backend phải xác thực toàn bộ chữ ký, scope, cũng như các claim `aud` (audience) và `iss` (issuer) của token trước khi chấp nhận yêu cầu.
 ## 8. A08:2025 - Software or Data Integrity Failures
+1. Vị trí và Tầm quan trọng
+    - Xếp hạng: Giữ nguyên vị trí số 8 trong OWASP Top 10:2025 (tương tự bản 2021).
+    - Tên gọi và Phạm vi: Đổi tên nhẹ từ "Software and Data Integrity Failures" thành "Software or Data Integrity Failures". Nhóm này tập trung vào sự thất bại trong việc bảo vệ ranh giới tin cậy (trust boundaries) và xác minh tính toàn vẹn của mã nguồn, phần mềm cũng như dữ liệu ở mức độ thấp hơn so với Software Supply Chain Failures (A03).
+    - Các CWE nổi bật: CWE-829 (Inclusion of Functionality from Untrusted Control Sphere), CWE-915 (Improperly Controlled Modification of Dynamically-Determined Object Attributes), và CWE-502 (Deserialization of Untrusted Data).
+2. Bản chất
+    - Lỗi xảy ra khi mã nguồn và hạ tầng không bảo vệ hệ thống trước các đoạn mã hoặc dữ liệu không đáng tin cậy/không hợp lệ, dẫn đến việc xử lý chúng như dữ liệu hợp lệ và đáng tin cậy.
+    - Các nguyên nhân và biểu hiện chính:
+      - Phụ thuộc vào các plugin, thư viện hoặc module từ nguồn, kho lưu trữ hoặc CDN không tin cậy.
+      - Pipeline CI/CD thiếu an toàn, kéo code hoặc artifact từ nơi không tin cậy và không kiểm tra chữ ký/tính hợp lệ trước khi triển khai, tạo cơ hội cho mã độc thâm nhập.
+      - Chức năng tự động cập nhật (auto-update) tải xuống và áp dụng bản cập nhật mà không kiểm tra chữ ký/tính toàn vẹn.
+      - Việc giải mã (decode) hoặc giải nén/giải tuần tự hóa (deserialize) dữ liệu cấu trúc trực tiếp từ user mà không xác minh tính hợp lệ (Insecure Deserialization).
+3. Kịch bản và Tác động
+    - Kịch bản 1 (Sử dụng tiện ích web từ nguồn ngoài): Công ty trỏ DNS `support.myCompany.com` sang nhà cung cấp bên thứ ba `myCompany.SupportProvider.com`. Hệ quả là mọi cookie xác thực thuộc `myCompany.com` đều bị gửi sang máy chủ bên ngoài, khiến attacker chiếm đoạt cơ sở hạ tầng bên thứ ba có thể trộm cookie và chiếm phiên của user.
+    - Kịch bản 2 (Cập nhật firmware/phần mềm không ký số): Các thiết bị, router, hoặc phần mềm tải và chạy bản cập nhật firmware không ký số (unsigned firmware). Attacker chặn bắt đường truyền (MitM) và đẩy firmware độc hại vào thiết bị. Tác động: Chiếm quyền điều khiển thiết bị/hệ thống.
+    - Kịch bản 3 (Insecure Deserialization): Ứng dụng React gọi Spring Boot microservice và truyền tải trạng thái user dạng serialized Java object (`rO0...` trong base64). Attacker chỉnh sửa gói dữ liệu và dùng công cụ quét lỗi để đạt quyền thực thi mã từ xa (RCE) trên máy chủ.
+4. Cơ chế Zap phát hiện
+    - ZAP Passive Scan phát hiện các dấu hiệu rủi ro liên quan đến ranh giới tin cậy và tải tài nguyên ngoài: ví dụ `90003` Subresource Integrity Attribute Missing (thiếu SRI trên thẻ script tải từ CDN), Cookie không phân định SameSite/Secure.
+    - ZAP Active Scan & Fuzzing:
+      - ZAP hỗ trợ các rule quét Insecure Deserialization và Mass Assignment (thông qua Active Scan bám sát các luồng dữ liệu JSON/XML hoặc custom serialized headers).
+      - Sử dụng ZAP Fuzzer để sửa đổi thông tin trong các serialized token hoặc chèn các gadget payload phổ biến (ví dụ: Ysoserial) để quan sát phản hồi lỗi từ server.
+    - Kiểm thử thủ công (MitM Proxy Intercept): Bắt các gói tin chứa cấu trúc dữ liệu nối tiếp, can thiệp thay đổi thuộc tính đối tượng (object attributes) để kiểm tra lỗi Mass Assignment (CWE-915) hoặc Deserialization.
+5. Cấu hình baseline
+    - Baseline Scan trong CI/CD giúp rà soát cấu hình tính toàn vẹn ở tầng frontend và giao tiếp mạng:
+      - Đặt mức `FAIL` đối với rule kiểm tra SRI và tài nguyên ngoài:
+        - `90003 WARN` hoặc `FAIL` cho `Subresource Integrity Attribute Missing` (bắt buộc kiểm tra tính toàn vẹn của thư viện JS/CSS từ CDN)
+        - `10098 WARN` hoặc `FAIL` cho `Cross Domain Misconfiguration` (ngăn chặn chia sẻ dữ liệu hoặc thao tác từ nguồn ngoài sai chính sách)
+    - Đối với rà soát quy trình CI/CD và giải tuần tự hóa an toàn, baseline scan không tự động hóa hoàn toàn; cần bổ sung các công cụ kiểm tra chữ ký và review kiến trúc.
+6. Sàng lọc cảnh báo (Triage)
+    - Kiểm tra thuộc tính SRI: Nếu tài nguyên được tải từ cùng một origin (chính máy chủ ứng dụng), việc thiếu SRI có thể là False Positive. Tuy nhiên, nếu tải từ CDN hoặc third-party domain, đây là rủi ro thực sự cần khắc phục.
+    - Đối chiếu ranh giới phân quyền khi báo lỗi Mass Assignment: Kiểm tra xem các model/DTO ở backend có gán dữ liệu tự động từ request vào object database (binding) mà không có danh sách trắng (allow-list) hay không.
+    - Xem xét luồng deserialization: Bất kỳ endpoint nào nhận stream/object nối tiếp từ client mà không yêu cầu mã hóa HMAC hoặc chữ ký số trước khi parse đều là lỗ hổng toàn vẹn dữ liệu.
+7. Cách khắc phục
+    - Kiểm tra chữ ký số: Dùng chữ ký số hoặc các cơ chế mã hóa HMAC tương đương để xác minh phần mềm, bản cập nhật hoặc dữ liệu đến từ nguồn hợp lệ và không bị chỉnh sửa.
+    - Quản lý kho phụ thuộc tin cậy: Đảm bảo các công cụ như npm, Maven, Gradle chỉ kéo thư viện từ các kho chính thức; với hệ thống rủi ro cao, nên triển khai kho lưu trữ nội bộ (internal repository) đã qua kiểm duyệt.
+    - Thiết lập quy trình review chặt chẽ: Áp dụng kiểm duyệt bắt buộc (code & configuration review) đối với mọi thay đổi trong pipeline phần mềm.
+    - Bảo mật CI/CD Pipeline: Áp dụng phân lập quyền, quản lý cấu hình và kiểm soát truy cập nghiêm ngặt trong CI/CD để bảo đảm tính toàn vẹn của mã nguồn từ khâu build đến deploy.
+    - Bảo vệ dữ liệu tuần tự hóa: Không tiếp nhận hoặc xử lý dữ liệu tuần tự hóa (serialized data) từ client mà không có kiểm tra tính toàn vẹn (integrity check) hoặc mã hóa để ngăn chặn giả mạo và tấn công phát lại (replay attack).
 ## 9. A09:2025 - Security Logging and Alerting Failures
+1. Vị trí và Tầm quan trọng
+    - Xếp hạng: Giữ nguyên vị trí số 9 trong OWASP Top 10:2025.
+    - Tên gọi và Phạm vi: Được đổi tên từ "Security Logging and Monitoring Failures" thành "Security Logging and Alerting Failures" nhằm nhấn mạnh chức năng cảnh báo (alerting) để kích hoạt hành động ứng phó kịp thời từ các sự kiện log.
+    - Đặc điểm: Đây là nhóm thường bị định giá thấp trong dữ liệu CVE (chỉ 723 CVE) và rất khó kiểm thử tự động, nhưng được cộng đồng bầu chọn cao vì ảnh hưởng cực lớn đến việc giám sát, cảnh báo sự cố và điều tra số (forensics). Các CWE tiêu biểu gồm CWE-117 (Improper Output Neutralization for Logs), CWE-532 (Insertion of Sensitive Information into Log File), và CWE-778 (Insufficient Logging).
+2. Bản chất
+    - Nếu không có log và giám sát, các cuộc tấn công và vi phạm không thể bị phát hiện; nếu không có cảnh báo (alerting), tổ chức không thể phản ứng nhanh chóng và hiệu quả trước sự cố bảo mật.
+    - Các biểu hiện và thiếu sót phổ biến:
+      - Bỏ sót hoặc ghi log không nhất quán các sự kiện quan trọng (như đăng nhập thành công/thất bại, giao dịch giá trị cao).
+      - Lỗi và cảnh báo sinh ra thông báo log mơ hồ, thiếu chi tiết hoặc không ghi log.
+      - Log không được bảo vệ vẹn toàn trước nguy cơ bị chỉnh sửa/xóa bỏ, hoặc chỉ lưu cục bộ mà không sao lưu độc lập.
+      - Log không được theo dõi và thiếu ngưỡng cảnh báo (alerting thresholds) hoặc quy trình leo thang ứng phó sự cố.
+      - Các đợt quét kiểm thử DAST (như ZAP, Burp Suite) không hề kích hoạt cảnh báo an ninh trên hệ thống.
+      - Lộ lọt thông tin nhạy cảm (PII, PHI, thông tin hệ thống) vào file log hoặc hiển thị chi tiết log cho user/attacker.
+      - Lỗ hổng tấn công tiêm mã vào hệ thống log (Log injection/Log4Shell) do không mã hóa/kiểm soát dữ liệu trước khi ghi log.
+      - Quá nhiều cảnh báo giả (false positives) khiến đội ngũ SOC quá tải và bỏ qua cảnh báo quan trọng.
+3. Kịch bản và Tác động
+    - Kịch bản 1 (Thiếu log dẫn đến rò rỉ kéo dài): Website bảo hiểm sức khỏe trẻ em bị tấn công và sửa đổi dữ liệu nhạy cảm của hơn 3,5 triệu trẻ em. Do hoàn toàn không có cơ chế log và giám sát, vụ vi phạm diễn ra ngầm trong hơn 7 năm mà không hề bị phát hiện cho đến khi có bên thứ ba thông báo.
+    - Kịch bản 2 (Rò rỉ phía nhà cung cấp cloud): Một hãng hàng không lớn bị trộm 10 năm dữ liệu hành khách (hộ chiếu, thẻ tín dụng) lưu trên cloud bên thứ ba; sự chậm trễ trong giám sát và cảnh báo khiến vụ việc kéo dài trước khi được phát hiện.
+    - Kịch bản 3 (Tấn công ứng dụng thanh toán): Attacker khai thác lỗ hổng thanh toán thu thập hơn 400.000 dữ liệu thẻ. Cơ chế giám sát kém dẫn đến không kịp ngắt kết nối, hậu quả là doanh nghiệp bị phạt 20 triệu bảng theo chuẩn GDPR.
+4. Cơ chế Zap phát hiện
+    - ZAP Passive Scan giúp phát hiện chỉ dấu lộ thông tin nhạy cảm: Các rule `10023` Debug Error Information Disclosure, `10027` Information Disclosure có thể báo hiệu ứng dụng đang để lộ thông tin debug/log ra ngoài response.
+    - Kiểm chứng khả năng kích hoạt cảnh báo (DAST Alert Test):
+      - Cách kiểm tra thực tế nhất là thực hiện Active Scan hoặc Fuzzing cường độ cao bằng ZAP vào ứng dụng. Nếu sau đợt quét dữ dội của ZAP mà hệ thống SIEM/SOC/Firewall của tổ chức không hề sinh ra cảnh báo (alert) hoặc khóa IP, điều đó chứng tỏ ứng dụng mắc lỗi A09 nghiêm trọng.
+    - Kiểm tra Log Injection: Sử dụng ZAP Fuzzer gửi các chuỗi payload đặc thù (chứa ký tự newline `\r\n` hoặc cú pháp macro/lookup như `${jndi:...}`) vào các trường input thường được log (như `User-Agent`, `username`, `X-Forwarded-For`) để kiểm tra hệ thống log có bị bẻ gãy hoặc chèn dòng giả mạo hay không.
+5. Cấu hình baseline
+    - Baseline Scan tập trung vào việc ngăn chặn rò rỉ thông tin lỗi/debug trên bề mặt ứng dụng:
+      - Thiết lập mức `WARN` hoặc `FAIL` cho các rule:
+        - `10023 WARN` cho `Debug Error Information Disclosure` (ngăn chặn in thông tin log nhạy cảm ra client)
+        - `90022 WARN` cho `Application Errors` (cảnh báo xử lý lỗi kém sinh ra thông tin nhạy cảm)
+    - Trong CI/CD, nên bổ sung kịch bản kiểm tra tự động: gửi các luồng DAST độc hại mẫu và xác minh hệ thống SIEM có nhận được log/alert tương ứng hay không.
+6. Sàng lọc cảnh báo (Triage)
+    - Đối chiếu thông tin rò rỉ: Khi ZAP báo lỗi rò rỉ thông tin, kiểm tra xem đó là thông tin nghiệp vụ thông thường hay là thông tin nhạy cảm (session, key, PII) thực sự bị đẩy nhầm ra log/response.
+    - Đánh giá ngưỡng cảnh báo (Threshold Triage): Nếu hệ thống có sinh log nhưng sinh hàng nghìn log vô nghĩa cho một lỗi lặp lại mà không gom cụm (aggregation), hoặc cảnh báo không được phân loại đúng mức nghiêm trọng, đó là thiếu sót về kiến trúc alerting.
+    - Đánh giá tính sẵn sàng của SOC: Kiểm tra xem các luồng cảnh báo có playbook xử lý tương ứng hay không. Nếu có cảnh báo nhưng không ai nhận hoặc không biết xử lý, hệ thống vẫn mang lỗi A09.
+7. Cách khắc phục
+    - Ghi log đầy đủ và chuẩn hóa: Ghi log mọi thao tác đăng nhập, phân quyền, các giao dịch và kiểm tra xác thực thất bại kèm ngữ cảnh rõ ràng (người dùng, IP, thời gian) với thời gian lưu trữ đủ lâu để phục vụ điều tra số.
+    - Tránh rò rỉ và tiêm mã log: Mã hóa hoặc kiểm soát chặt chẽ dữ liệu trước khi ghi log để phòng chống Log Injection; tuyệt đối không ghi log các thôngế thông tin nhạy cảm (mật khẩu dạng plaintext, số thẻ tín dụng, PII).
+    - Đồng bộ định dạng log: Sử dụng các định dạng chuẩn (như JSON) để các hệ thống quản lý log (ELK Stack, Splunk, SIEM) dễ dàng thu thập và phân tích.
+    - Bảo vệ tính toàn vẹn của Log: Implement cơ chế bảo vệ log (như bảng database chỉ cho phép ghi tiếp/append-only, hoặc đẩy log ngay sang máy chủ lưu trữ độc lập).
+    - Xây dựng quy trình giám sát & Alerting hiệu quả: Thiết lập các use-case và ngưỡng cảnh báo (alerting thresholds) hợp lý kèm Playbook để đội ngũ SOC xử lý tức thời; tích hợp các công cụ Observability hiện đại.
+    - Triển khai Honeytoken & Phân tích hành vi: Bẫy kẻ tấn công bằng các "honeytoken" (tài khoản, bảng dữ liệu, mồi giả). Vì user thật không bao giờ chạm vào mồi này, bất kỳ tương tác nào diễn ra cũng sẽ tạo cảnh báo với tỷ lệ false positive gần như bằng 0.
 ## 10. A10:2025 - Mishandling of Exceptional Conditions
-
-**Note (Mẫu sử dụng)**
-- **1. Khái niệm & Nguyên nhân:** Lỗ hổng xảy ra khi ứng dụng không kiểm tra quyền truy cập của user tại backend trước khi thực hiện hành động.
-- **2. Kịch bản & Tác động:** User A (ID=1) đổi tham số trên URL thành `?user_id=2` và xem được thông tin tài khoản của User B. Tác động: Lộ lọt dữ liệu trái phép, leo thang đặc quyền.
-- **3. Cơ chế ZAP phát hiện:** Baseline Scan (Passive) thường KHÔNG phát hiện được lỗi này hiệu quả. Cần sử dụng Active Scan kết hợp cấu hình User Session (Access Control Add-on trong ZAP).
-- **4. Cấu hình Baseline (zap-baseline.conf):** 
-  - Yêu cầu phải cấu hình ZAP Authenticated Scan (cung cấp session/token của 2 user khác nhau).
-  - Rule ID liên quan (nếu có bổ sung add-on): Set thành `FAIL` trong CI/CD.
-- **5. Sàng lọc cảnh báo (Triage):** Kiểm tra xem API đó có thực sự chứa dữ liệu nhạy cảm hay chỉ là API public (nếu public thì là False Positive).
-- **6. Cách khắc phục:** Bắt buộc kiểm tra quyền (Authorization check) dựa vào Token/Session của user tại Backend ở mọi endpoint, không phụ thuộc vào ẩn/hiện UI trên Frontend.
+1. Vị trí và Tầm quan trọng
+    - Xếp hạng: Là danh mục hoàn toàn mới xuất hiện ở vị trí số 10 trong OWASP Top 10:2025.
+    - Tên gọi và Phạm vi: Thay thế các mảng trôi nổi trước đây về chất lượng code, nhóm này chứa 24 CWE và tập trung vào việc xử lý lỗi sai quy cách (improper error handling), lỗi logic, mở rộng lối đi khi gặp sự cố (failing open), và các sai sót khi hệ thống đối mặt với điều kiện bất thường.
+    - Các CWE nổi bật: CWE-209 (Generation of Error Message Containing Sensitive Information), CWE-234 (Failure to Handle Missing Parameter), CWE-274 (Improper Handling of Insufficient Privileges), CWE-476 (NULL Pointer Dereference), và CWE-636 (Not Failing Securely / 'Failing Open').
+2. Bản chất
+    - Lỗi xử lý các điều kiện bất thường xảy ra khi phần mềm không phòng ngừa, phát hiện và phản ứng đúng cách trước các tình huống bất ngờ hoặc không dự đoán trước, dẫn đến sập nguồn (crash), hành vi sai lệch và tạo ra lỗ hổng.
+    - Các khía cạnh thất bại chính: (1) Ứng dụng không ngăn chặn tình huống bất thường xảy ra; (2) Không nhận diện được tình huống khi nó đang diễn ra; (3) Bỏ mặc hoặc phản ứng kém sau khi tình huống xảy ra.
+    - Nguyên nhân cốt lõi: Thiếu kiểm tra dữ liệu đầu vào (input validation), bắt exception chung chung ở tầng trên cùng thay vì xử lý ngay tại hàm xảy ra lỗi, bỏ sót exception (uncaught exceptions), hoặc khi gặp lỗi hệ thống không thu hồi quyền/giao dịch mà lại cho phép tiếp tục thao tác (Failing Open thay vì Failing Closed).
+3. Kịch bản và Tác động
+    - Kịch bản 1 (Cạn kiệt tài nguyên - DoS): Ứng dụng bắt exception khi upload file thất bại nhưng không giải phóng tài nguyên (file handle, bộ nhớ) sau đó. Cứ mỗi lần phát sinh exception, tài nguyên tiếp tục bị khóa cho đến khi sập toàn bộ dịch vụ.
+    - Kịch bản 2 (Lộ lọt thông tin nhạy cảm qua thông báo lỗi): Khi truy vấn database gặp điều kiện dị biệt, hệ thống in toàn bộ câu lệnh SQL và stack trace ra ngoài. Attacker cố tình đưa tham số dị dạng để ép hệ thống nhả lỗi, dùng thông tin đó làm trinh sát (reconnaissance) để tấn công SQL Injection chính xác.
+    - Kịch bản 3 (Hỏng trạng thái giao dịch tài chính): Giao dịch chuyển tiền gồm 3 bước: trừ tiền người gửi, cộng tiền người nhận, ghi log. Khi mạng gián đoạn ở bước 2, nếu hệ thống không roll back toàn bộ giao dịch (fail closed), attacker có thể vắt kiệt tiền tài khoản hoặc khai thác race condition để nhận tiền nhiều lần.
+4. Cơ chế Zap phát hiện
+    - ZAP Passive Scan phát hiện mạnh mẽ các hệ quả bề mặt của xử lý lỗi kém: `10023` Debug Error Information Disclosure, `90022` Application Errors (phát hiện server trả về HTTP 500 kèm stack trace hoặc chuỗi lỗi cụ thể).
+    - ZAP Active Scan & Fuzzing:
+      - ZAP Fuzzer là vũ khí tối thượng để phát hiện A10: Quét chèn các tham số dị biệt (giá trị null, bỏ sót tham số, số âm, ký tự đặc biệt, chuỗi cực dài) vào các API/endpoint để ép hệ thống rơi vào trạng thái ngoại lệ (Exceptional Conditions).
+      - Đánh giá phản hồi Fuzzing: Quan sát xem ứng dụng phản hồi bằng HTTP 500 (lộ stack trace), bị crash (kết nối timeout/từ chối dịch vụ), hay rơi vào trạng thái Fail Open (ví dụ: mất tham số xác thực nhưng server vẫn cho đi tiếp).
+5. Cấu hình baseline
+    - Baseline Scan theo dõi chặt chẽ các hành vi rò rỉ thông tin qua thông báo lỗi:
+      - Đặt mức cảnh báo nghiêm `WARN` hoặc `FAIL` cho các rule phát hiện xử lý lỗi kém:
+        - `90022 WARN` hoặc `FAIL` cho `Application Errors` (kiểm tra rò rỉ thông báo lỗi ứng dụng)
+        - `10023 WARN` hoặc `FAIL` cho `Debug Error Information Disclosure` (phát hiện lộ thông tin debug)
+        - `10055 INFO` hoặc `WARN` (rà soát bề mặt cấu hình an toàn)
+    - Để đánh giá toàn diện A10 trong CI/CD, nên kết hợp ZAP Baseline với các test case Fuzzing chuyên biệt kiểm tra sức chịu đựng và cơ chế rollback.
+6. Sàng lọc cảnh báo (Triage)
+    - Đánh giá thông báo lỗi phản hồi: Phân biệt rõ giữa việc server trả về mã HTTP 400/500 kèm thông điệp thân thiện ("Đã xảy ra lỗi, vui lòng thử lại") với việc trả về stack trace chứa mã nguồn/tên database. Trường hợp đầu là xử lý đúng, trường hợp sau là lỗ hổng A10.
+    - Phân tích cơ chế Rollback: Khi phát hiện một API trả về lỗi giữa chừng, kiểm tra xem dữ liệu trong database có bị ghi nhận dở dang (dirty state) hay không. Nếu có, đây là lỗ hổng nghiêm trọng về toàn vẹn giao dịch.
+    - Đánh giá cơ chế Fail Securely: Kiểm tra các luồng kiểm tra quyền/xác thực. Nếu hệ thống không thể kết nối tới dịch vụ xác thực (SSO/Redis) mà lại cho phép bypass qua cổng (Failing Open), đó là lỗi A10 nguy hiểm nhất.
+7. Cách khắc phục
+    - Thiết lập nguyên tắc Fail Securely (Failing Closed): Khi xảy ra ngoại lệ hoặc sự cố trong bất kỳ giao dịch nào, hệ thống phải tự động đóng luồng truy cập, khôi phục (roll back) toàn bộ trạng thái dữ liệu về điểm bắt đầu.
+    - Xử lý Exception triệt để tại chỗ: Bắt và xử lý mọi ngoại lệ (try-catch) ngay tại vị trí hàm/module xảy ra sự cố; thực hiện hành động khắc phục cụ thể, giải phóng tài nguyên (finally block) và thông báo lỗi thân thiện cho user.
+    - Xây dựng Global Exception Handler: Thiết lập trình xử lý ngoại lệ toàn cục ở tầng cao nhất của ứng dụng để đảm bảo không có exception nào bị bỏ sót (uncaught exception) gây sập hệ thống hoặc lộ stack trace.
+    - Áp dụng giới hạn tài nguyên (Rate Limiting & Quotas): Không có tài nguyên nào trong IT là vô hạn. Cấu hình rate limiting, throttling và giới hạn dung lượng/bộ nhớ để ngăn chặn nghẽn tải, tấn công DoS và cạn kiệt tài nguyên.
+    - Validate dữ liệu nghiêm ngặt & Gom cụm Log lỗi: Kiểm tra tính hợp lệ của mọi dữ liệu đầu vào. Với các lỗi lặp lại liên tục do bạo lực mạng (brute force/bot), hệ thống nên gộp cụm thông kê thay vì sinh log ngập lụt (tránh gây lỗi A09). Đảm bảo toàn bộ tổ chức tuân thủ chung một chuẩn xử lý ngoại lệ.
 
 ## 11. Reference
 
@@ -310,3 +493,8 @@ OWASP Top 10 là một tài liệu nâng cao nhận thức tiêu chuẩn dành c
 - https://owasp.org/Top10/2025/A03_2025-Software_Supply_Chain_Failures/
 - https://owasp.org/Top10/2025/A04_2025-Cryptographic_Failures/
 - https://owasp.org/Top10/2025/A05_2025-Injection/
+- https://owasp.org/Top10/2025/A06_2025-Insecure_Design/
+- https://owasp.org/Top10/2025/A07_2025-Authentication_Failures/
+- https://owasp.org/Top10/2025/A08_2025-Software_or_Data_Integrity_Failures/
+- https://owasp.org/Top10/2025/A09_2025-Security_Logging_and_Alerting_Failures/
+- https://owasp.org/Top10/2025/A10_2025-Mishandling_of_Exceptional_Conditions/
