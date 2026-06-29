@@ -24,10 +24,16 @@ Cách chạy kịch bản quét cho các phân hệ của EShop:
         python zap_scan.py --target http://localhost:5174 --ajax-spider --report-file zap_report_frontend_admin.html
 """
 
-import time
 import argparse
+import os
 import sys
+import time
+from pathlib import Path
+
 from zapv2 import ZAPv2
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+DEFAULT_REPORT_PATH = SCRIPT_DIR / "zap_report.html"
 
 def check_scan_status(zap, scan_id, scan_type="Spider"):
     """Vòng lặp kiểm tra tiến độ quét của ZAP"""
@@ -59,7 +65,7 @@ def main():
     parser.add_argument("--api-key", default="", help="ZAP API Key (nếu có cấu hình)")
     parser.add_argument("--ajax-spider", action="store_true", help="Sử dụng AJAX Spider (Dành cho Frontend Single Page App)")
     parser.add_argument("--report-format", default="html", choices=["html", "json", "xml", "md"], help="Định dạng báo cáo output")
-    parser.add_argument("--report-file", default="zap_report.html", help="Tên file báo cáo output")
+    parser.add_argument("--report-file", default=str(DEFAULT_REPORT_PATH), help="Tên file báo cáo output")
     
     args = parser.parse_args()
     target_url = args.target
@@ -128,8 +134,13 @@ def main():
         print(f" - {risk_level:<12}: {count}")
     print("="*40)
 
+    report_path = Path(args.report_file)
+    if not report_path.is_absolute():
+        report_path = (Path.cwd() / report_path).resolve()
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+
     # Xuất báo cáo
-    print(f"\n[*] Đang xuất báo cáo định dạng {args.report_format.upper()} ra file: {args.report_file}")
+    print(f"\n[*] Đang xuất báo cáo định dạng {args.report_format.upper()} ra file: {report_path}")
     try:
         if args.report_format == "html":
             report = zap.core.htmlreport()
@@ -140,9 +151,9 @@ def main():
         elif args.report_format == "md":
             report = zap.core.mdreport()
         
-        with open(args.report_file, "w", encoding="utf-8") as f:
+        with open(report_path, "w", encoding="utf-8") as f:
             f.write(report)
-        print(f"[+] Xuất báo cáo thành công tại: {args.report_file}")
+        print(f"[+] Xuất báo cáo thành công tại: {report_path}")
     except Exception as e:
         print(f"[!] Có lỗi xảy ra khi xuất báo cáo: {e}")
 

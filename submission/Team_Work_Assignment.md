@@ -81,6 +81,47 @@ Output Pha 1 phải đủ 3 phần để các thành viên khác dùng lại ở
 | Track A - Semgrep + AI triage + report | SAST, Semgrep OWASP Top-10 ruleset, cách đọc finding, false positive, prompt triage cho source finding, report source-level issue | Cài/chạy Semgrep -> chọn config `p/owasp-top-ten` -> scan EShop repo -> chọn finding -> prompt Gemini -> audit PoC/fix -> ghi source evidence -> report | `Semgrep Finding Note`, `AI Triage Note`, `Finding Report` cho source-level finding |
 | Track B - ZAP + AI triage + report | DAST, ZAP baseline/passive/active scan, target config, alert triage, prompt triage cho runtime alert, report runtime issue | Chạy EShop -> cấu hình target -> chạy ZAP baseline -> chọn alert -> prompt Gemini -> audit PoC/fix -> ghi runtime evidence -> report | `ZAP Alert Note`, `AI Triage Note`, `Finding Report` cho runtime alert |
 
+<!-- ZAP_AI_TRIAGE_START -->
+### AI-Triage cho ZAP Track
+
+- Input: `docs/zap/output/2026-06-29-ZAP-Report-.html`
+- Tool: OWASP ZAP report + Gemini/offline AI triage script `docs/zap/ai_triage_zap.py`
+- Tổng alert đã parse: 12
+- High: 1
+- Medium: 3
+- Low: 3
+- Informational: 5
+
+Kết quả triage chính:
+- `High` `Cross Site Scripting (DOM Based)` tại `http://localhost:5173/?name=abc#<img src="random.gif" onerror=alert(5397)>`: Có thể thực thi JavaScript trong browser nạn nhân, đánh cắp dữ liệu phiên hoặc thao tác thay người dùng.
+- `Medium` `Content Security Policy (CSP) Header Not Set` tại `http://localhost:5173/robots.txt`: Thiếu lớp giảm thiểu XSS/data injection, làm tăng blast radius khi có bug injection.
+- `Medium` `Cross-Domain Misconfiguration` tại `http://localhost:3000/api/products?search=`: Origin không tin cậy có thể đọc dữ liệu API nếu endpoint trả dữ liệu nhạy cảm hoặc được bảo vệ bằng mạng nội bộ.
+- `Medium` `Cross-Domain Misconfiguration` tại `http://localhost:5173/robots.txt`: Origin không tin cậy có thể đọc dữ liệu API nếu endpoint trả dữ liệu nhạy cảm hoặc được bảo vệ bằng mạng nội bộ.
+- `Low` `Server Leaks Information via "X-Powered-By" HTTP Response Header Field(s)` tại `http://localhost:3000/api/products?search=`: Lộ fingerprint framework, hỗ trợ attacker chọn payload theo stack.
+
+PoC/reproducer ưu tiên:
+**PoC DOM XSS**
+1. Mở trình duyệt tại `http://localhost:5173/?name=abc#<img src="random.gif" onerror=alert(5397)>`.
+2. Nếu app có ô nhập tương ứng, nhập lại payload từ URL/evidence.
+3. Quan sát popup `alert(...)` hoặc DOM bị chèn thẻ HTML.
+
+**Testcase**
+- Input: `query/hash payload`
+- Expected: payload được render như text an toàn, không chạy JavaScript.
+- Actual theo ZAP: payload có thể kích hoạt script trong browser.
+
+Testcase/evidence cần nộp:
+- ZAP report gốc trong `docs/zap/output` hoặc `zap_report.html`.
+- AI triage output trong `docs/zap/ai_triage_output.md`.
+- Screenshot/log khi reproduce finding ưu tiên cao nhất.
+- Human audit note: AI chỉ hỗ trợ draft; nhóm kiểm chứng bằng request/response thật và source/runtime evidence.
+
+Failure modes quan sát được:
+- ZAP có thể báo noise trên Vite/dev server, ví dụ dependency trong `/node_modules/.vite` hoặc `@react-refresh`.
+- AI có thể gợi ý fix quá chung; cần đối chiếu source code/backend config.
+- Nếu ZAP không có auth context, scan có thể bỏ sót endpoint sau đăng nhập.
+<!-- ZAP_AI_TRIAGE_END -->
+
 ## Pha 2 - Thực hiện end-to-end nhóm testcase
 
 Mục tiêu: mỗi thành viên sở hữu một nhóm testcase/finding riêng và tự đi qua workflow end-to-end. Nếu tool không phát hiện được case đó, phải ghi rõ đã chạy gì, output là gì và vì sao không áp dụng được.
