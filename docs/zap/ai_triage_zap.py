@@ -6,8 +6,8 @@ AI-assisted triage for OWASP ZAP reports.
 Default usage:
     python docs/zap/ai_triage_zap.py
 
-With Gemini:
-    GEMINI_API_KEY=... python docs/zap/ai_triage_zap.py --use-ai
+With OpenRouter:
+    OPENROUTER_API_KEY=... python docs/zap/ai_triage_zap.py --use-ai
 """
 
 from __future__ import annotations
@@ -29,8 +29,8 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 DEFAULT_INPUT_DIR = SCRIPT_DIR / "output"
 DEFAULT_OUTPUT = SCRIPT_DIR / "ai_triage_output.md"
 DEFAULT_SUBMISSION = Path("submission/Team_Work_Assignment.md")
-DEFAULT_MODEL = "gemini-2.5-flash"
-GEMINI_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+DEFAULT_MODEL = "google/gemini-2.5-flash"
+OPENROUTER_ENDPOINT = "https://openrouter.ai/api/v1/chat/completions"
 RISK_ORDER = {"High": 0, "Medium": 1, "Low": 2, "Informational": 3, "Info": 3, "Unknown": 4}
 SUBMISSION_START = "<!-- ZAP_AI_TRIAGE_START -->"
 SUBMISSION_END = "<!-- ZAP_AI_TRIAGE_END -->"
@@ -299,16 +299,24 @@ def build_prompt(alerts: list[Alert], source_name: str, limit: int) -> str:
     ).strip()
 
 
-def call_gemini(prompt: str, api_key: str, model: str, timeout: int = 20) -> str:
-    url = GEMINI_ENDPOINT.format(model=model, api_key=api_key)
+def call_openrouter(prompt: str, api_key: str, model: str, timeout: int = 20) -> str:
+    url = OPENROUTER_ENDPOINT
     payload = {
-        "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {"temperature": 0.2, "topP": 0.8},
+        "model": model,
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.2,
+        "top_p": 0.8,
+        "max_tokens": 4096,
     }
     request = urllib.request.Request(
         url,
         data=json.dumps(payload).encode("utf-8"),
-        headers={"Content-Type": "application/json"},
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}",
+            "HTTP-Referer": "https://github.com", # Required by OpenRouter for ranking
+            "X-Title": "ZAP Triage AI" # Optional
+        },
         method="POST",
     )
     try:
@@ -317,16 +325,16 @@ def call_gemini(prompt: str, api_key: str, model: str, timeout: int = 20) -> str
     except urllib.error.HTTPError as exc:
         body = exc.read().decode("utf-8", "ignore")
         detail = body.strip() or str(exc)
-        raise RuntimeError(f"Gemini API error {exc.code}: {detail}") from exc
+        raise RuntimeError(f"OpenRouter API error {exc.code}: {detail}") from exc
     except urllib.error.URLError as exc:
-        raise RuntimeError(f"Network error while calling Gemini: {exc.reason}") from exc
+        raise RuntimeError(f"Network error while calling OpenRouter: {exc.reason}") from exc
     except TimeoutError as exc:
-        raise RuntimeError(f"Gemini request timed out after {timeout}s") from exc
+        raise RuntimeError(f"OpenRouter request timed out after {timeout}s") from exc
 
     try:
-        return data["candidates"][0]["content"]["parts"][0]["text"].strip()
+        return data["choices"][0]["message"]["content"].strip()
     except (KeyError, IndexError) as exc:
-        raise RuntimeError(f"Unexpected Gemini response: {data}") from exc
+        raise RuntimeError(f"Unexpected OpenRouter response: {data}") from exc
 
 
 def classify_noise(alert: Alert) -> bool:
@@ -518,7 +526,7 @@ def build_submission_block(alerts: list[Alert], source_name: str) -> str:
             "### AI-Triage cho ZAP Track",
             "",
             f"- Input: `{source_name}`",
-            "- Tool: OWASP ZAP report + Gemini/offline AI triage script `docs/zap/ai_triage_zap.py`",
+            "- Tool: OWASP ZAP report + OpenRouter/offline AI triage script `docs/zap/ai_triage_zap.py`",
             f"- Tổng alert đã parse: {len(alerts)}",
             counts_lines or "- Không parse được alert.",
             "",
@@ -587,8 +595,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Generate AI triage markdown from OWASP ZAP HTML reports.")
     parser.add_argument("--input", type=Path, help="Path to a ZAP HTML report. Defaults to latest docs/zap/output/*.html.")
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT, help=f"Markdown output path. Default: {DEFAULT_OUTPUT}")
-    parser.add_argument("--use-ai", action="store_true", help="Call Gemini. Without this flag, uses offline triage template.")
-    parser.add_argument("--model", default=os.getenv("GEMINI_MODEL", DEFAULT_MODEL), help=f"Gemini model. Default: {DEFAULT_MODEL}")
+    parser.add_argument("--use-ai", action="store_true", help="Call OpenRouter. Without this flag, uses offline triage template.")
+    parser.add_argument("--model", default=os.getenv("OPENROUTER_MODEL", DEFAULT_MODEL), help=f"OpenRouter model. Default: {DEFAULT_MODEL}")
     parser.add_argument("--max-alerts", type=int, default=8, help="Maximum alerts to send to AI.")
     parser.add_argument("--update-submission", action="store_true", help=f"Update managed AI-Triage block in {DEFAULT_SUBMISSION}.")
     parser.add_argument("--submission-file", type=Path, default=DEFAULT_SUBMISSION, help=f"Submission markdown path. Default: {DEFAULT_SUBMISSION}")
@@ -603,18 +611,18 @@ def main() -> int:
     model_name = "offline-template"
     triage_text = ""
     if args.use_ai:
-        api_key = os.getenv("GEMINI_API_KEY")
+        api_key = os.getenv("OPENROUTER_API_KEY")
         if not api_key:
-            print("[!] GEMINI_API_KEY is not set. Falling back to offline triage.", file=sys.stderr)
+            print("[!] OPENROUTER_API_KEY is not set. Falling back to offline triage.", file=sys.stderr)
         else:
             try:
                 prompt = build_prompt(alerts, source_name=str(report_path), limit=args.max_alerts)
-                triage_text = call_gemini(prompt, api_key=api_key, model=args.model)
+                triage_text = call_openrouter(prompt, api_key=api_key, model=args.model)
                 model_name = args.model
             except KeyboardInterrupt:
-                print("[!] Gemini request interrupted. Falling back to offline triage.", file=sys.stderr)
+                print("[!] OpenRouter request interrupted. Falling back to offline triage.", file=sys.stderr)
             except (urllib.error.URLError, TimeoutError, RuntimeError, json.JSONDecodeError) as exc:
-                print(f"[!] Gemini call failed: {exc}. Falling back to offline triage.", file=sys.stderr)
+                print(f"[!] OpenRouter call failed: {exc}. Falling back to offline triage.", file=sys.stderr)
 
     if not triage_text:
         triage_text = build_offline_triage(alerts, source_name=str(report_path))
