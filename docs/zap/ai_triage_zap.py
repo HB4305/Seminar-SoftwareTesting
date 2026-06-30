@@ -29,7 +29,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 DEFAULT_INPUT_DIR = SCRIPT_DIR / "output"
 DEFAULT_OUTPUT = SCRIPT_DIR / "ai_triage_output.md"
 DEFAULT_SUBMISSION = Path("submission/Team_Work_Assignment.md")
-DEFAULT_MODEL = "gemini-1.5-flash"
+DEFAULT_MODEL = "gemini-2.5-flash"
 GEMINI_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
 RISK_ORDER = {"High": 0, "Medium": 1, "Low": 2, "Informational": 3, "Info": 3, "Unknown": 4}
 SUBMISSION_START = "<!-- ZAP_AI_TRIAGE_START -->"
@@ -299,7 +299,7 @@ def build_prompt(alerts: list[Alert], source_name: str, limit: int) -> str:
     ).strip()
 
 
-def call_gemini(prompt: str, api_key: str, model: str, timeout: int = 60) -> str:
+def call_gemini(prompt: str, api_key: str, model: str, timeout: int = 20) -> str:
     url = GEMINI_ENDPOINT.format(model=model, api_key=api_key)
     payload = {
         "contents": [{"parts": [{"text": prompt}]}],
@@ -311,8 +311,18 @@ def call_gemini(prompt: str, api_key: str, model: str, timeout: int = 60) -> str
         headers={"Content-Type": "application/json"},
         method="POST",
     )
-    with urllib.request.urlopen(request, timeout=timeout) as response:
-        data = json.loads(response.read().decode("utf-8"))
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            data = json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        body = exc.read().decode("utf-8", "ignore")
+        detail = body.strip() or str(exc)
+        raise RuntimeError(f"Gemini API error {exc.code}: {detail}") from exc
+    except urllib.error.URLError as exc:
+        raise RuntimeError(f"Network error while calling Gemini: {exc.reason}") from exc
+    except TimeoutError as exc:
+        raise RuntimeError(f"Gemini request timed out after {timeout}s") from exc
+
     try:
         return data["candidates"][0]["content"]["parts"][0]["text"].strip()
     except (KeyError, IndexError) as exc:
@@ -601,6 +611,8 @@ def main() -> int:
                 prompt = build_prompt(alerts, source_name=str(report_path), limit=args.max_alerts)
                 triage_text = call_gemini(prompt, api_key=api_key, model=args.model)
                 model_name = args.model
+            except KeyboardInterrupt:
+                print("[!] Gemini request interrupted. Falling back to offline triage.", file=sys.stderr)
             except (urllib.error.URLError, TimeoutError, RuntimeError, json.JSONDecodeError) as exc:
                 print(f"[!] Gemini call failed: {exc}. Falling back to offline triage.", file=sys.stderr)
 

@@ -8,6 +8,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from ai_triage_zap import (
     Alert,
+    DEFAULT_MODEL,
     build_offline_triage,
     load_dotenv,
     parse_zap_html,
@@ -131,6 +132,9 @@ class AiTriageZapTests(unittest.TestCase):
                 self.assertEqual(os.environ["GEMINI_API_KEY"], "test-key")
             finally:
                 os.environ.pop("GEMINI_API_KEY", None)
+
+    def test_default_model_uses_supported_gemini_model(self):
+        self.assertEqual(DEFAULT_MODEL, "gemini-2.5-flash")
 
     def test_resolve_output_path_uses_report_stem(self):
         report_path = Path("docs/zap/output/backend_report.html")
