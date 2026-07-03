@@ -64,5 +64,3 @@ Tất cả thông tin, nội dung liên quan đến đề tài được tạo ra
 |    4   | Track Zap: Tạo flow Test với Zap, AI Triage (có báo cáo output) | Lê Trung Kiên, Mai Thị Kim Duyên |
 
 ## 5. Issues
-
-None
