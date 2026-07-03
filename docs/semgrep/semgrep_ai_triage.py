@@ -9,6 +9,81 @@ except ImportError:
     print("Vui lòng cài đặt thư viện mới nhất: pip install google-genai")
     sys.exit(1)
 
+def resolve_file_path(original_path):
+    """
+    Hàm giải quyết đường dẫn tuyệt đối hoặc không nhất quán trong JSON kết quả quét
+    để tìm ra file thực tế trên đĩa của máy đang chạy hiện tại.
+    """
+    # 1. Thử đường dẫn gốc nếu nó tồn tại trực tiếp
+    if os.path.exists(original_path):
+        return original_path
+
+    # 2. Chuẩn hóa đường dẫn gốc (thay \ bằng /)
+    normalized = original_path.replace('\\', '/')
+    parts = normalized.split('/')
+    
+    # 3. Trích xuất phần đuôi tương đối từ 'eshop-sut' hoặc 'backend'
+    subpath = None
+    if 'eshop-sut' in parts:
+        idx = parts.index('eshop-sut')
+        subpath = os.path.join(*parts[idx:])
+    elif 'backend' in parts:
+        idx = parts.index('backend')
+        subpath = os.path.join('eshop-sut', *parts[idx:])
+        
+    if subpath:
+        # Danh sách các vị trí tương đối phổ biến từ thư mục chạy script
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        candidates = [
+            # Chạy từ root của Seminar-SoftwareTesting: '../../EShop/eshop-sut/...'
+            os.path.abspath(os.path.join(os.getcwd(), '..', 'EShop', subpath)),
+            # Chạy từ docs/semgrep/: '../../../EShop/eshop-sut/...'
+            os.path.abspath(os.path.join(os.getcwd(), '..', '..', 'EShop', subpath)),
+            # Tương đối so với file script: '../../../EShop/eshop-sut/...'
+            os.path.abspath(os.path.join(script_dir, '..', '..', '..', 'EShop', subpath)),
+            # Tương đối trực tiếp nếu EShop nằm cùng cấp thư mục gốc học tập
+            os.path.abspath(os.path.join(script_dir, '..', '..', '..', 'Kiểm thử phần mềm', 'EShop', subpath)),
+            os.path.abspath(os.path.join(script_dir, '..', '..', '..', 'Kiß╗âm thß╗¡ phß║ºn mß╗üm', 'EShop', subpath))
+        ]
+        for candidate in candidates:
+            if os.path.exists(candidate):
+                return candidate
+                
+    # 4. Fallback cuối: Thử tìm theo tên file trong toàn thư mục cha
+    filename = os.path.basename(normalized)
+    parent_dir = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..'))
+    for root, dirs, files in os.walk(parent_dir):
+        if filename in files:
+            full_path = os.path.join(root, filename)
+            if 'eshop-sut' in full_path or 'EShop' in full_path:
+                return full_path
+                
+    return None
+
+def get_source_code_snippet(file_path, line_number, context_lines=5):
+    """
+    Đọc file nguồn trên đĩa và trích xuất đoạn mã xung quanh dòng lỗi.
+    """
+    if not file_path or not os.path.exists(file_path):
+        return None
+    try:
+        with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+            lines = f.readlines()
+        
+        start_idx = max(0, line_number - context_lines - 1)
+        end_idx = min(len(lines), line_number + context_lines)
+        
+        snippet_lines = []
+        for i in range(start_idx, end_idx):
+            line_num = i + 1
+            marker = "=> " if line_num == line_number else "   "
+            snippet_lines.append(f"{marker}{line_num}: {lines[i].rstrip()}")
+            
+        return '\n'.join(snippet_lines)
+    except Exception as e:
+        print(f"Lỗi khi đọc file nguồn {file_path}: {e}")
+        return None
+
 def main():
     # Kiểm tra xem người dùng có truyền file json vào không
     if len(sys.argv) < 2:
@@ -60,6 +135,15 @@ def main():
     line = finding.get("start", {}).get("line")
     message = finding.get("extra", {}).get("message")
     code_lines = finding.get("extra", {}).get("lines", "")
+
+    # Fallback nếu code_lines bị ẩn ("requires login") hoặc trống
+    if not code_lines or code_lines == "requires login":
+        resolved_path = resolve_file_path(file_path)
+        if resolved_path:
+            print(f"-> Phát hiện trường 'lines' bị ẩn hoặc trống. Đang đọc trực tiếp từ file: {resolved_path}")
+            code_lines = get_source_code_snippet(resolved_path, line)
+        else:
+            print(f"-> Cảnh báo: Không thể định vị file nguồn '{file_path}' trên hệ thống để fallback đọc trực tiếp.")
     
     # Chuẩn bị Prompt y hệt như những gì một Tester thực thụ cung cấp cho chuyên gia bảo mật
     prompt = f"""
