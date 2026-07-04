@@ -8,42 +8,29 @@
 
 ## 2. Nhiệm vụ đã hoàn thành tuần này
 
-### 2.1. 23127075 - Lê Trung Kiên
+### 2.1. Bảng nhiệm vụ
 
-**Nhiệm vụ:**
-- Tìm hiểu về DAST.
-- Tìm hiểu về ZAP.
-- Tìm hiểu về OWASP Top 10: 1; 2.
+| **Nhiệm vụ** | **Họ tên** |
+|:--|:--|
+| Tìm hiểu về DAST. | Lê Trung Kiên |
+| Tìm hiểu về ZAP. | Lê Trung Kiên, Mai Thị Kim Duyên |
+| Tìm hiểu về OWASP Top 10: 1; 2. | Lê Trung Kiên |
+| Tìm hiểu về SAST. | Lâm Hữu Khánh |
+| Tìm hiểu về Semgrep. | Lâm Hữu Khánh, Lê Mai Hoài Bảo |
+| Tìm hiểu về OWASP Top 10: 5; 6. | Lâm Hữu Khánh |
+| Tìm hiểu về OWASP Top 10: 7; 8; 9; 10. | Lê Mai Hoài Bảo |
+| Tìm hiểu về OWASP. | Mai Thị Kim Duyên |
+| Tìm hiểu về OWASP Top 10: 3; 4. | Mai Thị Kim Duyên |
 
-**Minh chứng**
+### 2.2. Minh chứng
 
-### 2.2. 23127205 - Lâm Hữu Khánh
+**Phân công trên Jira**
 
-**Nhiệm vụ:**
-- Tìm hiểu về SAST.
-- Tìm hiểu về Semgrep.
-- Tìm hiểu về OWASP Top 10: 5; 6.
+![1783150166039](image/Group06/1783150166039.png)
 
-**Minh chứng**
+**Các document liên quan**
 
-### 2.3. 23127326 - Lê Mai Hoài Bảo
-
-**Nhiệm vụ:**
-- Tìm hiểu về Semgrep.
-- Tìm hiểu về OWASP Top 10: 7; 8; 9; 10.
-
-**Minh chứng**
-
-
-### 2.4. 23127185 - Mai Thị Kim Duyên
-
-**Nhiệm vụ:**
-- Tìm hiểu về OWASP
-- Tìm hiểu về ZAP.
-- Tìm hiểu về OWASP Top 10: 3; 4.
-
-**Minh chứng**
-
+Nội dung tìm hiểu về SAST, DAST, OWASP, OWASP Top 10, Semgrep, ZAP được viết thành các file markdown bỏ vào trong thư mục evidence đính kèm.
 
 ## 3. Khai báo sử dụng AI
 
@@ -64,3 +51,5 @@ Tất cả thông tin, nội dung liên quan đến đề tài được tạo ra
 |    4   | Track Zap: Tạo flow Test với Zap, AI Triage (có báo cáo output) | Lê Trung Kiên, Mai Thị Kim Duyên |
 
 ## 5. Issues
+
+None
