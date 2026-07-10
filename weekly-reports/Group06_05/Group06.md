@@ -68,7 +68,11 @@ Evidence tuần này gồm:
 
 ### 3.4. Lê Mai Hoài Bảo
 
-- Chưa bổ sung thông tin khai báo sử dụng AI.
+- Công cụ: Google Gemini, model Gemini 3.1 Flash.
+- Prompt đã sử dụng: Yêu cầu AI sửa script `semgrep_ai_triage.py` để chuyển từ thư viện cũ `google-generativeai` sang `google-genai`, xử lý lỗi gọi model và bổ sung cơ chế tự động thử lại khi Gemini API trả về lỗi 503; sau đó yêu cầu AI phân tích finding `hardcoded-jwt-secret` từ kết quả Semgrep và hỗ trợ điền `Track_A_Semgrep_Template.md`.
+- Mục đích sử dụng: Khắc phục lỗi tích hợp Gemini API, tự động hóa bước AI Triage và hoàn thiện báo cáo mẫu cho Track Semgrep trên dự án EShop.
+- Nội dung AI tạo ra: Bản nháp mã gọi Gemini bằng `genai.Client`, cơ chế retry khi API quá tải, báo cáo `AI_Triage_hardcoded-jwt-secret.md` gồm giải thích lỗ hổng, PoC, impact và remediation; đồng thời hỗ trợ tổng hợp Finding Note, AI Triage Note, AI Audit và Finding Report trong template Track A.
+- Nội dung tự thực hiện/kiểm chứng: Cài thư viện `google-genai`, chạy lại script với `semgrep_results.json`, xác nhận script xuất được báo cáo Markdown, đối chiếu rule ID và vị trí finding với mã nguồn `backend/server.js`, kiểm tra tính hợp lý của PoC JWT và giải pháp dùng `process.env.JWT_SECRET`, sau đó rà soát và chỉnh sửa nội dung trước khi đưa vào tài liệu của nhóm.
 
 ## 4. Task tuần sau
 
