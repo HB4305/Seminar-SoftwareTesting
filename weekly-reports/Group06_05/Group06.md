@@ -26,19 +26,19 @@
 
 - **Track Semgrep: Cài đặt và chạy Semgrep**
 
-  - Mô tả:
+  - Mô tả: Chuẩn bị môi trường và chạy thử công cụ Semgrep để phục vụ kiểm thử bảo mật mã nguồn.
   - Thành viên: Lâm Hữu Khánh, Lê Mai Hoài Bảo
 - **Track Semgrep: Tạo flow Test với Semgrep, AI Triage (có báo cáo output)**
 
-  - Mô tả:
+  - Mô tả: Xây dựng quy trình kiểm thử bằng Semgrep và dùng AI hỗ trợ phân tích kết quả quét.
   - Thành viên: Lâm Hữu Khánh, Lê Mai Hoài Bảo
 - **Track Zap: Cài đặt và chạy Zap**
 
-  - Mô tả:
+  - Mô tả: Chuẩn bị môi trường và chạy thử OWASP ZAP để phục vụ kiểm thử bảo mật ứng dụng web.
   - Thành viên: Lê Trung Kiên, Mai Thị Kim Duyên
 - **Track Zap: Tạo flow Test với ZAP, AI Triage (có báo cáo output)**
 
-  - Mô tả:
+  - Mô tả: Xây dựng quy trình kiểm thử bằng ZAP và dùng AI hỗ trợ phân tích kết quả scan.
   - Thành viên: Lê Trung Kiên, Mai Thị Kim Duyên
 
 ### 2.2.2. Các document liên quan
@@ -64,7 +64,11 @@ Evidence tuần này gồm:
 
 ### 3.3. Lâm Hữu Khánh
 
-- Chưa bổ sung thông tin khai báo sử dụng AI.
+- Công cụ: ChatGPT / Gemini.
+- Prompt đã sử dụng: Yêu cầu AI hỗ trợ rà soát phần Semgrep SAST, kiểm tra finding `hardcoded-jwt-secret`, giải thích nguy cơ hardcoded JWT secret, gợi ý PoC tạo JWT giả mạo và đề xuất hướng khắc phục bằng biến môi trường.
+- Mục đích sử dụng: Hỗ trợ bước AI audit/triage cho Track Semgrep, đối chiếu cảnh báo của Semgrep với source code và đánh giá finding là True Positive hay cần thêm evidence.
+- Nội dung AI tạo ra: Nhận xét sơ bộ về root cause `SECRET_KEY` bị hardcode, phân tích impact của việc lộ JWT secret, draft PoC sử dụng thư viện `jsonwebtoken`, checklist kiểm chứng rule ID/file/dòng code và gợi ý remediation dùng `process.env.JWT_SECRET`.
+- Nội dung tự thực hiện/kiểm chứng: Đối chiếu output Semgrep với phần evidence trong `./evidence/semgrep/`, kiểm tra các vị trí `jwt.sign` và `jwt.verify` dùng cùng `SECRET_KEY`, rà soát PoC trước khi đưa vào báo cáo và ghi nhận rằng các finding liên quan nên được gộp thành một root cause thay vì báo thành nhiều lỗi riêng lẻ.
 
 ### 3.4. Lê Mai Hoài Bảo
 
