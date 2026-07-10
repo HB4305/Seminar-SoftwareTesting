@@ -60,7 +60,11 @@ Evidence tuần này gồm:
 
 ### 3.2. Mai Thị Kim Duyên
 
-- Chưa bổ sung thông tin khai báo sử dụng AI.
+- Công cụ: Gemini 3.1 Pro.
+- Prompt đã sử dụng: Yêu cầu AI hỗ trợ viết mã nguồn Python để gọi API thực hiện quá trình kiểm thử tự động với OWASP ZAP. Yêu cầu AI gợi ý cách trình bày và hỗ trợ chuyển đổi và định dạng lại nội dung báo cáo về OWASP Top 10 theo cấu trúc mới.
+- Mục đích sử dụng: Tự động hóa các bước gọi API của ZAP (như khởi tạo quét Spider, Active Scan và lấy kết quả) để tiết kiệm thời gian. Hỗ trợ biên tập và hoàn thiện nội dung phần báo cáo về OWASP Top 10 theo cấu trúc mới.
+- Nội dung AI tạo ra: Bản nháp mã nguồn Python sử dụng thư viện `zaproxy`, kèm theo logic gọi các endpoint kiểm thử và xử lý danh sách cảnh báo (alerts) trả về. Bản nháp nội dung báo cáo OWASP Top 10 đã được chuẩn hóa định dạng.
+- Nội dung tự thực hiện/kiểm chứng: Kiểm tra lại các nội dung về OWASP ZAP, tiến hành chạy thử nghiệm script thực tế hoàn toàn qua API, rà soát kết quả trả về.
 
 ### 3.3. Lâm Hữu Khánh
 
