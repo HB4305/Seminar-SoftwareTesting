@@ -20,7 +20,7 @@
 
 ### 2.2. Minh chứng
 
-**Phân công trên Jira:**
+### 2.2.1. Phân công trên Jira
 
 ![1783694468293](image/Group06/1783694468293.png)
 
@@ -41,7 +41,7 @@
   - Mô tả:
   - Thành viên: Lê Trung Kiên, Mai Thị Kim Duyên
 
-**Các document liên quan:**
+### 2.2.2. Các document liên quan
 
 Evidence tuần này gồm:
 
