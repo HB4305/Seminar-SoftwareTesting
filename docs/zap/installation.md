@@ -18,8 +18,6 @@ Có 2 cách để cài đặt ZAP trên Windows: cài bằng file trực tiếp 
 3. Nháy đúp vào file tải về để mở trình cài đặt.
 4. Đọc thỏa thuận cấp phép (License agreement) -> Chọn `Accept` -> Chọn `Standard` (Cài mặc định) -> Click `Finish`.
 
-> **⚠️ Xử lý cảnh báo bảo mật trên Windows:** > Trình duyệt có thể cảnh báo file ZAP "không an toàn" hoặc "ít được tải xuống". Để bỏ qua: Click vào dấu `...` (hoặc Tùy chọn) -> Chọn **Keep** -> Chọn **Show more** -> Chọn **Keep anyway**.
-
 ### Cách 2: Sử dụng các công cụ dòng lệnh (Dành cho Dev)
 Nếu bạn thích dùng command line, bạn có thể cài thông qua một số kho lưu trữ chính thức:
 * **Windows Package Manager (winget):** `winget install --id=ZAP.ZAP -e`
@@ -33,9 +31,6 @@ Bạn cần chọn đúng bản cài đặt tương ứng với dòng chip của
 ### Cách 1: Sử dụng File Cài đặt (Installer)
 1. Tải bản **macOS Installer** phù hợp với máy của bạn (Intel - amd64 hoặc Apple Silicon - aarch64) từ trang chủ.
 2. Mở file để cài đặt bình thường.
-
-> **⚠️ Xử lý cảnh báo nhà phát triển trên macOS:** > Vì ZAP không phải là ứng dụng được Apple xác minh (verified developer), máy sẽ hiện thông báo *"ZAP.app cannot be opened..."*. Để mở được phần mềm: 
-> Vào **System Preferences (Cài đặt hệ thống)** > **Security & Privacy (Bảo mật & Quyền riêng tư)** > Tìm dòng thông báo ZAP bị chặn và bấm nút **Open anyway (Vẫn mở)**.
 
 ### Cách 2: Sử dụng Homebrew Cask
 Đây là cách nhanh nhất trên Mac. Chỉ cần mở Terminal và gõ:
@@ -73,27 +68,38 @@ zaproxy
 
 ### Cách 2: Cài thủ công bằng file tải về
 
-1. Tải file cài đặt phù hợp cho Linux từ trang chủ, gồm:
-   - Linux Installer (.sh)
-   - Linux Package (.tar.gz)
-2. Nếu bạn dùng bản Installer, chạy file .sh và làm theo hướng dẫn trên màn hình.
-3. Nếu bạn dùng bản Package, giải nén thư mục, vào thư mục vừa giải nén và chạy lệnh khởi động:
-```bash
-./zap.sh
-```
+1. Tải file cài đặt phù hợp cho Linux từ trang chủ. ZAP cung cấp 2 định dạng:
+   - **Linux Installer (.sh):** Trình cài đặt có giao diện đồ họa (GUI). File này sẽ tự động giải nén, cài đặt ZAP vào hệ thống và tạo shortcut ứng dụng. Yêu cầu hệ thống phải hỗ trợ môi trường đồ họa để có thể hiển thị cửa sổ cài đặt.
+   - **Linux Package (.tar.gz):** Bản đóng gói dạng Portable (không cần cài đặt). Bao gồm các file thực thi đã được biên dịch sẵn. Phù hợp cho mọi môi trường Linux, đặc biệt là khi không thể khởi chạy giao diện cài đặt `.sh` hoặc người dùng không có quyền quản trị (root).
+2. Nếu bạn dùng bản Installer, cần cấp quyền thực thi trước (ví dụ: `chmod +x ZAP_2.15.0_Linux_Installer.sh`), sau đó chạy file `.sh` và làm theo các bước trên màn hình.
+3. Nếu bạn dùng bản Package (.tar.gz), đầu tiên hãy giải nén file (ví dụ: `tar -xf ZAP_2.15.0_Linux.tar.gz`) và truy cập vào thư mục vừa giải nén. Khởi chạy ZAP bằng lệnh:
+   ```bash
+   ./zap.sh
+   ```
+   > *(Lưu ý: Nếu bạn khởi chạy trên môi trường Wayland và gặp lỗi hiển thị, vui lòng xem mục 4.4 bên dưới)*
 
-### Lưu ý & Khắc phục lỗi: "ZAP GUI is not supported on a headless environment"
+## 4. Các lỗi và cảnh báo thường gặp khi cài đặt
 
-1. Dấu hiệu nhận biết lỗi
+### 4.1. Cảnh báo bảo mật khi tải file trên Windows
+- **Dấu hiệu:** Trình duyệt cảnh báo file cài đặt ZAP "không an toàn" hoặc "ít được tải xuống".
+- **Cách khắc phục:** Trên trình duyệt, click vào dấu `...` (hoặc Tùy chọn) -> Chọn **Keep** -> Chọn **Show more** -> Chọn **Keep anyway**.
+
+### 4.2. Lỗi "ZAP.app cannot be opened" trên macOS
+- **Dấu hiệu:** Máy Mac hiện thông báo lỗi chặn mở app do ZAP không phải là ứng dụng được Apple xác minh (verified developer).
+- **Cách khắc phục:** Vào **System Preferences (Cài đặt hệ thống)** > **Security & Privacy (Bảo mật & Quyền riêng tư)** > Tìm dòng thông báo ZAP bị chặn và bấm nút **Open anyway (Vẫn mở)**.
+
+### 4.3. Lỗi "ZAP GUI is not supported on a headless environment" trên Linux
+
+**1. Dấu hiệu nhận biết lỗi**
    - Khi chạy lệnh `./zap.sh` trên Linux (Fedora, Ubuntu, ...), ZAP bị văng ngay lập tức và Terminal trả về thông báo:
 ```text
 FATAL org.zaproxy.zap.GuiBootstrap - ZAP GUI is not supported on a headless environment.
 ```
 
-2. Nguyên nhân
+**2. Nguyên nhân**
    - Hệ thống đang dùng phiên bản Java headless làm mặc định. Đây là bản Java rút gọn dành cho máy chủ, không có thư viện hỗ trợ giao diện đồ họa nên OWASP ZAP không thể mở cửa sổ GUI.
 
-3. Cách khắc phục
+**3. Cách khắc phục**
    - Bước 1: Cài đặt gói Java đầy đủ (có hỗ trợ đồ họa)
 ```bash
 sudo dnf install java-25-openjdk -y
@@ -108,3 +114,12 @@ sudo alternatives --config java
 ```
 
 > Sau khi chọn đúng phiên bản Java, giao diện OWASP ZAP sẽ hiển thị bình thường.
+
+### 4.4. Lỗi hiển thị giao diện (cửa sổ trắng, không click được) trên Wayland (Linux)
+
+- **Dấu hiệu:** Ứng dụng ZAP mở lên nhưng giao diện trống trơn, cửa sổ trắng xóa hoặc không thể tương tác (click) vào bất kỳ đâu.
+- **Nguyên nhân:** Các ứng dụng Java sử dụng giao diện AWT/Swing như ZAP thường bị lỗi hiển thị khi chạy trực tiếp (native) trên môi trường Wayland.
+- **Cách khắc phục:** Cần khởi chạy ZAP kèm các biến môi trường để ép ứng dụng chạy qua lớp tương thích XWayland và hỗ trợ vẽ cửa sổ tốt hơn. Thay vì chạy `./zap.sh`, hãy dùng lệnh sau:
+```bash
+_JAVA_AWT_WM_NONREPARENTING=1 GDK_BACKEND=x11 ./zap.sh
+```
