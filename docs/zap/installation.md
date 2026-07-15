@@ -68,11 +68,11 @@ zaproxy
 
 ### Cách 2: Cài thủ công bằng file tải về
 
-1. Tải file cài đặt phù hợp cho Linux từ trang chủ. Dưới đây là hướng dẫn để chọn bản phù hợp:
-   - **Linux Installer (.sh):** Khuyên dùng cho người mới hoặc các hệ điều hành họ **Debian/Ubuntu** (như Ubuntu, Linux Mint, Kali Linux...). File này sẽ mở trình cài đặt đồ họa từng bước và tự động tạo shortcut Ứng dụng.
-   - **Linux Package (.tar.gz):** Dạng Portable (giải nén và chạy trực tiếp). Khuyên dùng cho các hệ điều hành họ **RedHat** (như **Fedora**, CentOS, RHEL, Rocky Linux), họ **Arch** (như Arch Linux, Manjaro) hoặc những môi trường ưu tiên sử dụng Wayland. Nguyên nhân là do trình cài đặt `.sh` có thể gặp lỗi phân quyền hoặc không thể hiển thị giao diện đồ họa trên các hệ điều hành này.
-2. Nếu bạn dùng bản Installer, chạy file .sh và làm theo hướng dẫn trên màn hình.
-3. Nếu bạn dùng bản Package (.tar.gz) trên các môi trường như Fedora, đầu tiên hãy giải nén file (ví dụ: `tar -xf ZAP_2.15.0_Linux.tar.gz`) và truy cập vào thư mục vừa giải nén. Khởi chạy ZAP bình thường bằng lệnh:
+1. Tải file cài đặt phù hợp cho Linux từ trang chủ. ZAP cung cấp 2 định dạng:
+   - **Linux Installer (.sh):** Trình cài đặt có giao diện đồ họa (GUI). File này sẽ tự động giải nén, cài đặt ZAP vào hệ thống và tạo shortcut ứng dụng. Yêu cầu hệ thống phải hỗ trợ môi trường đồ họa để có thể hiển thị cửa sổ cài đặt.
+   - **Linux Package (.tar.gz):** Bản đóng gói dạng Portable (không cần cài đặt). Bao gồm các file thực thi đã được biên dịch sẵn. Phù hợp cho mọi môi trường Linux, đặc biệt là khi không thể khởi chạy giao diện cài đặt `.sh` hoặc người dùng không có quyền quản trị (root).
+2. Nếu bạn dùng bản Installer, cần cấp quyền thực thi trước (ví dụ: `chmod +x ZAP_2.15.0_Linux_Installer.sh`), sau đó chạy file `.sh` và làm theo các bước trên màn hình.
+3. Nếu bạn dùng bản Package (.tar.gz), đầu tiên hãy giải nén file (ví dụ: `tar -xf ZAP_2.15.0_Linux.tar.gz`) và truy cập vào thư mục vừa giải nén. Khởi chạy ZAP bằng lệnh:
    ```bash
    ./zap.sh
    ```
