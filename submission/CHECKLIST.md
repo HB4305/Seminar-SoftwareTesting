@@ -1,72 +1,71 @@
-# Submission Checklist
+# Danh Sách Kiểm Tra Hồ Sơ Nộp Bài
 
-## Stage S1 - Tool Survey and Proposal
+## Giai đoạn S1 - Khảo sát và đề xuất công cụ
 
-- [ ] Confirm topic code and team members
-- [ ] Compare at least 3 candidate tools
-- [ ] Choose 1 traditional tool and 1 AI-augmented direction
-- [ ] Complete `Tool_Survey_Proposal.md`
-- [ ] Add AI disclosure and cross-check notes
+- [ ] Xác nhận mã đề tài và danh sách thành viên
+- [ ] So sánh ít nhất 3 công cụ ứng viên
+- [ ] Chọn 1 hướng truyền thống và 1 hướng có hỗ trợ AI
+- [ ] Hoàn thành `Tool_Survey_Proposal.md`
+- [ ] Bổ sung công bố sử dụng AI và ghi chú đối chiếu nguồn
 
-## Stage S2 - Approval
+## Giai đoạn S2 - Phê duyệt
 
-- [ ] Submit the proposal for review
-- [ ] Record instructor or TA feedback
-- [ ] Update scope if required
+- [ ] Gửi đề xuất để giảng viên hoặc TA review
+- [ ] Ghi lại nhận xét của giảng viên hoặc TA
+- [ ] Điều chỉnh scope nếu được yêu cầu
 
-## Stage S3 - Deep Study and Practice
+## Giai đoạn S3 - Học sâu và thực hành
 
-- [ ] Assign team roles in `Team_Work_Assignment.md`
-- [ ] Each member can explain the full Semgrep -> Gemini -> ZAP workflow
-- [ ] Each member writes their own Markdown section
-- [ ] Each member prepares their own slides
-- [ ] Each member records AI usage/disclosure for their own work
-- [ ] Install selected tools
-- [ ] Run at least 1 end-to-end scenario on EShop
-- [ ] Capture screenshots and command history
-- [ ] Reproduce at least 2 findings with PoC
-- [ ] Compare AI suggestion versus actual fix
+- [ ] Phân vai trò thành viên trong `Team_Work_Assignment.md`
+- [ ] Mỗi thành viên giải thích được quy trình Semgrep -> Gemini -> ZAP
+- [ ] Mỗi thành viên viết phần Markdown của riêng mình
+- [ ] Mỗi thành viên chuẩn bị phần slide của riêng mình
+- [ ] Mỗi thành viên ghi lại lịch sử sử dụng AI cho công việc của mình
+- [ ] Cài đặt các công cụ đã chọn
+- [ ] Chạy ít nhất 1 kịch bản end-to-end trên EShop
+- [ ] Lưu screenshot và lịch sử lệnh
+- [ ] Tái lập ít nhất 2 finding bằng PoC hoặc testcase
+- [ ] So sánh gợi ý của AI với bản sửa thực tế
 
-## Stage S4 - User Guide and Screencast
+## Giai đoạn S4 - Hướng dẫn sử dụng và video demo
 
-- [ ] Complete `User_Guide.md`
-- [ ] Add at least 3 troubleshooting items
-- [ ] Add at least 3 failure modes
-- [ ] Record `Demo_Screencast.mp4`
-- [ ] Prepare slide deck draft
+- [ ] Hoàn thành `User_Guide.md`
+- [ ] Có ít nhất 3 mục troubleshooting
+- [ ] Có ít nhất 3 failure modes
+- [ ] Quay `Demo_Screencast.mp4`
+- [ ] Chuẩn bị bản nháp slide
 
-## Stage S5 - Pre-seminar Share
+## Giai đoạn S5 - Chia sẻ trước seminar
 
-- [ ] Complete `Activity_Worksheet.md`
-- [ ] Review all required files for naming consistency
-- [ ] Upload guide, screencast, worksheet, and slides
-- [ ] Share materials at least 3 working days early
+- [ ] Hoàn thành `Activity_Worksheet.md`
+- [ ] Rà soát tên file và cấu trúc thư mục
+- [ ] Upload guide, video, worksheet và slide
+- [ ] Chia sẻ tài liệu trước ít nhất 3 ngày làm việc
 
-## Stage S6 - Live Seminar
+## Giai đoạn S6 - Seminar trên lớp
 
-- [ ] Pitch explains why this tool was chosen
-- [ ] Live demo shows both traditional and AI features
-- [ ] Audience activity fits within 20-25 minutes
-- [ ] Backup demo recording is ready
-- [ ] Team roles are assigned before class
+- [ ] Phần mở đầu giải thích rõ vì sao chọn bộ công cụ này
+- [ ] Demo thể hiện cả phần truyền thống và phần AI
+- [ ] Hoạt động cho lớp hoàn thành trong 20-25 phút
+- [ ] Đã có bản ghi dự phòng cho demo
+- [ ] Đã phân vai trò thuyết trình trước giờ học
 
-## Stage S7 - Audience Feedback
+## Giai đoạn S7 - Feedback từ người nghe
 
-- [ ] Collect minute papers
-- [ ] Summarize feedback in `Audience_Feedback_Aggregated.md`
-- [ ] Note improvements for the final reflection
+- [ ] Thu phiếu phản hồi 1 phút từ các nhóm
+- [ ] Tổng hợp feedback vào `Audience_Feedback_Aggregated.md`
+- [ ] Ghi lại điểm cần cải thiện cho phần tổng kết cuối
 
-## Stage S8 - AI Audit and Reflection
+## Giai đoạn S8 - Audit AI và phần tự đánh giá
 
-- [ ] Complete `ai-audit/[AI-02]_AI_Audit_Report.md`
-- [ ] Prepare signed `ai-audit/[AI-03]_AI_Disclosure.pdf`
-- [ ] Complete `ai-audit/[AI-04]_Reflective_Statement.md`
-- [ ] Finalize `Final_Reflection.md`
+- [ ] Hoàn thành `ai-audit/[AI-02]_AI_Audit_Report.md`
+- [ ] Chuẩn bị file ký tên `ai-audit/[AI-03]_AI_Disclosure.pdf`
+- [ ] Hoàn thành `ai-audit/[AI-04]_Reflective_Statement.md`
+- [ ] Hoàn thành `Final_Reflection.md`
 
-## Final Packaging Check
+## Kiểm tra đóng gói cuối
 
-- [ ] File names are clean and final
-- [ ] English sections are polished where required
-- [ ] Sources are cited
-- [ ] AI claims are auditable
-- [ ] Submission folder is ready to zip or upload
+- [ ] Tên file sạch sẽ, đúng phiên bản cuối
+- [ ] Các nhận định đều có nguồn và bằng chứng
+- [ ] Mọi nội dung liên quan AI đều có thể audit
+- [ ] Thư mục `submission/` sẵn sàng để zip hoặc nộp
