@@ -13,6 +13,28 @@ REPLACER_RULE = "EShop JWT Authorization"
 ZAP_IMAGE = "ghcr.io/zaproxy/zaproxy:stable"
 
 
+def _format_command(command: object) -> str:
+    if isinstance(command, (list, tuple)):
+        return " ".join(str(part) for part in command)
+    return str(command)
+
+
+def _docker_start_error(command: object, exc: Exception) -> str:
+    parts = [
+        "Docker must be installed/running to start ZAP",
+        f"command failed: {_format_command(command)}",
+    ]
+    stderr = getattr(exc, "stderr", None)
+    stdout = getattr(exc, "stdout", None)
+    if stderr:
+        parts.append(f"stderr: {stderr}")
+    if stdout:
+        parts.append(f"stdout: {stdout}")
+    if not stderr and not stdout and str(exc):
+        parts.append(str(exc))
+    return "; ".join(parts)
+
+
 @dataclasses.dataclass(frozen=True)
 class Credential:
     email: str
@@ -58,8 +80,9 @@ class ZapDockerManager:
         self.started = False
 
     def start(self) -> None:
+        command = ["docker", "version"]
         try:
-            subprocess.run(["docker", "version"], check=True, capture_output=True, text=True)
+            subprocess.run(command, check=True, capture_output=True, text=True)
             command = [
                 "docker", "run", "--rm", "-d", "--name", self.container_name,
                 "--network", "host", ZAP_IMAGE, "zap.sh", "-daemon",
@@ -68,16 +91,19 @@ class ZapDockerManager:
             ]
             subprocess.run(command, check=True, capture_output=True, text=True)
         except (FileNotFoundError, subprocess.CalledProcessError) as exc:
-            raise RuntimeError("Docker must be installed and running to start ZAP") from exc
+            failed_command = getattr(exc, "cmd", None) or command
+            raise RuntimeError(_docker_start_error(failed_command, exc)) from exc
         self.started = True
 
     def stop(self) -> None:
         if not self.started:
             return
-        subprocess.run(
-            ["docker", "stop", self.container_name],
-            check=False,
-            capture_output=True,
-            text=True,
-        )
-        self.started = False
+        try:
+            subprocess.run(
+                ["docker", "stop", self.container_name],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+        finally:
+            self.started = False

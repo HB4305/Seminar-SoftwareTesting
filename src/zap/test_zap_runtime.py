@@ -1,5 +1,6 @@
 import os
 import re
+import subprocess
 import sys
 import unittest
 from pathlib import Path
@@ -110,3 +111,51 @@ class ZapRuntimeTests(unittest.TestCase):
             capture_output=True,
             text=True,
         )
+
+    @patch("zap_runtime.subprocess.run")
+    def test_docker_manager_reports_missing_docker(self, run):
+        run.side_effect = FileNotFoundError("docker")
+        manager = ZapDockerManager(container_name="test-zap")
+
+        with self.assertRaisesRegex(RuntimeError, "Docker must be installed/running") as raised:
+            manager.start()
+
+        self.assertIn("docker version", str(raised.exception))
+        self.assertFalse(manager.started)
+
+    @patch("zap_runtime.subprocess.run")
+    def test_docker_manager_reports_docker_version_failure(self, run):
+        run.side_effect = subprocess.CalledProcessError(
+            1,
+            ["docker", "version"],
+            stderr="Cannot connect to the Docker daemon",
+        )
+        manager = ZapDockerManager(container_name="test-zap")
+
+        with self.assertRaisesRegex(RuntimeError, "Docker must be installed/running") as raised:
+            manager.start()
+
+        message = str(raised.exception)
+        self.assertIn("docker version", message)
+        self.assertIn("Cannot connect to the Docker daemon", message)
+        self.assertFalse(manager.started)
+
+    @patch("zap_runtime.subprocess.run")
+    def test_docker_manager_reports_docker_run_failure(self, run):
+        run.side_effect = [
+            subprocess.CompletedProcess(["docker", "version"], 0),
+            subprocess.CalledProcessError(
+                125,
+                ["docker", "run"],
+                stderr="port is already allocated",
+            ),
+        ]
+        manager = ZapDockerManager(container_name="test-zap")
+
+        with self.assertRaisesRegex(RuntimeError, "Docker must be installed/running") as raised:
+            manager.start()
+
+        message = str(raised.exception)
+        self.assertIn("docker run", message)
+        self.assertIn("port is already allocated", message)
+        self.assertFalse(manager.started)
