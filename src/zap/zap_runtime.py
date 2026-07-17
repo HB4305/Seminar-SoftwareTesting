@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 ALLOWED_HOSTS = {"localhost", "127.0.0.1"}
 ALLOWED_PORTS = {3000, 5173, 5174}
 CONTEXT_NAME = "EShop"
-CONTEXT_REGEX = r"http://(?:localhost|127\.0\.0\.1):(?:3000|5173|5174)(?:/.*)?"
+CONTEXT_REGEX = r"^http://(?:localhost|127\.0\.0\.1):(?:3000|5173|5174)(?:[/?#].*)?$"
 REPLACER_RULE = "EShop JWT Authorization"
 
 
@@ -19,10 +19,14 @@ class Credential:
 
 def validate_target(target: str) -> str:
     parsed = urlparse(target)
+    try:
+        port = parsed.port
+    except ValueError:
+        port = None
     if (
         parsed.scheme != "http"
         or parsed.hostname not in ALLOWED_HOSTS
-        or parsed.port not in ALLOWED_PORTS
+        or port not in ALLOWED_PORTS
     ):
         raise ValueError("Target must be a local EShop URL on port 3000, 5173, or 5174")
     return target

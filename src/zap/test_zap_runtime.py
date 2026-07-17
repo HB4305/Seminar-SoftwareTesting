@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import unittest
 from pathlib import Path
@@ -6,7 +7,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from zap_runtime import Credential, get_credential, validate_target
+from zap_runtime import CONTEXT_REGEX, Credential, get_credential, validate_target
 
 
 class ZapRuntimeTests(unittest.TestCase):
@@ -24,6 +25,29 @@ class ZapRuntimeTests(unittest.TestCase):
             with self.subTest(url=url):
                 with self.assertRaisesRegex(ValueError, "local EShop"):
                     validate_target(url)
+
+    def test_validate_target_rejects_malformed_port_with_friendly_error(self):
+        with self.assertRaisesRegex(ValueError, "local EShop"):
+            validate_target("http://localhost:abc")
+
+    def test_context_regex_matches_eshop_target_scope(self):
+        for url in (
+            "http://localhost:3000",
+            "http://localhost:3000/",
+            "http://localhost:3000?x=1",
+            "http://127.0.0.1:5174/admin#section",
+        ):
+            with self.subTest(url=url):
+                self.assertIsNotNone(re.fullmatch(CONTEXT_REGEX, url))
+
+    def test_context_regex_rejects_external_or_unknown_targets(self):
+        for url in (
+            "http://localhost:3000.evil.test/path",
+            "https://localhost:3000",
+            "http://localhost:8080",
+        ):
+            with self.subTest(url=url):
+                self.assertIsNone(re.search(CONTEXT_REGEX, url))
 
     def test_get_credential_uses_seed_user(self):
         self.assertEqual(
