@@ -12,7 +12,7 @@ Pipeline hiện tại:
 4. Nếu có `--forced-user`, bật Forced User Mode để ZAP scan dưới user đã cấu hình.
 5. Chạy traditional spider, tùy chọn AJAX Spider cho SPA, chờ passive scan xử lý, rồi chạy active scan.
 6. Ghi report ra file, mặc định là `src/zap/output/zap_scan_report.html`.
-7. Chạy AI triage từ report HTML để tạo bản tóm tắt ưu tiên xử lý.
+7. Sau khi scan xong, có thể chạy AI triage riêng từ report HTML để tạo bản tóm tắt ưu tiên xử lý.
 
 ## Yêu cầu
 
@@ -53,6 +53,8 @@ Scan với ZAP daemon tự quản lý bên ngoài:
 rtk python src/zap/scan_zap.py --target http://localhost:5173 --auth-role user --forced-user --ajax-spider --external-zap --zap-url http://localhost:8090
 ```
 
+Nếu external ZAP daemon bật bảo vệ API key, truyền thêm `--api-key ...`.
+
 Tùy chỉnh report:
 
 ```bash
@@ -85,6 +87,8 @@ Chạy triage offline từ report HTML:
 ```bash
 rtk python src/zap/ai_triage_zap.py --input src/zap/output/zap_scan_report.html
 ```
+
+Nếu bỏ `--input`, `ai_triage_zap.py` sẽ dùng report HTML mới nhất trong `src/zap/output/*.html`.
 
 Output triage mặc định:
 
