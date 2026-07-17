@@ -7,7 +7,13 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from zap_runtime import CONTEXT_REGEX, Credential, get_credential, validate_target
+from zap_runtime import (
+    CONTEXT_REGEX,
+    Credential,
+    ZapDockerManager,
+    get_credential,
+    validate_target,
+)
 
 
 class ZapRuntimeTests(unittest.TestCase):
@@ -68,3 +74,39 @@ class ZapRuntimeTests(unittest.TestCase):
 
     def test_get_credential_returns_none_for_anonymous(self):
         self.assertIsNone(get_credential("none"))
+
+    @patch("zap_runtime.subprocess.run")
+    def test_docker_manager_starts_expected_container(self, run):
+        run.return_value.returncode = 0
+        manager = ZapDockerManager(port=8090, container_name="test-zap")
+
+        manager.start()
+
+        run.assert_any_call(["docker", "version"], check=True, capture_output=True, text=True)
+        run.assert_any_call(
+            [
+                "docker", "run", "--rm", "-d", "--name", "test-zap",
+                "--network", "host", "ghcr.io/zaproxy/zaproxy:stable",
+                "zap.sh", "-daemon", "-port", "8090", "-host", "0.0.0.0",
+                "-config", "api.disablekey=true",
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        self.assertTrue(manager.started)
+
+    @patch("zap_runtime.subprocess.run")
+    def test_docker_manager_stops_only_after_start(self, run):
+        manager = ZapDockerManager(container_name="test-zap")
+        manager.stop()
+        run.assert_not_called()
+
+        manager.started = True
+        manager.stop()
+        run.assert_called_once_with(
+            ["docker", "stop", "test-zap"],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
