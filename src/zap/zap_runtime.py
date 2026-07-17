@@ -90,8 +90,12 @@ def ensure_context(zap) -> str:
         zap.context.include_in_context(CONTEXT_NAME, CONTEXT_REGEX)
     else:
         context_id = str(zap.context.context(CONTEXT_NAME)["id"])
-        if CONTEXT_REGEX not in zap.context.include_regexs(CONTEXT_NAME):
-            zap.context.include_in_context(CONTEXT_NAME, CONTEXT_REGEX)
+        if list(zap.context.include_regexs(CONTEXT_NAME)) != [CONTEXT_REGEX]:
+            zap.context.set_context_regexs(
+                CONTEXT_NAME,
+                json.dumps([CONTEXT_REGEX]),
+                "[]",
+            )
     zap.context.set_context_in_scope(CONTEXT_NAME, "true")
     return context_id
 
@@ -121,7 +125,13 @@ def configure_authenticated_context(
         pass
     try:
         zap.replacer.add_rule(
-            REPLACER_RULE, "true", "REQ_HEADER", "false", "Authorization", f"Bearer {token}"
+            REPLACER_RULE,
+            "true",
+            "REQ_HEADER",
+            "false",
+            "Authorization",
+            f"Bearer {token}",
+            url=CONTEXT_REGEX,
         )
     except Exception as exc:
         raise RuntimeError("ZAP Replacer API is unavailable; cannot inject JWT") from exc

@@ -24,6 +24,7 @@ from zap_runtime import (
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 DEFAULT_REPORT_PATH = SCRIPT_DIR / "output" / "zap_scan_report.html"
+LOCAL_ZAP_HOSTS = {"localhost", "127.0.0.1"}
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -42,6 +43,21 @@ def build_parser() -> argparse.ArgumentParser:
         help=f"Report output path. Default: {DEFAULT_REPORT_PATH}",
     )
     return parser
+
+
+def validate_authenticated_zap_url(zap_url: str) -> str:
+    parsed = urlparse(zap_url)
+    try:
+        parsed.port
+    except ValueError as exc:
+        raise ValueError(
+            "Authenticated scans require --zap-url to be a local HTTP ZAP daemon URL"
+        ) from exc
+    if parsed.scheme != "http" or parsed.hostname not in LOCAL_ZAP_HOSTS:
+        raise ValueError(
+            "Authenticated scans require --zap-url to be a local HTTP ZAP daemon URL"
+        )
+    return zap_url
 
 
 def wait_for_zap(zap, timeout: int = 60) -> str:
@@ -172,6 +188,8 @@ def run(args) -> int:
     exit_code = 0
     try:
         target = validate_target(args.target)
+        if args.auth_role != "none":
+            validate_authenticated_zap_url(args.zap_url)
         if not args.external_zap:
             manager = ZapDockerManager(port=urlparse(args.zap_url).port or 8090)
         if manager:

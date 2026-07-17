@@ -55,6 +55,8 @@ rtk python src/zap/scan_zap.py --target http://localhost:5173 --auth-role user -
 
 Nếu external ZAP daemon bật bảo vệ API key, truyền thêm `--api-key ...`.
 
+Khi dùng `--external-zap` cùng `--auth-role`, chỉ trỏ `--zap-url` đến ZAP daemon local (`http://localhost...` hoặc `http://127.0.0.1...`). ZAP bên ngoài có thể lưu request đăng nhập và JWT trong history/session; hãy dùng session/container ZAP local dùng một lần, hoặc tự clear session/history sau khi scan. Script chỉ tự dọn secret cho ZAP container do script quản lý, không đảm bảo xóa sạch history/session của ZAP external.
+
 Tùy chỉnh report:
 
 ```bash
@@ -103,6 +105,7 @@ rtk python src/zap/ai_triage_zap.py --input src/zap/output/zap_scan_report.html 
 ## Giới hạn và an toàn
 
 - Script chỉ allowlist target local EShop: `http://localhost` hoặc `http://127.0.0.1` trên cổng `3000`, `5173`, `5174`.
+- Với authenticated scan, `--zap-url` cũng phải là ZAP daemon HTTP local để tránh gửi credentials qua proxy từ xa hoặc không tin cậy.
 - Chỉ scan hệ thống bạn được phép kiểm thử.
 - Active Scan có thể gửi payload tấn công, tạo dữ liệu rác, khóa tài khoản test hoặc thay đổi trạng thái ứng dụng.
 - Kết quả ZAP và AI triage là tín hiệu hỗ trợ; cần con người xác thực lại trước khi kết luận hoặc tạo issue bảo mật.

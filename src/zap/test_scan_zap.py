@@ -155,3 +155,33 @@ class ScanZapTests(unittest.TestCase):
 
         manager_cls.assert_not_called()
         zap_cls.assert_not_called()
+
+    @patch("scan_zap.ZAPv2")
+    @patch("scan_zap.ZapDockerManager")
+    def test_run_rejects_authenticated_scan_through_remote_zap_url(
+        self, manager_cls, zap_cls
+    ):
+        args = build_parser().parse_args(
+            ["--auth-role", "user", "--zap-url", "http://evil.example:8090"]
+        )
+
+        with patch("sys.stderr", new_callable=io.StringIO):
+            self.assertEqual(run(args), 1)
+
+        manager_cls.assert_not_called()
+        zap_cls.assert_not_called()
+
+    @patch("scan_zap.ZAPv2")
+    @patch("scan_zap.ZapDockerManager")
+    def test_run_rejects_authenticated_scan_with_malformed_zap_url_port(
+        self, manager_cls, zap_cls
+    ):
+        args = build_parser().parse_args(
+            ["--auth-role", "user", "--external-zap", "--zap-url", "http://localhost:abc"]
+        )
+
+        with patch("sys.stderr", new_callable=io.StringIO):
+            self.assertEqual(run(args), 1)
+
+        manager_cls.assert_not_called()
+        zap_cls.assert_not_called()

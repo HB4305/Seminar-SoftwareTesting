@@ -18,6 +18,7 @@ from zap_runtime import (
     ZapDockerManager,
     cleanup_authenticated_context,
     configure_authenticated_context,
+    ensure_context,
     get_credential,
     login_for_token,
     validate_target,
@@ -116,10 +117,44 @@ class ZapRuntimeTests(unittest.TestCase):
         zap.context.set_context_in_scope.assert_called_once_with("EShop", "true")
         zap.users.set_user_enabled.assert_called_once_with("7", "3", "true")
         zap.replacer.add_rule.assert_called_once_with(
-            REPLACER_RULE, "true", "REQ_HEADER", "false", "Authorization", "Bearer jwt-value"
+            REPLACER_RULE,
+            "true",
+            "REQ_HEADER",
+            "false",
+            "Authorization",
+            "Bearer jwt-value",
+            url=CONTEXT_REGEX,
         )
         zap.forcedUser.set_forced_user.assert_called_once_with("7", "3")
         zap.forcedUser.set_forced_user_mode_enabled.assert_called_once_with("true")
+
+    def test_ensure_context_resets_existing_context_to_local_allowlist(self):
+        zap = MagicMock()
+        zap.context.context_list = ["EShop"]
+        zap.context.context.return_value = {"id": "7"}
+        zap.context.include_regexs.return_value = [".*"]
+
+        context_id = ensure_context(zap)
+
+        self.assertEqual(context_id, "7")
+        zap.context.set_context_regexs.assert_called_once_with(
+            "EShop", json.dumps([CONTEXT_REGEX]), "[]"
+        )
+        zap.context.include_in_context.assert_not_called()
+        zap.context.set_context_in_scope.assert_called_once_with("EShop", "true")
+
+    def test_ensure_context_keeps_existing_exact_local_allowlist(self):
+        zap = MagicMock()
+        zap.context.context_list = ["EShop"]
+        zap.context.context.return_value = {"id": "7"}
+        zap.context.include_regexs.return_value = [CONTEXT_REGEX]
+
+        context_id = ensure_context(zap)
+
+        self.assertEqual(context_id, "7")
+        zap.context.set_context_regexs.assert_not_called()
+        zap.context.include_in_context.assert_not_called()
+        zap.context.set_context_in_scope.assert_called_once_with("EShop", "true")
 
     def test_configure_authenticated_context_requires_replacer_api(self):
         zap = MagicMock()
@@ -157,7 +192,13 @@ class ZapRuntimeTests(unittest.TestCase):
 
         self.assertIsInstance(raised.exception.__cause__, Exception)
         zap.replacer.add_rule.assert_called_once_with(
-            REPLACER_RULE, "true", "REQ_HEADER", "false", "Authorization", "Bearer jwt-value"
+            REPLACER_RULE,
+            "true",
+            "REQ_HEADER",
+            "false",
+            "Authorization",
+            "Bearer jwt-value",
+            url=CONTEXT_REGEX,
         )
         self.assertEqual(
             zap.replacer.method_calls,
@@ -170,6 +211,7 @@ class ZapRuntimeTests(unittest.TestCase):
                     "false",
                     "Authorization",
                     "Bearer jwt-value",
+                    url=CONTEXT_REGEX,
                 ),
                 call.remove_rule(REPLACER_RULE),
             ],
