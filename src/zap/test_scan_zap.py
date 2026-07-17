@@ -19,6 +19,11 @@ class ScanZapTests(unittest.TestCase):
             Path(__file__).resolve().parent / "output" / "zap_scan_report.html",
         )
 
+    def test_parser_help_shows_default_report_path(self):
+        help_text = build_parser().format_help()
+
+        self.assertIn("src/zap/output/zap_scan_report.html", help_text)
+
     @patch("scan_zap.ZAPv2")
     @patch("scan_zap.ZapDockerManager")
     @patch("scan_zap.wait_for_zap")

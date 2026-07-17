@@ -36,7 +36,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--ajax-spider", action="store_true")
     parser.add_argument("--external-zap", action="store_true")
     parser.add_argument("--report-format", default="html", choices=["html", "json", "xml", "md"])
-    parser.add_argument("--report-file", default=str(DEFAULT_REPORT_PATH))
+    parser.add_argument(
+        "--report-file",
+        default=str(DEFAULT_REPORT_PATH),
+        help=f"Report output path. Default: {DEFAULT_REPORT_PATH}",
+    )
     return parser
 
 
