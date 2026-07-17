@@ -46,6 +46,12 @@ class Credential:
     password: str
 
 
+@dataclasses.dataclass(frozen=True)
+class AuthState:
+    context_id: str
+    user_id: str
+
+
 def validate_target(target: str) -> str:
     parsed = urlparse(target)
     try:
@@ -76,6 +82,61 @@ def get_credential(role: str) -> Credential | None:
         os.getenv(f"{prefix}_EMAIL", email),
         os.getenv(f"{prefix}_PASSWORD", password),
     )
+
+
+def ensure_context(zap) -> str:
+    if CONTEXT_NAME not in zap.context.context_list:
+        context_id = str(zap.context.new_context(CONTEXT_NAME))
+        zap.context.include_in_context(CONTEXT_NAME, CONTEXT_REGEX)
+    else:
+        context_id = str(zap.context.context(CONTEXT_NAME)["id"])
+        if CONTEXT_REGEX not in zap.context.include_regexs(CONTEXT_NAME):
+            zap.context.include_in_context(CONTEXT_NAME, CONTEXT_REGEX)
+    zap.context.set_context_in_scope(CONTEXT_NAME, "true")
+    return context_id
+
+
+def _user_id(zap, context_id: str, email: str) -> str:
+    for user in zap.users.users_list(context_id):
+        if user.get("name") == email:
+            user_id = str(user["id"])
+            break
+    else:
+        user_id = str(zap.users.new_user(context_id, email))
+    zap.users.set_user_enabled(context_id, user_id, "true")
+    return user_id
+
+
+def configure_authenticated_context(
+    zap,
+    credential: Credential,
+    token: str,
+    forced_user: bool,
+) -> AuthState:
+    context_id = ensure_context(zap)
+    user_id = _user_id(zap, context_id, credential.email)
+    try:
+        zap.replacer.remove_rule(REPLACER_RULE)
+    except Exception:
+        pass
+    try:
+        zap.replacer.add_rule(
+            REPLACER_RULE, "true", "REQ_HEADER", "false", "Authorization", f"Bearer {token}"
+        )
+    except Exception as exc:
+        raise RuntimeError("ZAP Replacer API is unavailable; cannot inject JWT") from exc
+    if forced_user:
+        zap.forcedUser.set_forced_user(context_id, user_id)
+        zap.forcedUser.set_forced_user_mode_enabled("true")
+    return AuthState(context_id, user_id)
+
+
+def cleanup_authenticated_context(zap, forced_user: bool) -> None:
+    try:
+        zap.replacer.remove_rule(REPLACER_RULE)
+    finally:
+        if forced_user:
+            zap.forcedUser.set_forced_user_mode_enabled("false")
 
 
 def _proxy_opener(zap_url: str):

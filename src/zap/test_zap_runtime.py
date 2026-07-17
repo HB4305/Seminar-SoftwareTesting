@@ -7,14 +7,17 @@ import subprocess
 import sys
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from zap_runtime import (
     CONTEXT_REGEX,
     Credential,
+    REPLACER_RULE,
     ZapDockerManager,
+    cleanup_authenticated_context,
+    configure_authenticated_context,
     get_credential,
     login_for_token,
     validate_target,
@@ -95,6 +98,52 @@ class ZapRuntimeTests(unittest.TestCase):
 
     def test_get_credential_returns_none_for_anonymous(self):
         self.assertIsNone(get_credential("none"))
+
+    def test_configure_authenticated_context_creates_scoped_user_and_replacer(self):
+        zap = MagicMock()
+        zap.context.context_list = []
+        zap.context.new_context.return_value = "7"
+        zap.users.users_list.return_value = []
+        zap.users.new_user.return_value = "3"
+
+        state = configure_authenticated_context(
+            zap, Credential("test@eshop.com", "secret"), "jwt-value", forced_user=True
+        )
+
+        self.assertEqual(state.context_id, "7")
+        self.assertEqual(state.user_id, "3")
+        zap.context.include_in_context.assert_called_once_with("EShop", CONTEXT_REGEX)
+        zap.context.set_context_in_scope.assert_called_once_with("EShop", "true")
+        zap.users.set_user_enabled.assert_called_once_with("7", "3", "true")
+        zap.replacer.add_rule.assert_called_once_with(
+            REPLACER_RULE, "true", "REQ_HEADER", "false", "Authorization", "Bearer jwt-value"
+        )
+        zap.forcedUser.set_forced_user.assert_called_once_with("7", "3")
+        zap.forcedUser.set_forced_user_mode_enabled.assert_called_once_with("true")
+
+    def test_configure_authenticated_context_requires_replacer_api(self):
+        zap = MagicMock()
+        zap.context.context_list = []
+        zap.context.new_context.return_value = "7"
+        zap.users.users_list.return_value = []
+        zap.users.new_user.return_value = "3"
+        zap.replacer.add_rule.side_effect = Exception("missing replacer")
+
+        with self.assertRaisesRegex(RuntimeError, "Replacer"):
+            configure_authenticated_context(
+                zap,
+                Credential("test@eshop.com", "secret"),
+                "jwt-value",
+                forced_user=False,
+            )
+
+        zap.forcedUser.set_forced_user_mode_enabled.assert_not_called()
+
+    def test_cleanup_removes_secret_and_disables_forced_user(self):
+        zap = MagicMock()
+        cleanup_authenticated_context(zap, forced_user=True)
+        zap.replacer.remove_rule.assert_called_once_with(REPLACER_RULE)
+        zap.forcedUser.set_forced_user_mode_enabled.assert_called_once_with("false")
 
     @patch("zap_runtime.urllib.request.build_opener")
     def test_login_for_token_extracts_jwt_without_logging_it(self, build_opener):
