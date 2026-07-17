@@ -6,5 +6,10 @@ __pycache__/
 # Test caches
 .pytest_cache/
 
+# Local environment files
+.env
+**/.env
+
 AGENTS.md
 .worktrees/
+eshop-sut

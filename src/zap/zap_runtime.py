@@ -16,12 +16,28 @@ LOGIN_URL = "http://localhost:3000/api/login"
 REPLACER_RULE = "EShop JWT Authorization"
 VERIFY_URL = "http://localhost:3000/api/users/me"
 ZAP_IMAGE = "ghcr.io/zaproxy/zaproxy:stable"
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 def _format_command(command: object) -> str:
     if isinstance(command, (list, tuple)):
         return " ".join(str(part) for part in command)
     return str(command)
+
+
+def load_dotenv(env_path: str | os.PathLike[str] | None = None) -> None:
+    candidate = os.fspath(env_path) if env_path is not None else os.path.join(SCRIPT_DIR, ".env")
+    if not os.path.exists(candidate):
+        return
+    with open(candidate, encoding="utf-8") as env_file:
+        for raw_line in env_file:
+            line = raw_line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            key = key.strip()
+            value = value.strip().strip('"').strip("'")
+            os.environ.setdefault(key, value)
 
 
 def _docker_start_error(command: object, exc: Exception) -> str:
@@ -199,9 +215,15 @@ def verify_authenticated_session(zap_url: str, timeout: int = 15) -> None:
 
 
 class ZapDockerManager:
-    def __init__(self, port: int = 8090, container_name: str | None = None) -> None:
+    def __init__(
+        self,
+        port: int = 8090,
+        container_name: str | None = None,
+        image: str | None = None,
+    ) -> None:
         self.port = port
         self.container_name = container_name or f"eshop-zap-{os.getpid()}"
+        self.image = image or os.getenv("ZAP_IMAGE", ZAP_IMAGE)
         self.started = False
 
     def start(self) -> None:
@@ -210,7 +232,7 @@ class ZapDockerManager:
             subprocess.run(command, check=True, capture_output=True, text=True)
             command = [
                 "docker", "run", "--rm", "-d", "--name", self.container_name,
-                "--network", "host", ZAP_IMAGE, "zap.sh", "-daemon",
+                "--network", "host", self.image, "zap.sh", "-daemon",
                 "-port", str(self.port), "-host", "0.0.0.0",
                 "-config", "api.disablekey=true",
             ]

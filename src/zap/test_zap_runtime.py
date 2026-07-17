@@ -5,6 +5,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, call, patch
@@ -20,6 +21,7 @@ from zap_runtime import (
     configure_authenticated_context,
     ensure_context,
     get_credential,
+    load_dotenv,
     login_for_token,
     validate_target,
     verify_authenticated_session,
@@ -99,6 +101,33 @@ class ZapRuntimeTests(unittest.TestCase):
 
     def test_get_credential_returns_none_for_anonymous(self):
         self.assertIsNone(get_credential("none"))
+
+    def test_load_dotenv_reads_env_file_without_overriding_existing_values(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            env_path = Path(temp_dir) / ".env"
+            env_path.write_text(
+                "\n".join(
+                    [
+                        "# local ZAP config",
+                        "ZAP_TARGET=http://localhost:5173",
+                        "ZAP_AUTH_ROLE=user",
+                        "ZAP_USER_PASSWORD='from-file'",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            os.environ.pop("ZAP_TARGET", None)
+            os.environ["ZAP_USER_PASSWORD"] = "from-env"
+            try:
+                load_dotenv(env_path)
+
+                self.assertEqual(os.environ["ZAP_TARGET"], "http://localhost:5173")
+                self.assertEqual(os.environ["ZAP_AUTH_ROLE"], "user")
+                self.assertEqual(os.environ["ZAP_USER_PASSWORD"], "from-env")
+            finally:
+                os.environ.pop("ZAP_TARGET", None)
+                os.environ.pop("ZAP_AUTH_ROLE", None)
+                os.environ.pop("ZAP_USER_PASSWORD", None)
 
     def test_configure_authenticated_context_creates_scoped_user_and_replacer(self):
         zap = MagicMock()
@@ -329,6 +358,26 @@ class ZapRuntimeTests(unittest.TestCase):
             text=True,
         )
         self.assertTrue(manager.started)
+
+    @patch.dict(os.environ, {"ZAP_IMAGE": "zaproxy/zap-stable:test"}, clear=False)
+    @patch("zap_runtime.subprocess.run")
+    def test_docker_manager_can_use_image_from_environment(self, run):
+        run.return_value.returncode = 0
+        manager = ZapDockerManager(port=8090, container_name="test-zap")
+
+        manager.start()
+
+        run.assert_any_call(
+            [
+                "docker", "run", "--rm", "-d", "--name", "test-zap",
+                "--network", "host", "zaproxy/zap-stable:test",
+                "zap.sh", "-daemon", "-port", "8090", "-host", "0.0.0.0",
+                "-config", "api.disablekey=true",
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
 
     @patch("zap_runtime.subprocess.run")
     def test_docker_manager_stops_only_after_start(self, run):

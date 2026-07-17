@@ -1,4 +1,5 @@
 import io
+import os
 import unittest
 import sys
 from pathlib import Path
@@ -11,7 +12,7 @@ from scan_zap import build_parser, run
 
 class ScanZapTests(unittest.TestCase):
     def test_parser_defaults_to_managed_anonymous_scan(self):
-        args = build_parser().parse_args([])
+        args = build_parser(load_env=False).parse_args([])
         self.assertEqual(args.auth_role, "none")
         self.assertFalse(args.external_zap)
         self.assertEqual(
@@ -19,8 +20,85 @@ class ScanZapTests(unittest.TestCase):
             Path(__file__).resolve().parent / "output" / "zap_scan_report.html",
         )
 
+    @patch.dict(
+        os.environ,
+        {
+            "ZAP_TARGET": "http://localhost:5173",
+            "ZAP_URL": "http://localhost:9090",
+            "ZAP_API_KEY": "dev-key",
+            "ZAP_AUTH_ROLE": "user",
+            "ZAP_FORCED_USER": "true",
+            "ZAP_AJAX_SPIDER": "1",
+            "ZAP_EXTERNAL_ZAP": "yes",
+            "ZAP_REPORT_FORMAT": "json",
+            "ZAP_REPORT_FILE": "src/zap/output/from-env.json",
+        },
+        clear=False,
+    )
+    def test_parser_defaults_can_come_from_environment(self):
+        args = build_parser(load_env=False).parse_args([])
+
+        self.assertEqual(args.target, "http://localhost:5173")
+        self.assertEqual(args.zap_url, "http://localhost:9090")
+        self.assertEqual(args.api_key, "dev-key")
+        self.assertEqual(args.auth_role, "user")
+        self.assertTrue(args.forced_user)
+        self.assertTrue(args.ajax_spider)
+        self.assertTrue(args.external_zap)
+        self.assertEqual(args.report_format, "json")
+        self.assertEqual(args.report_file, "src/zap/output/from-env.json")
+
+    @patch.dict(
+        os.environ,
+        {
+            "ZAP_TARGET": "http://localhost:5173",
+            "ZAP_AUTH_ROLE": "user",
+            "ZAP_FORCED_USER": "true",
+            "ZAP_REPORT_FORMAT": "json",
+        },
+        clear=False,
+    )
+    def test_cli_flags_override_environment_defaults(self):
+        args = build_parser(load_env=False).parse_args(
+            [
+                "--target",
+                "http://localhost:3000",
+                "--auth-role",
+                "admin",
+                "--report-format",
+                "html",
+            ]
+        )
+
+        self.assertEqual(args.target, "http://localhost:3000")
+        self.assertEqual(args.auth_role, "admin")
+        self.assertTrue(args.forced_user)
+        self.assertEqual(args.report_format, "html")
+
+    def test_env_example_documents_zap_configuration(self):
+        example = (Path(__file__).resolve().parent / ".env.example").read_text(
+            encoding="utf-8"
+        )
+
+        for key in (
+            "ZAP_TARGET",
+            "ZAP_URL",
+            "ZAP_AUTH_ROLE",
+            "ZAP_FORCED_USER",
+            "ZAP_AJAX_SPIDER",
+            "ZAP_EXTERNAL_ZAP",
+            "ZAP_USER_EMAIL",
+            "ZAP_USER_PASSWORD",
+            "ZAP_ADMIN_EMAIL",
+            "ZAP_ADMIN_PASSWORD",
+            "OPENROUTER_API_KEY",
+            "OPENROUTER_MODEL",
+        ):
+            with self.subTest(key=key):
+                self.assertIn(f"{key}=", example)
+
     def test_parser_help_shows_default_report_path(self):
-        help_text = build_parser().format_help()
+        help_text = build_parser(load_env=False).format_help()
 
         self.assertIn("src/zap/output/zap_scan_report.html", help_text)
 
@@ -30,7 +108,7 @@ class ScanZapTests(unittest.TestCase):
     def test_run_stops_managed_container_on_connection_failure(self, wait_for_zap, manager_cls, zap_cls):
         manager = manager_cls.return_value
         wait_for_zap.side_effect = RuntimeError("not ready")
-        args = build_parser().parse_args([])
+        args = build_parser(load_env=False).parse_args([])
 
         self.assertEqual(run(args), 1)
         manager.start.assert_called_once()
@@ -64,7 +142,7 @@ class ScanZapTests(unittest.TestCase):
         credential = MagicMock(email="test@eshop.com", password="secret")
         get_credential.return_value = credential
         configure_authenticated_context.return_value.context_id = "7"
-        args = build_parser().parse_args(["--auth-role", "user", "--forced-user"])
+        args = build_parser(load_env=False).parse_args(["--auth-role", "user", "--forced-user"])
 
         self.assertEqual(run(args), 0)
 
@@ -108,7 +186,7 @@ class ScanZapTests(unittest.TestCase):
         get_credential.return_value = credential
         configure_authenticated_context.return_value.context_id = "7"
         cleanup_authenticated_context.side_effect = RuntimeError("cleanup failed")
-        args = build_parser().parse_args(["--auth-role", "user", "--forced-user"])
+        args = build_parser(load_env=False).parse_args(["--auth-role", "user", "--forced-user"])
 
         with patch("sys.stderr", new_callable=io.StringIO) as stderr:
             self.assertEqual(run(args), 1)
@@ -135,7 +213,7 @@ class ScanZapTests(unittest.TestCase):
         write_report,
     ):
         manager_cls.return_value.stop.side_effect = RuntimeError("stop failed")
-        args = build_parser().parse_args([])
+        args = build_parser(load_env=False).parse_args([])
 
         with patch("sys.stderr", new_callable=io.StringIO) as stderr:
             self.assertEqual(run(args), 1)
@@ -148,7 +226,7 @@ class ScanZapTests(unittest.TestCase):
     def test_run_returns_one_for_malformed_managed_zap_url_without_starting_docker(
         self, manager_cls, zap_cls
     ):
-        args = build_parser().parse_args(["--zap-url", "http://localhost:abc"])
+        args = build_parser(load_env=False).parse_args(["--zap-url", "http://localhost:abc"])
 
         with patch("sys.stderr", new_callable=io.StringIO):
             self.assertEqual(run(args), 1)
@@ -161,7 +239,7 @@ class ScanZapTests(unittest.TestCase):
     def test_run_rejects_authenticated_scan_through_remote_zap_url(
         self, manager_cls, zap_cls
     ):
-        args = build_parser().parse_args(
+        args = build_parser(load_env=False).parse_args(
             ["--auth-role", "user", "--zap-url", "http://evil.example:8090"]
         )
 
@@ -176,7 +254,7 @@ class ScanZapTests(unittest.TestCase):
     def test_run_rejects_authenticated_scan_with_malformed_zap_url_port(
         self, manager_cls, zap_cls
     ):
-        args = build_parser().parse_args(
+        args = build_parser(load_env=False).parse_args(
             ["--auth-role", "user", "--external-zap", "--zap-url", "http://localhost:abc"]
         )
 

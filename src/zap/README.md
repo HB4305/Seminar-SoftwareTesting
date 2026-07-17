@@ -27,6 +27,16 @@ pip install python-owasp-zap-v2.4
 - EShop backend chạy trên cổng `3000`
 - Frontend chạy trên cổng phù hợp với mục tiêu scan, ví dụ `5173` cho user hoặc `5174` cho admin
 
+## Cấu hình `.env`
+
+Copy file mẫu rồi sửa giá trị local/CI nếu cần:
+
+```bash
+cp src/zap/.env.example src/zap/.env
+```
+
+Script tự đọc `src/zap/.env`. Thứ tự ưu tiên là CLI flag > biến môi trường/`.env` > default trong code. Không commit `.env` thật.
+
 ## Chạy scan
 
 Anonymous scan backend mặc định:
@@ -65,17 +75,37 @@ rtk python src/zap/scan_zap.py --target http://localhost:3000 --report-format md
 
 ## Tài khoản và biến môi trường
 
-Script có tài khoản test mặc định cho `user` và `admin`, nhưng nên override bằng biến môi trường khi chạy trên máy/CI riêng. Không in hoặc commit giá trị thật của các biến này.
+Các biến trong `src/zap/.env.example` có thể điều khiển scan mà không cần sửa code:
 
+- `ZAP_TARGET`
+- `ZAP_URL`
+- `ZAP_API_KEY`
+- `ZAP_IMAGE`
+- `ZAP_AUTH_ROLE` (`none`, `user`, `admin`)
+- `ZAP_FORCED_USER`
+- `ZAP_AJAX_SPIDER`
+- `ZAP_EXTERNAL_ZAP`
+- `ZAP_REPORT_FORMAT`
+- `ZAP_REPORT_FILE`
 - `ZAP_USER_EMAIL`
 - `ZAP_USER_PASSWORD`
 - `ZAP_ADMIN_EMAIL`
 - `ZAP_ADMIN_PASSWORD`
+- `OPENROUTER_API_KEY`
+- `OPENROUTER_MODEL`
+
+Script có tài khoản test mặc định cho `user` và `admin`, nhưng nên override bằng `.env`, biến môi trường shell, hoặc CI secret. Không in hoặc commit giá trị thật của các biến secret.
 
 Ví dụ chạy sau khi đã export biến trong shell/CI secret:
 
 ```bash
 rtk python src/zap/scan_zap.py --target http://localhost:5173 --auth-role user --forced-user --ajax-spider
+```
+
+Ví dụ chạy hoàn toàn bằng `.env`:
+
+```bash
+rtk python src/zap/scan_zap.py
 ```
 
 ## Output và AI triage

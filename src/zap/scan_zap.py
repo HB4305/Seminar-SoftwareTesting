@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import subprocess
 import sys
 import time
@@ -17,6 +18,7 @@ from zap_runtime import (
     configure_authenticated_context,
     ensure_context,
     get_credential,
+    load_dotenv,
     login_for_token,
     validate_target,
     verify_authenticated_session,
@@ -27,19 +29,48 @@ DEFAULT_REPORT_PATH = SCRIPT_DIR / "output" / "zap_scan_report.html"
 LOCAL_ZAP_HOSTS = {"localhost", "127.0.0.1"}
 
 
-def build_parser() -> argparse.ArgumentParser:
+def _env_bool(name: str, default: bool = False) -> bool:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "y", "on"}
+
+
+def build_parser(load_env: bool = True) -> argparse.ArgumentParser:
+    if load_env:
+        load_dotenv()
     parser = argparse.ArgumentParser(description="Run an automated OWASP ZAP scan for local EShop")
-    parser.add_argument("--target", default="http://localhost:3000")
-    parser.add_argument("--zap-url", default="http://localhost:8090")
-    parser.add_argument("--api-key", default="")
-    parser.add_argument("--auth-role", choices=["none", "user", "admin"], default="none")
-    parser.add_argument("--forced-user", action="store_true")
-    parser.add_argument("--ajax-spider", action="store_true")
-    parser.add_argument("--external-zap", action="store_true")
-    parser.add_argument("--report-format", default="html", choices=["html", "json", "xml", "md"])
+    parser.add_argument("--target", default=os.getenv("ZAP_TARGET", "http://localhost:3000"))
+    parser.add_argument("--zap-url", default=os.getenv("ZAP_URL", "http://localhost:8090"))
+    parser.add_argument("--api-key", default=os.getenv("ZAP_API_KEY", ""))
+    parser.add_argument(
+        "--auth-role",
+        choices=["none", "user", "admin"],
+        default=os.getenv("ZAP_AUTH_ROLE", "none"),
+    )
+    parser.add_argument(
+        "--forced-user",
+        action=argparse.BooleanOptionalAction,
+        default=_env_bool("ZAP_FORCED_USER"),
+    )
+    parser.add_argument(
+        "--ajax-spider",
+        action=argparse.BooleanOptionalAction,
+        default=_env_bool("ZAP_AJAX_SPIDER"),
+    )
+    parser.add_argument(
+        "--external-zap",
+        action=argparse.BooleanOptionalAction,
+        default=_env_bool("ZAP_EXTERNAL_ZAP"),
+    )
+    parser.add_argument(
+        "--report-format",
+        default=os.getenv("ZAP_REPORT_FORMAT", "html"),
+        choices=["html", "json", "xml", "md"],
+    )
     parser.add_argument(
         "--report-file",
-        default=str(DEFAULT_REPORT_PATH),
+        default=os.getenv("ZAP_REPORT_FILE", str(DEFAULT_REPORT_PATH)),
         help=f"Report output path. Default: {DEFAULT_REPORT_PATH}",
     )
     return parser
