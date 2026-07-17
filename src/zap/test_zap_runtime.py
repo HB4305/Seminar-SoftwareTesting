@@ -1,3 +1,5 @@
+import contextlib
+import io
 import json
 import os
 import re
@@ -97,10 +99,18 @@ class ZapRuntimeTests(unittest.TestCase):
     @patch("zap_runtime.urllib.request.build_opener")
     def test_login_for_token_extracts_jwt_without_logging_it(self, build_opener):
         build_opener.return_value.open.return_value = FakeResponse({"token": "jwt-value"})
+        stdout = io.StringIO()
+        stderr = io.StringIO()
 
-        token = login_for_token("http://localhost:8090", Credential("a@b.test", "secret"))
+        with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+            token = login_for_token(
+                "http://localhost:8090",
+                Credential("a@b.test", "secret"),
+            )
 
         self.assertEqual(token, "jwt-value")
+        self.assertNotIn("jwt-value", stdout.getvalue())
+        self.assertNotIn("jwt-value", stderr.getvalue())
 
     @patch("zap_runtime.urllib.request.build_opener")
     def test_login_for_token_rejects_missing_token(self, build_opener):
