@@ -1,3 +1,4 @@
+import io
 import unittest
 import sys
 from pathlib import Path
@@ -72,3 +73,80 @@ class ScanZapTests(unittest.TestCase):
         )
         cleanup_authenticated_context.assert_called_once_with(zap_cls.return_value, True)
         manager_cls.return_value.stop.assert_called_once()
+
+    @patch("scan_zap.write_report")
+    @patch("scan_zap.execute_scan")
+    @patch("scan_zap.verify_authenticated_session")
+    @patch("scan_zap.cleanup_authenticated_context")
+    @patch("scan_zap.configure_authenticated_context")
+    @patch("scan_zap.login_for_token", return_value="jwt-value")
+    @patch("scan_zap.get_credential")
+    @patch("scan_zap.ensure_context", return_value="7")
+    @patch("scan_zap.wait_for_zap", return_value="2.16.1")
+    @patch("scan_zap.ZapDockerManager")
+    @patch("scan_zap.ZAPv2")
+    def test_run_returns_one_when_auth_cleanup_fails_after_success(
+        self,
+        zap_cls,
+        manager_cls,
+        wait_for_zap,
+        ensure_context,
+        get_credential,
+        login_for_token,
+        configure_authenticated_context,
+        cleanup_authenticated_context,
+        verify_authenticated_session,
+        execute_scan,
+        write_report,
+    ):
+        credential = MagicMock(email="test@eshop.com", password="secret")
+        get_credential.return_value = credential
+        configure_authenticated_context.return_value.context_id = "7"
+        cleanup_authenticated_context.side_effect = RuntimeError("cleanup failed")
+        args = build_parser().parse_args(["--auth-role", "user", "--forced-user"])
+
+        with patch("sys.stderr", new_callable=io.StringIO) as stderr:
+            self.assertEqual(run(args), 1)
+
+        cleanup_authenticated_context.assert_called_once_with(zap_cls.return_value, True)
+        manager_cls.return_value.stop.assert_called_once()
+        self.assertIn("cleanup failed", stderr.getvalue())
+
+    @patch("scan_zap.write_report")
+    @patch("scan_zap.execute_scan")
+    @patch("scan_zap.get_credential", return_value=None)
+    @patch("scan_zap.ensure_context", return_value="7")
+    @patch("scan_zap.wait_for_zap", return_value="2.16.1")
+    @patch("scan_zap.ZapDockerManager")
+    @patch("scan_zap.ZAPv2")
+    def test_run_returns_one_when_manager_stop_fails_after_success(
+        self,
+        zap_cls,
+        manager_cls,
+        wait_for_zap,
+        ensure_context,
+        get_credential,
+        execute_scan,
+        write_report,
+    ):
+        manager_cls.return_value.stop.side_effect = RuntimeError("stop failed")
+        args = build_parser().parse_args([])
+
+        with patch("sys.stderr", new_callable=io.StringIO) as stderr:
+            self.assertEqual(run(args), 1)
+
+        manager_cls.return_value.stop.assert_called_once()
+        self.assertIn("stop failed", stderr.getvalue())
+
+    @patch("scan_zap.ZAPv2")
+    @patch("scan_zap.ZapDockerManager")
+    def test_run_returns_one_for_malformed_managed_zap_url_without_starting_docker(
+        self, manager_cls, zap_cls
+    ):
+        args = build_parser().parse_args(["--zap-url", "http://localhost:abc"])
+
+        with patch("sys.stderr", new_callable=io.StringIO):
+            self.assertEqual(run(args), 1)
+
+        manager_cls.assert_not_called()
+        zap_cls.assert_not_called()

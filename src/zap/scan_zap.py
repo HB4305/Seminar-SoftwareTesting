@@ -162,11 +162,14 @@ def print_alert_summary(zap, target: str) -> None:
 
 
 def run(args) -> int:
-    manager = None if args.external_zap else ZapDockerManager(port=urlparse(args.zap_url).port or 8090)
+    manager = None
     zap = None
     auth_configured = False
+    exit_code = 0
     try:
         target = validate_target(args.target)
+        if not args.external_zap:
+            manager = ZapDockerManager(port=urlparse(args.zap_url).port or 8090)
         if manager:
             manager.start()
         zap = ZAPv2(apikey=args.api_key, proxies={"http": args.zap_url, "https": args.zap_url})
@@ -183,17 +186,23 @@ def run(args) -> int:
         execute_scan(zap, target, context_id, args.ajax_spider)
         print_alert_summary(zap, target)
         write_report(zap, args.report_format, Path(args.report_file))
-        return 0
     except (OSError, RuntimeError, ValueError, subprocess.SubprocessError) as exc:
         print(f"[!] {exc}", file=sys.stderr)
-        return 1
+        exit_code = 1
     finally:
-        try:
-            if zap is not None and auth_configured:
+        if zap is not None and auth_configured:
+            try:
                 cleanup_authenticated_context(zap, args.forced_user)
-        finally:
-            if manager is not None:
+            except Exception as exc:
+                print(f"[!] Failed to clean up authenticated ZAP context: {exc}", file=sys.stderr)
+                exit_code = 1
+        if manager is not None:
+            try:
                 manager.stop()
+            except Exception as exc:
+                print(f"[!] Failed to stop ZAP Docker manager: {exc}", file=sys.stderr)
+                exit_code = 1
+    return exit_code
 
 
 def main() -> None:
