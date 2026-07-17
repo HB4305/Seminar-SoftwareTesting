@@ -1,15 +1,20 @@
 from __future__ import annotations
 
 import dataclasses
+import json
 import os
 import subprocess
+import urllib.error
+import urllib.request
 from urllib.parse import urlparse
 
 ALLOWED_HOSTS = {"localhost", "127.0.0.1"}
 ALLOWED_PORTS = {3000, 5173, 5174}
 CONTEXT_NAME = "EShop"
 CONTEXT_REGEX = r"^http://(?:localhost|127\.0\.0\.1):(?:3000|5173|5174)(?:[/?#].*)?$"
+LOGIN_URL = "http://localhost:3000/api/login"
 REPLACER_RULE = "EShop JWT Authorization"
+VERIFY_URL = "http://localhost:3000/api/users/me"
 ZAP_IMAGE = "ghcr.io/zaproxy/zaproxy:stable"
 
 
@@ -71,6 +76,42 @@ def get_credential(role: str) -> Credential | None:
         os.getenv(f"{prefix}_EMAIL", email),
         os.getenv(f"{prefix}_PASSWORD", password),
     )
+
+
+def _proxy_opener(zap_url: str):
+    return urllib.request.build_opener(
+        urllib.request.ProxyHandler({"http": zap_url, "https": zap_url})
+    )
+
+
+def login_for_token(zap_url: str, credential: Credential, timeout: int = 15) -> str:
+    request = urllib.request.Request(
+        LOGIN_URL,
+        data=json.dumps(dataclasses.asdict(credential)).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with _proxy_opener(zap_url).open(request, timeout=timeout) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+    except (OSError, urllib.error.URLError, json.JSONDecodeError) as exc:
+        raise RuntimeError(f"EShop login failed: {exc}") from exc
+    token = payload.get("token")
+    if not isinstance(token, str) or not token:
+        raise RuntimeError("EShop login response did not contain a token")
+    return token
+
+
+def verify_authenticated_session(zap_url: str, timeout: int = 15) -> None:
+    request = urllib.request.Request(VERIFY_URL, method="GET")
+    try:
+        with _proxy_opener(zap_url).open(request, timeout=timeout) as response:
+            if response.status != 200:
+                raise RuntimeError(
+                    f"Authentication verification returned HTTP {response.status}"
+                )
+    except (OSError, urllib.error.URLError) as exc:
+        raise RuntimeError(f"Authentication verification failed: {exc}") from exc
 
 
 class ZapDockerManager:

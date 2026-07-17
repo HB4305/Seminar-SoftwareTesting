@@ -1,3 +1,4 @@
+import json
 import os
 import re
 import subprocess
@@ -13,8 +14,25 @@ from zap_runtime import (
     Credential,
     ZapDockerManager,
     get_credential,
+    login_for_token,
     validate_target,
+    verify_authenticated_session,
 )
+
+
+class FakeResponse:
+    def __init__(self, payload, status=200):
+        self.payload = json.dumps(payload).encode("utf-8")
+        self.status = status
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        return False
+
+    def read(self):
+        return self.payload
 
 
 class ZapRuntimeTests(unittest.TestCase):
@@ -75,6 +93,30 @@ class ZapRuntimeTests(unittest.TestCase):
 
     def test_get_credential_returns_none_for_anonymous(self):
         self.assertIsNone(get_credential("none"))
+
+    @patch("zap_runtime.urllib.request.build_opener")
+    def test_login_for_token_extracts_jwt_without_logging_it(self, build_opener):
+        build_opener.return_value.open.return_value = FakeResponse({"token": "jwt-value"})
+
+        token = login_for_token("http://localhost:8090", Credential("a@b.test", "secret"))
+
+        self.assertEqual(token, "jwt-value")
+
+    @patch("zap_runtime.urllib.request.build_opener")
+    def test_login_for_token_rejects_missing_token(self, build_opener):
+        build_opener.return_value.open.return_value = FakeResponse({"message": "ok"})
+
+        with self.assertRaisesRegex(RuntimeError, "token"):
+            login_for_token("http://localhost:8090", Credential("a@b.test", "secret"))
+
+    @patch("zap_runtime.urllib.request.build_opener")
+    def test_verify_authenticated_session_requires_success(self, build_opener):
+        build_opener.return_value.open.return_value = FakeResponse(
+            {"email": "a@b.test"},
+            status=200,
+        )
+
+        verify_authenticated_session("http://localhost:8090")
 
     @patch("zap_runtime.subprocess.run")
     def test_docker_manager_starts_expected_container(self, run):
