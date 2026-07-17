@@ -214,11 +214,28 @@ class ZapDockerManager:
         if not self.started:
             return
         try:
-            subprocess.run(
+            result = subprocess.run(
                 ["docker", "stop", self.container_name],
                 check=False,
                 capture_output=True,
                 text=True,
             )
+            returncode = getattr(result, "returncode", 0)
+            if (
+                isinstance(returncode, int)
+                and not isinstance(returncode, bool)
+                and returncode != 0
+            ):
+                parts = [
+                    f"docker stop failed for ZAP container {self.container_name}",
+                    f"exit code: {returncode}",
+                ]
+                stderr = getattr(result, "stderr", None)
+                stdout = getattr(result, "stdout", None)
+                if stderr:
+                    parts.append(f"stderr: {stderr}")
+                if stdout:
+                    parts.append(f"stdout: {stdout}")
+                raise RuntimeError("; ".join(parts))
         finally:
             self.started = False

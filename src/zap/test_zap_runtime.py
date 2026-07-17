@@ -304,6 +304,22 @@ class ZapRuntimeTests(unittest.TestCase):
         )
 
     @patch("zap_runtime.subprocess.run")
+    def test_docker_manager_raises_when_docker_stop_fails(self, run):
+        run.return_value = subprocess.CompletedProcess(
+            ["docker", "stop", "test-zap"],
+            returncode=1,
+            stdout="",
+            stderr="stop failed",
+        )
+        manager = ZapDockerManager(container_name="test-zap")
+        manager.started = True
+
+        with self.assertRaisesRegex(RuntimeError, "docker stop failed|stop failed"):
+            manager.stop()
+
+        self.assertFalse(manager.started)
+
+    @patch("zap_runtime.subprocess.run")
     def test_docker_manager_reports_missing_docker(self, run):
         run.side_effect = FileNotFoundError("docker")
         manager = ZapDockerManager(container_name="test-zap")
