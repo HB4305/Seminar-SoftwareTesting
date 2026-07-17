@@ -133,14 +133,22 @@ class AiTriageZapTests(unittest.TestCase):
             finally:
                 os.environ.pop("GEMINI_API_KEY", None)
 
-    def test_default_model_uses_supported_gemini_model(self):
-        self.assertEqual(DEFAULT_MODEL, "gemini-2.5-flash")
+    def test_default_model_uses_openrouter_model_identifier(self):
+        self.assertEqual(DEFAULT_MODEL, "google/gemini-2.5-flash")
 
-    def test_resolve_output_path_uses_report_stem(self):
-        report_path = Path("docs/zap/output/backend_report.html")
+    def test_resolve_output_path_uses_standard_output_name(self):
+        report_path = Path("src/zap/output/backend_report.html")
         output_path = resolve_output_path(report_path, None)
 
-        self.assertEqual(output_path, Path("docs/zap/output/backend_report_ai_triage.md"))
+        expected = (Path.cwd() / "src/zap/output/zap_ai_triage_report.md").resolve()
+        self.assertEqual(output_path, expected)
+
+    def test_resolve_output_path_resolves_explicit_relative_path(self):
+        report_path = Path("src/zap/output/backend_report.html")
+        output_path = resolve_output_path(report_path, Path("tmp/custom.md"))
+
+        expected = (Path.cwd() / "tmp/custom.md").resolve()
+        self.assertEqual(output_path, expected)
 
     def test_update_submission_file_replaces_managed_block(self):
         path = Path(__file__).resolve().parent / "_tmp_submission.md"

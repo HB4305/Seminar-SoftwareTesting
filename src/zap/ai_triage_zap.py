@@ -4,10 +4,10 @@
 AI-assisted triage for OWASP ZAP reports.
 
 Default usage:
-    python docs/zap/ai_triage_zap.py
+    python src/zap/ai_triage_zap.py
 
 With OpenRouter:
-    OPENROUTER_API_KEY=... python docs/zap/ai_triage_zap.py --use-ai
+    OPENROUTER_API_KEY=... python src/zap/ai_triage_zap.py --use-ai
 """
 
 from __future__ import annotations
@@ -27,7 +27,7 @@ from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 DEFAULT_INPUT_DIR = SCRIPT_DIR / "output"
-DEFAULT_OUTPUT = SCRIPT_DIR / "ai_triage_output.md"
+DEFAULT_OUTPUT = DEFAULT_INPUT_DIR / "zap_ai_triage_report.md"
 DEFAULT_SUBMISSION = Path("submission/Team_Work_Assignment.md")
 DEFAULT_MODEL = "google/gemini-2.5-flash"
 OPENROUTER_ENDPOINT = "https://openrouter.ai/api/v1/chat/completions"
@@ -526,7 +526,7 @@ def build_submission_block(alerts: list[Alert], source_name: str) -> str:
             "### AI-Triage cho ZAP Track",
             "",
             f"- Input: `{source_name}`",
-            "- Tool: OWASP ZAP report + OpenRouter/offline AI triage script `docs/zap/ai_triage_zap.py`",
+            "- Tool: OWASP ZAP report + OpenRouter/offline AI triage script `src/zap/ai_triage_zap.py`",
             f"- Tổng alert đã parse: {len(alerts)}",
             counts_lines or "- Không parse được alert.",
             "",
@@ -537,8 +537,8 @@ def build_submission_block(alerts: list[Alert], source_name: str) -> str:
             poc,
             "",
             "Testcase/evidence cần nộp:",
-            "- ZAP report gốc trong `docs/zap/output` hoặc `zap_report.html`.",
-            "- AI triage output trong `docs/zap/ai_triage_output.md`.",
+            "- ZAP report gốc trong `src/zap/output` hoặc `zap_report.html`.",
+            "- AI triage output trong `src/zap/output/zap_ai_triage_report.md`.",
             "- Screenshot/log khi reproduce finding ưu tiên cao nhất.",
             "- Human audit note: AI chỉ hỗ trợ draft; nhóm kiểm chứng bằng request/response thật và source/runtime evidence.",
             "",
@@ -582,18 +582,16 @@ def load_alerts(input_path: Path | None) -> tuple[Path, list[Alert]]:
 
 
 def resolve_output_path(report_path: Path, output_path: Path | None) -> Path:
-    if output_path is not None:
-        return output_path if output_path.is_absolute() else (Path.cwd() / output_path).resolve()
-
-    report_name = report_path.stem
-    return (report_path.parent / f"{report_name}_ai_triage.md").resolve()
+    del report_path
+    selected_path = output_path or DEFAULT_OUTPUT
+    return selected_path if selected_path.is_absolute() else (Path.cwd() / selected_path).resolve()
 
 
 def main() -> int:
     load_dotenv()
 
     parser = argparse.ArgumentParser(description="Generate AI triage markdown from OWASP ZAP HTML reports.")
-    parser.add_argument("--input", type=Path, help="Path to a ZAP HTML report. Defaults to latest docs/zap/output/*.html.")
+    parser.add_argument("--input", type=Path, help="Path to a ZAP HTML report. Defaults to latest src/zap/output/*.html.")
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT, help=f"Markdown output path. Default: {DEFAULT_OUTPUT}")
     parser.add_argument("--use-ai", action="store_true", help="Call OpenRouter. Without this flag, uses offline triage template.")
     parser.add_argument("--model", default=os.getenv("OPENROUTER_MODEL", DEFAULT_MODEL), help=f"OpenRouter model. Default: {DEFAULT_MODEL}")
