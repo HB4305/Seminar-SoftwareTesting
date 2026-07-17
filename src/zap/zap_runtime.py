@@ -94,8 +94,14 @@ def login_for_token(zap_url: str, credential: Credential, timeout: int = 15) -> 
     try:
         with _proxy_opener(zap_url).open(request, timeout=timeout) as response:
             payload = json.loads(response.read().decode("utf-8"))
-    except (OSError, urllib.error.URLError, json.JSONDecodeError) as exc:
+    except (
+        OSError,
+        urllib.error.URLError,
+        json.JSONDecodeError,
+    ) as exc:
         raise RuntimeError(f"EShop login failed: {exc}") from exc
+    if not isinstance(payload, dict):
+        raise RuntimeError("EShop login response did not contain a token")
     token = payload.get("token")
     if not isinstance(token, str) or not token:
         raise RuntimeError("EShop login response did not contain a token")

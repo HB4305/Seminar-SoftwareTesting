@@ -120,6 +120,39 @@ class ZapRuntimeTests(unittest.TestCase):
             login_for_token("http://localhost:8090", Credential("a@b.test", "secret"))
 
     @patch("zap_runtime.urllib.request.build_opener")
+    def test_login_for_token_rejects_non_object_json_response(self, build_opener):
+        build_opener.return_value.open.return_value = FakeResponse(["jwt-value"])
+
+        with self.assertRaisesRegex(RuntimeError, "token"):
+            login_for_token("http://localhost:8090", Credential("a@b.test", "secret"))
+
+    def test_login_for_token_sends_login_request_through_zap_proxy(self):
+        zap_url = "http://localhost:8090"
+        with (
+            patch("zap_runtime.urllib.request.ProxyHandler") as proxy_handler,
+            patch("zap_runtime.urllib.request.build_opener") as build_opener,
+        ):
+            build_opener.return_value.open.return_value = FakeResponse({"token": "jwt-value"})
+
+            login_for_token(
+                zap_url,
+                Credential("a@b.test", "secret"),
+                timeout=9,
+            )
+
+        proxy_handler.assert_called_once_with({"http": zap_url, "https": zap_url})
+        build_opener.assert_called_once_with(proxy_handler.return_value)
+        open_call = build_opener.return_value.open.call_args
+        request = open_call.args[0]
+        self.assertEqual(request.full_url, "http://localhost:3000/api/login")
+        self.assertEqual(request.get_method(), "POST")
+        self.assertEqual(
+            json.loads(request.data.decode("utf-8")),
+            {"email": "a@b.test", "password": "secret"},
+        )
+        self.assertEqual(open_call.kwargs["timeout"], 9)
+
+    @patch("zap_runtime.urllib.request.build_opener")
     def test_verify_authenticated_session_requires_success(self, build_opener):
         build_opener.return_value.open.return_value = FakeResponse(
             {"email": "a@b.test"},
@@ -127,6 +160,27 @@ class ZapRuntimeTests(unittest.TestCase):
         )
 
         verify_authenticated_session("http://localhost:8090")
+
+    def test_verify_authenticated_session_sends_me_request_through_zap_proxy(self):
+        zap_url = "http://localhost:8090"
+        with (
+            patch("zap_runtime.urllib.request.ProxyHandler") as proxy_handler,
+            patch("zap_runtime.urllib.request.build_opener") as build_opener,
+        ):
+            build_opener.return_value.open.return_value = FakeResponse(
+                {"email": "a@b.test"},
+                status=200,
+            )
+
+            verify_authenticated_session(zap_url, timeout=11)
+
+        proxy_handler.assert_called_once_with({"http": zap_url, "https": zap_url})
+        build_opener.assert_called_once_with(proxy_handler.return_value)
+        open_call = build_opener.return_value.open.call_args
+        request = open_call.args[0]
+        self.assertEqual(request.full_url, "http://localhost:3000/api/users/me")
+        self.assertEqual(request.get_method(), "GET")
+        self.assertEqual(open_call.kwargs["timeout"], 11)
 
     @patch("zap_runtime.subprocess.run")
     def test_docker_manager_starts_expected_container(self, run):
