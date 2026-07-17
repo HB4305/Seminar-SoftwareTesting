@@ -126,8 +126,15 @@ def configure_authenticated_context(
     except Exception as exc:
         raise RuntimeError("ZAP Replacer API is unavailable; cannot inject JWT") from exc
     if forced_user:
-        zap.forcedUser.set_forced_user(context_id, user_id)
-        zap.forcedUser.set_forced_user_mode_enabled("true")
+        try:
+            zap.forcedUser.set_forced_user(context_id, user_id)
+            zap.forcedUser.set_forced_user_mode_enabled("true")
+        except Exception as exc:
+            try:
+                zap.replacer.remove_rule(REPLACER_RULE)
+            except Exception:
+                pass
+            raise RuntimeError("ZAP forced user setup failed") from exc
     return AuthState(context_id, user_id)
 
 

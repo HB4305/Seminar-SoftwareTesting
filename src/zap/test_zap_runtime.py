@@ -7,7 +7,7 @@ import subprocess
 import sys
 import unittest
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
@@ -138,6 +138,42 @@ class ZapRuntimeTests(unittest.TestCase):
             )
 
         zap.forcedUser.set_forced_user_mode_enabled.assert_not_called()
+
+    def test_configure_authenticated_context_removes_replacer_when_forced_user_fails(self):
+        zap = MagicMock()
+        zap.context.context_list = []
+        zap.context.new_context.return_value = "7"
+        zap.users.users_list.return_value = []
+        zap.users.new_user.return_value = "3"
+        zap.forcedUser.set_forced_user.side_effect = Exception("forced user unavailable")
+
+        with self.assertRaisesRegex(RuntimeError, "forced user setup failed") as raised:
+            configure_authenticated_context(
+                zap,
+                Credential("test@eshop.com", "secret"),
+                "jwt-value",
+                forced_user=True,
+            )
+
+        self.assertIsInstance(raised.exception.__cause__, Exception)
+        zap.replacer.add_rule.assert_called_once_with(
+            REPLACER_RULE, "true", "REQ_HEADER", "false", "Authorization", "Bearer jwt-value"
+        )
+        self.assertEqual(
+            zap.replacer.method_calls,
+            [
+                call.remove_rule(REPLACER_RULE),
+                call.add_rule(
+                    REPLACER_RULE,
+                    "true",
+                    "REQ_HEADER",
+                    "false",
+                    "Authorization",
+                    "Bearer jwt-value",
+                ),
+                call.remove_rule(REPLACER_RULE),
+            ],
+        )
 
     def test_cleanup_removes_secret_and_disables_forced_user(self):
         zap = MagicMock()
