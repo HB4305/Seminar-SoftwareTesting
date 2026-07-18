@@ -82,8 +82,16 @@ def get_ai_settings(env: Optional[Mapping[str, str]] = None, env_file=None):
         base_url = None
     elif provider in {"openai-compatible", "openai"}:
         provider = "openai-compatible"
-        api_key = merged_env.get("AI_API_KEY") or merged_env.get("OPENAI_API_KEY")
-        base_url = (merged_env.get("OPENAI_BASE_URL") or "").rstrip("/")
+        api_key = (
+            merged_env.get("AI_API_KEY")
+            or merged_env.get("OPENROUTER_API_KEY")
+            or merged_env.get("OPENAI_API_KEY")
+        )
+        base_url = (
+            merged_env.get("OPENROUTER_BASE_URL")
+            or merged_env.get("OPENAI_BASE_URL")
+            or ""
+        ).rstrip("/")
     else:
         raise ValueError("AI_PROVIDER chỉ hỗ trợ 'gemini' hoặc 'openai-compatible'.")
 
@@ -92,9 +100,9 @@ def get_ai_settings(env: Optional[Mapping[str, str]] = None, env_file=None):
     if not api_key:
         if provider == "gemini":
             raise ValueError("Chưa thiết lập AI_API_KEY hoặc GEMINI_API_KEY.")
-        raise ValueError("Chưa thiết lập AI_API_KEY hoặc OPENAI_API_KEY.")
+        raise ValueError("Chưa thiết lập AI_API_KEY, OPENROUTER_API_KEY hoặc OPENAI_API_KEY.")
     if provider == "openai-compatible" and not base_url:
-        raise ValueError("Chưa thiết lập OPENAI_BASE_URL cho provider openai-compatible.")
+        raise ValueError("Chưa thiết lập OPENROUTER_BASE_URL hoặc OPENAI_BASE_URL cho provider openai-compatible.")
 
     return AiSettings(provider=provider, model=model, api_key=api_key, base_url=base_url)
 

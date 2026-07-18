@@ -82,7 +82,7 @@ tests/
 
 ## 4. Xuất kết quả định dạng JSON phục vụ AI Triage
 
-Để script AI Triage (`semgrep_ai_triage.py`) có thể đọc và gửi dữ liệu sang provider AI đã cấu hình, kết quả quét của Semgrep cần phải được định dạng theo chuẩn JSON.
+Để script AI Triage (`src/semgrep/semgrep_ai_triage.py`) có thể đọc và gửi dữ liệu sang provider AI đã cấu hình, kết quả quét của Semgrep cần phải được định dạng theo chuẩn JSON.
 
 ### Lệnh xuất JSON:
 ```bash
@@ -99,26 +99,20 @@ Sau khi đã tạo thành công tệp `semgrep_results.json`, bạn có thể ch
 
 1. **Thiết lập provider/model/API key:**
    ```bash
-   cp docs/semgrep/.env.example docs/semgrep/.env
+   cp src/semgrep/.env.example src/semgrep/.env
    ```
-   Sau đó mở `docs/semgrep/.env` và điền cấu hình thật. Mặc định:
-   ```env
-   AI_PROVIDER=gemini
-   AI_MODEL=gemini-2.5-flash
-   GEMINI_API_KEY=api_key_cua_ban
-   ```
-   Nếu dùng endpoint OpenAI-compatible:
+   Sau đó mở `src/semgrep/.env` và điền cấu hình thật. Mặc định nhóm dùng OpenRouter với model Gemini:
    ```env
    AI_PROVIDER=openai-compatible
-   AI_MODEL=deepseek/deepseek-chat
-   OPENAI_API_KEY=api_key_cua_ban
-   OPENAI_BASE_URL=https://openrouter.ai/api/v1
+   AI_MODEL=google/gemini-2.5-flash-lite
+   OPENROUTER_API_KEY=api_key_openrouter_cua_ban
+   OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
    ```
 2. **Chạy script triage:**
    ```bash
-   python docs/semgrep/semgrep_ai_triage.py semgrep_results.json
+   python src/semgrep/semgrep_ai_triage.py semgrep_results.json --output-dir src/semgrep/output
    ```
-3. **Đầu ra:** Script sẽ tự động sinh ra tệp báo cáo chi tiết định dạng Markdown chứa:
+3. **Đầu ra:** Script sẽ tự động sinh báo cáo trong `src/semgrep/output/`, gồm:
    - **Giải thích lỗ hổng**
    - **Mã khai thác thử nghiệm (PoC)**
    - **Mức độ ảnh hưởng (Impact)**

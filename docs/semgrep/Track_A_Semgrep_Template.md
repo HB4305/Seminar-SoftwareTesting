@@ -175,7 +175,7 @@ _Mẫu report này có thể dùng lại cho các case ở Pha 2._
   const token = jwt.sign({ id: user.id, role: user.role }, SECRET_KEY); // Gọi ở dòng 51
   ```
 - **PoC (Proof of Concept):**
-  Một kẻ xấu có mã nguồn sẽ tạo file `exploit.js` với nội dung sau:
+  Một kẻ xấu có mã nguồn sẽ tạo file `src/semgrep/exploit.js` với nội dung sau:
   ```javascript
   const jwt = require('jsonwebtoken');
   const forgedToken = jwt.sign({ id: 1, role: 'admin' }, "super_secret_key_that_should_not_be_here");

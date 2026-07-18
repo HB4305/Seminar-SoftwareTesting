@@ -77,6 +77,24 @@ class SemgrepAiTriageWorkflowTest(unittest.TestCase):
         self.assertIn("SECRET_KEY", records[0].code)
         self.assertEqual(records[1].severity, "ERROR")
 
+    def test_get_ai_settings_supports_openrouter_variables(self):
+        triage = load_triage_module()
+
+        settings = triage.get_ai_settings(
+            {
+                "AI_PROVIDER": "openai-compatible",
+                "AI_MODEL": "google/gemini-2.5-flash-lite",
+                "OPENROUTER_API_KEY": "openrouter-key",
+                "OPENROUTER_BASE_URL": "https://openrouter.ai/api/v1",
+            },
+            env_file="",
+        )
+
+        self.assertEqual(settings.provider, "openai-compatible")
+        self.assertEqual(settings.model, "google/gemini-2.5-flash-lite")
+        self.assertEqual(settings.api_key, "openrouter-key")
+        self.assertEqual(settings.base_url, "https://openrouter.ai/api/v1")
+
     def test_write_triage_outputs_creates_summary_and_per_finding_files(self):
         triage = load_triage_module()
         record = triage.FindingRecord(
