@@ -120,6 +120,14 @@ class ScanZapTests(unittest.TestCase):
 
         self.assertEqual(args.report_file, "src/zap/output/frontend_user.html")
 
+    def test_parser_rejects_non_pipeline_report_formats(self):
+        for report_format in ("xml", "md"):
+            with self.subTest(report_format=report_format):
+                with self.assertRaises(SystemExit):
+                    build_parser(load_env=False).parse_args(
+                        ["--report-format", report_format]
+                    )
+
     def test_write_report_uses_official_reports_addon_for_html(self):
         zap = MagicMock()
         with tempfile.TemporaryDirectory() as temp_dir:
