@@ -21,6 +21,7 @@ Tài liệu này cung cấp kiến thức nền tảng về Kiểm thử bảo m
    - Theo dõi đường đi của dữ liệu từ khi được định nghĩa hoặc nhận vào cho đến khi được sử dụng.
 4. **Phân tích vết bẩn (Taint Analysis):**
    - Theo dõi luồng dữ liệu từ một **Nguồn (Source)** - nơi nhận dữ liệu từ người dùng (ví dụ: `req.query`) - cho tới một **Điểm đích (Sink)** - nơi dữ liệu được thực thi (ví dụ: câu lệnh truy vấn SQL `db.run()` hoặc render HTML). Nếu dữ liệu không đi qua một hàm **Lọc/Làm sạch (Sanitizer)**, công cụ sẽ cảnh báo lỗ hổng (ví dụ: SQL Injection, XSS).
+   - Cần hiểu đúng "hàm lọc": không phải mọi thao tác kiểm tra chuỗi đều là sanitizer an toàn. **Validation** chỉ kiểm tra dữ liệu có đúng định dạng mong muốn hay không; **escaping/sanitization** biến đổi ký tự nguy hiểm theo từng ngữ cảnh; còn với SQL Injection, cách phòng vệ chuẩn là **parameterized query/prepared statement**, tức tách dữ liệu người dùng khỏi cấu trúc câu SQL. Vì vậy, nếu code vẫn nối trực tiếp `req.query.search` vào template literal SQL, luồng dữ liệu đó vẫn được xem là nguy hiểm dù trước đó có kiểm tra đơn giản.
 
 ```mermaid
 flowchart LR
@@ -70,11 +71,11 @@ flowchart LR
 
 # 3. Phân tích Cảnh báo (Alert Triage) kết hợp AI
 
-Do đặc tính của các công cụ SAST truyền thống thường sinh ra lượng cảnh báo giả (False Positive) rất lớn, quy trình làm việc hiện đại (AI-Assisted) tích hợp các mô hình ngôn ngữ lớn (LLM - như Google Gemini) để hỗ trợ bộ phận bảo mật tự động hóa việc lọc và thẩm định lỗi.
+Do đặc tính của các công cụ SAST truyền thống thường sinh ra lượng cảnh báo giả (False Positive) rất lớn, quy trình làm việc hiện đại (AI-Assisted) tích hợp các mô hình ngôn ngữ lớn (LLM - ví dụ Google Gemini hoặc provider OpenAI-compatible) để hỗ trợ bộ phận bảo mật tự động hóa việc lọc và thẩm định lỗi.
 
 ```
 +--------------+     JSON      +-------------------+     Prompt      +-------------------+
-| Semgrep Scan | ------------> | AI Triage Script  | --------------> | Google Gemini API |
+| Semgrep Scan | ------------> | AI Triage Script  | --------------> | Configured AI API |
 |   (SAST)     |               | (Đọc lỗi & Code)  |                 |  (Model LLM)      |
 +--------------+               +-------------------+                 +-------------------+
                                                                                |
@@ -109,6 +110,7 @@ Qua thực nghiệm quét dự án EShop, nhóm đã phát hiện 3 trường h�
   db.all(query, (err, rows) => { ... });
   ```
 - **Nguyên nhân:** Bộ quy tắc mặc định của cộng đồng không có luật theo dõi luồng (Taint analysis) chuyên biệt cho thư viện `sqlite3` khi kết hợp với cú pháp template literal của Javascript. Semgrep không nhận diện được biến `searchQuery` bị nhiễm bẩn (tainted) từ request truyền vào điểm đích `db.all()`.
+- **Giải thích câu hỏi "OWASP Top 10 có Injection nhưng sao không detect?":** OWASP A05:2025 Injection là một **nhóm rủi ro bảo mật**, còn `p/owasp-top-ten` là một **tập rule cụ thể** do Semgrep Registry cung cấp. Việc ruleset có nhãn OWASP không đảm bảo bao phủ mọi thư viện, framework và biến thể code của Injection. Trường hợp này vẫn là SQL Injection thật, nhưng là **false negative** của ruleset mặc định vì rule chưa mô hình hóa đúng cặp source/sink `req.query` -> `sqlite3 db.all()` qua template literal.
 - **Giải pháp khắc phục:** Phải bổ sung các ruleset nâng cao hoặc tự viết custom ruleset sử dụng chế độ `mode: taint` để theo dõi dữ liệu đầu vào.
 
 ### FM-2: False Negative — Plaintext Password không được cảnh báo

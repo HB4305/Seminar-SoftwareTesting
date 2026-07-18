@@ -42,9 +42,11 @@ Windows không phải là môi trường gốc được hỗ trợ hoàn hảo n
 Nếu bạn thường xuyên phát triển phần mềm trên Windows, sử dụng WSL là cách tốt nhất để Semgrep hoạt động mượt mà và tối ưu hiệu suất.
 
 1. Mở Ubuntu/Debian trên WSL.
-2. Chạy lệnh cài đặt chính thức của Semgrep dành cho Linux:
+2. Cài đặt bằng pip giống hướng dẫn Linux:
    ```bash
-   curl -fsSL https://semgrep.dev/get | sh
+   sudo apt update
+   sudo apt install python3-pip -y
+   python3 -m pip install --user semgrep
    ```
 3. Sau khi cài đặt xong, bạn có thể gọi trực tiếp lệnh `semgrep` trong môi trường WSL.
 
@@ -93,27 +95,48 @@ Trên macOS, bạn có thể dễ dàng cài đặt thông qua trình quản lý
 
 ## 3. Cài đặt trên Linux
 
-Đối với các hệ điều hành Linux (Ubuntu, Debian, CentOS, Alpine...), bạn có thể cài bằng script tự động hoặc thông qua Pip.
+Đối với Linux, nhóm khuyến nghị cài Semgrep bằng `pip` thay vì script `curl -fsSL https://semgrep.dev/get | sh`, vì script tải tự động có thể trả về HTML hoặc lỗi redirect trên một số môi trường như Fedora.
 
-### Cách 1: Sử dụng Script tải tự động (Khuyến nghị)
-Đây là cách nhanh nhất và tự động tải phiên bản binary tối ưu cho kiến trúc CPU của bạn.
-
-1. Mở Linux Terminal.
-2. Chạy lệnh:
-   ```bash
-   curl -fsSL https://semgrep.dev/get | sh
-   ```
-
-### Cách 2: Sử dụng Pip
-1. Cập nhật danh sách gói và cài đặt pip (nếu chưa có):
+### Ubuntu / Debian
+1. Cài đặt Python pip nếu máy chưa có:
    ```bash
    sudo apt update
    sudo apt install python3-pip -y
    ```
 2. Cài đặt Semgrep:
    ```bash
-   pip3 install semgrep
+   python3 -m pip install --user semgrep
    ```
+
+### Fedora
+1. Cài đặt Python pip nếu máy chưa có:
+   ```bash
+   sudo dnf install python3-pip -y
+   ```
+2. Cài đặt Semgrep:
+   ```bash
+   python3 -m pip install --user semgrep
+   ```
+
+### Arch Linux
+1. Cài đặt Python pip nếu máy chưa có:
+   ```bash
+   sudo pacman -S python-pip
+   ```
+2. Cài đặt Semgrep:
+   ```bash
+   python3 -m pip install --user semgrep
+   ```
+
+### Cấu hình PATH sau khi cài bằng pip
+Nếu terminal báo `semgrep: command not found`, thêm thư mục cài package của user vào `PATH`:
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+```
+Sau đó chạy lại:
+```bash
+semgrep --version
+```
 
 ---
 
@@ -144,3 +167,10 @@ Nếu màn hình hiển thị số phiên bản (Ví dụ: `1.168.0` hoặc mớ
 ### Lỗi 2: Lỗi mã hóa `UnicodeEncodeError: 'charmap' codec can't encode...` trên Windows
 * **Nguyên nhân:** Môi trường Windows Command Prompt/PowerShell mặc định dùng bộ mã hóa không phải UTF-8.
 * **Cách khắc phục:** Đọc kỹ hướng dẫn cấu hình biến môi trường `PYTHONUTF8='1'` và lệnh đổi bảng mã `chcp 65001` ở **Mục 1 (Cách 1)**.
+
+### Lỗi 3: Script cài Linux trả về `<!doctype html>`
+* **Nguyên nhân:** Lệnh tải tự động `curl -fsSL https://semgrep.dev/get | sh` không lấy được nội dung shell script hợp lệ trong môi trường mạng/distro hiện tại.
+* **Cách khắc phục:** Không dùng script này trong báo cáo của nhóm. Chuyển sang cách cài bằng pip theo distro ở **Mục 3**:
+  ```bash
+  python3 -m pip install --user semgrep
+  ```

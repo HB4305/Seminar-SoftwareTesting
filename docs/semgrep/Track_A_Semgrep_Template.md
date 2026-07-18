@@ -11,19 +11,27 @@
   brew install semgrep
   ```
 
-#### 2. Trên Linux (Ubuntu / Debian / CentOS / Alpine)
+#### 2. Trên Linux (Ubuntu / Debian / Fedora / Arch)
 - **Môi trường:** Linux Terminal
-- **Cách cài đặt (APT - Ubuntu/Debian):**
+- **Ubuntu / Debian:**
   ```bash
   sudo apt update
   sudo apt install python3-pip -y
-  pip3 install semgrep
+  python3 -m pip install --user semgrep
   ```
-- **Cách cài đặt nhanh qua Curl script:**
+- **Fedora:**
   ```bash
-  python3 -m pip install semgrep
-  # Hoặc dùng script chính thức:
-  curl -fsSL https://semgrep.dev/get | sh
+  sudo dnf install python3-pip -y
+  python3 -m pip install --user semgrep
+  ```
+- **Arch Linux:**
+  ```bash
+  sudo pacman -S python-pip
+  python3 -m pip install --user semgrep
+  ```
+- **Nếu terminal chưa nhận lệnh `semgrep`:**
+  ```bash
+  export PATH="$HOME/.local/bin:$PATH"
   ```
 
 #### 3. Trên Windows
@@ -44,7 +52,9 @@ Có 3 cách tiếp cận chính tuỳ thuộc vào môi trường phát triển 
 ##### Cách 2: Cài đặt qua WSL (Windows Subsystem for Linux - Khuyến nghị)
 Nếu bạn dùng WSL, hãy mở terminal Linux (ví dụ Ubuntu WSL) và chạy lệnh:
 ```bash
-curl -fsSL https://semgrep.dev/get | sh
+sudo apt update
+sudo apt install python3-pip -y
+python3 -m pip install --user semgrep
 ```
 
 ##### Cách 3: Chạy qua Docker
@@ -209,7 +219,9 @@ _Mẫu report này có thể dùng lại cho các case ở Pha 2._
   ```
   Biến `searchQuery` đến từ `req.query.search` (user input) và được nối trực tiếp vào câu SQL qua template literal mà không qua bất kỳ bước sanitize nào.
 - **Nguyên nhân Semgrep bỏ sót:** Bộ ruleset `p/owasp-top-ten` (560 rules, trong đó 73 rules áp dụng cho JS/JSON) không chứa rule taint-analysis chuyên biệt cho thư viện `sqlite3` kết hợp ES6 template literal. Semgrep cần rule sử dụng taint mode (theo dõi luồng dữ liệu từ `req.query` → `db.all()`) để phát hiện, nhưng rule này không có trong bộ OWASP mặc định.
+- **Vì sao OWASP có Injection nhưng không detect:** OWASP A05:2025 Injection là nhóm rủi ro tổng quát, còn `p/owasp-top-ten` là một tập rule cụ thể. Ruleset này không đảm bảo bao phủ mọi biến thể Injection trong từng thư viện. Trường hợp trên là false negative: lỗi SQL Injection có thật, nhưng rule mặc định chưa mô hình hóa đúng source `req.query.search`, sink `db.all()` của `sqlite3`, và cú pháp template literal.
 - **Cách khắc phục:** Bổ sung ruleset chuyên sâu hơn: `p/javascript`, `p/nodejs`, hoặc viết custom rule Semgrep với taint mode. Đồng thời kết hợp quét DAST (ZAP) để phát hiện SQLi từ runtime.
+- **Cách sửa code an toàn:** Không nối chuỗi SQL thủ công. Dùng parameterized query/prepared statement, ví dụ `db.all("SELECT * FROM products WHERE name LIKE ?", [\`%${searchQuery}%\`], callback)`. Đây là cơ chế phòng vệ phù hợp hơn so với chỉ "lọc chuỗi" thủ công.
 - **CWE liên quan:** CWE-89: Improper Neutralization of Special Elements used in an SQL Command.
 
 ### FM-2: False Negative — Plaintext Password không được cảnh báo

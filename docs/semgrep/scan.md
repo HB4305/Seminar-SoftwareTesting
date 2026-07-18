@@ -82,7 +82,7 @@ tests/
 
 ## 4. Xuất kết quả định dạng JSON phục vụ AI Triage
 
-Để script AI Triage (`semgrep_ai_triage.py`) có thể đọc và gửi dữ liệu sang Google Gemini phân tích, kết quả quét của Semgrep cần phải được định dạng theo chuẩn JSON.
+Để script AI Triage (`semgrep_ai_triage.py`) có thể đọc và gửi dữ liệu sang provider AI đã cấu hình, kết quả quét của Semgrep cần phải được định dạng theo chuẩn JSON.
 
 ### Lệnh xuất JSON:
 ```bash
@@ -97,9 +97,23 @@ semgrep scan --config "p/owasp-top-ten" --json -o semgrep_results.json .
 
 Sau khi đã tạo thành công tệp `semgrep_results.json`, bạn có thể chạy script phân tích tự động bằng trí tuệ nhân tạo (AI Triage) để thẩm định các lỗi phát hiện được.
 
-1. **Thiết lập API Key cho Gemini:**
-   * macOS/Linux: `export GEMINI_API_KEY="api_key_cua_ban"`
-   * Windows: `$env:GEMINI_API_KEY="api_key_cua_ban"`
+1. **Thiết lập provider/model/API key:**
+   ```bash
+   cp docs/semgrep/.env.example docs/semgrep/.env
+   ```
+   Sau đó mở `docs/semgrep/.env` và điền cấu hình thật. Mặc định:
+   ```env
+   AI_PROVIDER=gemini
+   AI_MODEL=gemini-2.5-flash
+   GEMINI_API_KEY=api_key_cua_ban
+   ```
+   Nếu dùng endpoint OpenAI-compatible:
+   ```env
+   AI_PROVIDER=openai-compatible
+   AI_MODEL=deepseek/deepseek-chat
+   OPENAI_API_KEY=api_key_cua_ban
+   OPENAI_BASE_URL=https://openrouter.ai/api/v1
+   ```
 2. **Chạy script triage:**
    ```bash
    python docs/semgrep/semgrep_ai_triage.py semgrep_results.json

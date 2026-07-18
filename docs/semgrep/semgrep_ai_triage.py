@@ -1,13 +1,10 @@
 import json
 import os
 import sys
-
-# Yêu cầu cài đặt thư viện mới nhất trước khi chạy: pip install google-genai
-try:
-    from google import genai
-except ImportError:
-    print("Vui lòng cài đặt thư viện mới nhất: pip install google-genai")
-    sys.exit(1)
+import urllib.error
+import urllib.request
+from pathlib import Path
+from typing import Mapping, NamedTuple, Optional
 
 def resolve_file_path(original_path):
     """
@@ -60,6 +57,126 @@ def resolve_file_path(original_path):
                 
     return None
 
+class AiSettings(NamedTuple):
+    provider: str
+    model: str
+    api_key: str
+    base_url: Optional[str] = None
+
+def load_env_file(env_file):
+    """
+    Đọc file .env đơn giản theo định dạng KEY=VALUE.
+    Hàm này cố ý không ghi đè trực tiếp os.environ để dễ test và tránh side effect.
+    """
+    if not env_file:
+        return {}
+
+    env_path = Path(env_file)
+    if not env_path.exists():
+        return {}
+
+    values = {}
+    for raw_line in env_path.read_text(encoding='utf-8').splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith('#') or '=' not in line:
+            continue
+        key, value = line.split('=', 1)
+        values[key.strip()] = value.strip().strip('"').strip("'")
+    return values
+
+def find_default_env_file():
+    """Tìm .env ở thư mục đang chạy hoặc cùng thư mục với script."""
+    candidates = [
+        Path.cwd() / '.env',
+        Path(__file__).with_name('.env'),
+    ]
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return None
+
+def get_ai_settings(env: Optional[Mapping[str, str]] = None, env_file=None):
+    """
+    Tạo cấu hình AI từ .env và biến môi trường.
+    Biến môi trường thật được ưu tiên hơn file .env để dễ override khi chạy CI/terminal.
+    """
+    merged_env = {}
+    default_env_file = find_default_env_file() if env_file is None else env_file
+    merged_env.update(load_env_file(default_env_file))
+    merged_env.update(dict(os.environ if env is None else env))
+
+    provider = merged_env.get('AI_PROVIDER', 'gemini').strip().lower()
+    default_model = 'gemini-2.5-flash' if provider == 'gemini' else ''
+    model = merged_env.get('AI_MODEL', default_model).strip()
+
+    if provider == 'gemini':
+        api_key = merged_env.get('AI_API_KEY') or merged_env.get('GEMINI_API_KEY')
+        base_url = None
+    elif provider in {'openai-compatible', 'openai'}:
+        provider = 'openai-compatible'
+        api_key = merged_env.get('AI_API_KEY') or merged_env.get('OPENAI_API_KEY')
+        base_url = (merged_env.get('OPENAI_BASE_URL') or '').rstrip('/')
+    else:
+        raise ValueError("AI_PROVIDER chỉ hỗ trợ 'gemini' hoặc 'openai-compatible'.")
+
+    if not model:
+        raise ValueError('Chưa thiết lập AI_MODEL cho provider đã chọn.')
+    if not api_key:
+        if provider == 'gemini':
+            raise ValueError('Chưa thiết lập AI_API_KEY hoặc GEMINI_API_KEY.')
+        raise ValueError('Chưa thiết lập AI_API_KEY hoặc OPENAI_API_KEY.')
+    if provider == 'openai-compatible' and not base_url:
+        raise ValueError('Chưa thiết lập OPENAI_BASE_URL cho provider openai-compatible.')
+
+    return AiSettings(provider=provider, model=model, api_key=api_key, base_url=base_url)
+
+def generate_ai_response(prompt, settings):
+    """Gọi provider AI đã cấu hình và trả về nội dung Markdown."""
+    if settings.provider == 'gemini':
+        try:
+            from google import genai
+        except ImportError as exc:
+            raise RuntimeError("Vui lòng cài đặt thư viện mới nhất: pip install google-genai") from exc
+
+        client = genai.Client(api_key=settings.api_key)
+        response = client.models.generate_content(
+            model=settings.model,
+            contents=prompt
+        )
+        return response.text
+
+    if settings.provider == 'openai-compatible':
+        request_body = json.dumps(
+            {
+                'model': settings.model,
+                'messages': [
+                    {
+                        'role': 'user',
+                        'content': prompt,
+                    }
+                ],
+            }
+        ).encode('utf-8')
+        request = urllib.request.Request(
+            f"{settings.base_url}/chat/completions",
+            data=request_body,
+            headers={
+                'Authorization': f"Bearer {settings.api_key}",
+                'Content-Type': 'application/json',
+            },
+            method='POST',
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=90) as response:
+                payload = json.loads(response.read().decode('utf-8'))
+        except urllib.error.HTTPError as exc:
+            body = exc.read().decode('utf-8', errors='replace')
+            raise RuntimeError(f"Lỗi OpenAI-compatible API ({exc.code}): {body}") from exc
+
+        return payload['choices'][0]['message']['content']
+
+    raise ValueError(f"Provider không được hỗ trợ: {settings.provider}")
+
 def get_source_code_snippet(file_path, line_number, context_lines=5):
     """
     Đọc file nguồn trên đĩa và trích xuất đoạn mã xung quanh dòng lỗi.
@@ -108,23 +225,13 @@ def main():
         
     print(f"Tìm thấy {len(findings)} lỗi từ Semgrep. Bắt đầu quá trình AI Triage...\n")
 
-    # 2. Cấu hình Gemini API
-    # Lấy API Key từ biến môi trường để bảo mật, KHÔNG hardcode API Key vào source code!
-    api_key = os.environ.get("GEMINI_API_KEY")
-    if not api_key:
-        print("Lỗi: Chưa thiết lập biến môi trường GEMINI_API_KEY.")
-        print("Vui lòng chạy lệnh sau trên Terminal trước khi chạy script:")
-        print("export GEMINI_API_KEY='thay_api_key_cua_ban_vao_day'")
-        sys.exit(1)
-        
+    # 2. Cấu hình AI provider/model/API key từ .env hoặc biến môi trường.
     try:
-        client = genai.Client(api_key=api_key)
-    except Exception as e:
-        print(f"Lỗi khởi tạo Gemini Client: {e}")
+        settings = get_ai_settings()
+    except ValueError as e:
+        print(f"Lỗi cấu hình AI: {e}")
+        print("Gợi ý: copy docs/semgrep/.env.example thành docs/semgrep/.env rồi điền API key.")
         sys.exit(1)
-        
-    # Sử dụng model gemini-2.5-flash (model tiêu chuẩn mới nhất)
-    model_name = 'gemini-2.5-flash'
     
     # 3. Tiến hành phân tích (Triage)
     # Trong demo, chúng ta sẽ Triage lỗi đầu tiên tìm được để tránh tốn quá nhiều request.
@@ -168,24 +275,21 @@ Hãy cung cấp một báo cáo đánh giá chi tiết với các mục sau (Tr�
 """
     
     print(f"Đang gửi dữ liệu phân tích cho lỗi [{rule_id}] tại {file_path} (dòng {line})...")
+    print(f"Provider: {settings.provider} | Model: {settings.model}")
     try:
-        # Gọi API của Gemini
-        response = client.models.generate_content(
-            model=model_name,
-            contents=prompt
-        )
+        ai_text = generate_ai_response(prompt, settings)
         
         # 4. Lưu kết quả ra file Markdown
         output_file = f"AI_Triage_{rule_id.split('.')[-1]}.md"
         with open(output_file, 'w', encoding='utf-8') as f:
             f.write(f"# AI Triage Report: {rule_id}\n\n")
-            f.write(response.text)
+            f.write(ai_text)
             
         print(f"\n[THÀNH CÔNG] Báo cáo AI Triage đã được tạo và lưu tại: {output_file}")
         print("Mở file Markdown trên để xem kết quả đánh giá, PoC và Code fix!")
         
     except Exception as e:
-        print(f"Lỗi khi gọi Gemini API: {e}")
+        print(f"Lỗi khi gọi AI API: {e}")
 
 if __name__ == "__main__":
     main()
