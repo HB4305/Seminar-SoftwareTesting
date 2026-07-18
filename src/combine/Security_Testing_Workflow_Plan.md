@@ -12,8 +12,8 @@ Semgrep SAST -> AI triage -> PoC/testcase -> OWASP ZAP DAST -> đối chiếu ch
 
 ## Hiện trạng trong `src`
 
-- `src/semgrep/sg_rs.json`: kết quả scan Semgrep hiện tại, gồm 12 findings.
-- `src/semgrep/semgrep_ai_triage.py`: script gửi finding Semgrep sang Gemini để phân tích.
+- `src/semgrep/sg_rs.json`: kết quả scan Semgrep hiện tại; số findings phụ thuộc vào nội dung mảng `results`.
+- `src/semgrep/semgrep_ai_triage.py`: script gửi toàn bộ findings Semgrep sang provider AI đã cấu hình để phân tích.
 - `src/zap/scan_zap.py`: script chạy OWASP ZAP scan và xuất report.
 - `src/zap/ai_triage_zap.py`: script parse ZAP HTML report, tạo AI/offline triage markdown và block cho submission.
 - `src/zap/test_ai_triage_zap.py`: unit test cho parser và renderer của ZAP AI triage.
@@ -32,7 +32,7 @@ rtk python -m unittest src/zap/test_ai_triage_zap.py
 
 ### 2. Mở rộng Semgrep AI triage
 
-- Hiện script Semgrep chỉ xử lý finding đầu tiên; cần chuyển sang xử lý toàn bộ `results`.
+- Script Semgrep phải xử lý toàn bộ `results`, không hardcode số lượng findings theo một report cụ thể.
 - Sinh một file tổng hợp theo rule, file, dòng, severity, CWE, OWASP, likelihood, impact, confidence.
 - Với mỗi finding, lưu prompt, output AI, nhận định true positive/false positive và phần human validation.
 - Khi `extra.lines` là `requires login`, fallback đọc source code bằng `path` và `start.line`.

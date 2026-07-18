@@ -13,7 +13,7 @@ Tài liệu này mô tả cấu trúc chính của file kết quả Semgrep tạ
 - `skipped_rules`: danh sách rule bị bỏ qua.
 - `profiling_results`: kết quả profiling bổ sung.
 
-Trong report hiện tại có `12` findings, gồm `3` cảnh báo hardcoded JWT secret và `9` cảnh báo HTTP request không mã hóa.
+Trong file `sg_rs.json` hiện tại có `12` findings, gồm `3` cảnh báo hardcoded JWT secret và `9` cảnh báo HTTP request không mã hóa. Đây chỉ là số lượng của lần scan hiện tại; script triage phải đọc toàn bộ mảng `results` và không được hardcode con số này.
 
 ## Schema rút gọn
 
@@ -117,4 +117,3 @@ Trong report hiện tại có `12` findings, gồm `3` cảnh báo hardcoded JWT
 | --- | ---: | --- | --- |
 | `javascript.jsonwebtoken.security.jwt-hardcode.hardcoded-jwt-secret` | 3 | `backend/server.js`, `backend/test_profile.js` | Phát hiện secret/JWT key hardcode trong source code. |
 | `typescript.react.security.react-insecure-request.react-insecure-request` | 9 | `frontend-mobile/App.js` | Phát hiện request dùng HTTP không mã hóa. |
-
