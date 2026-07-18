@@ -68,6 +68,23 @@ class SemgrepAiTriageConfigTest(unittest.TestCase):
         self.assertEqual(settings.api_key, "openai-compatible-key")
         self.assertEqual(settings.base_url, "https://openrouter.ai/api/v1")
 
+    def test_get_ai_settings_supports_openrouter_api_key(self):
+        triage = load_triage_module()
+        settings = triage.get_ai_settings(
+            {
+                "AI_PROVIDER": "openai-compatible",
+                "AI_MODEL": "google/gemini-2.5-flash",
+                "OPENROUTER_API_KEY": "openrouter-key",
+                "OPENROUTER_BASE_URL": "https://openrouter.ai/api/v1",
+            },
+            env_file=None,
+        )
+
+        self.assertEqual(settings.provider, "openai-compatible")
+        self.assertEqual(settings.model, "google/gemini-2.5-flash")
+        self.assertEqual(settings.api_key, "openrouter-key")
+        self.assertEqual(settings.base_url, "https://openrouter.ai/api/v1")
+
 
 if __name__ == "__main__":
     unittest.main()
