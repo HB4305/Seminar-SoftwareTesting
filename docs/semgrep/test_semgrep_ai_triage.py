@@ -1,4 +1,5 @@
 import importlib.util
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -60,7 +61,7 @@ class SemgrepAiTriageConfigTest(unittest.TestCase):
                 "OPENAI_API_KEY": "openai-compatible-key",
                 "OPENAI_BASE_URL": "https://openrouter.ai/api/v1",
             },
-            env_file=None,
+            env_file="",
         )
 
         self.assertEqual(settings.provider, "openai-compatible")
@@ -77,13 +78,68 @@ class SemgrepAiTriageConfigTest(unittest.TestCase):
                 "OPENROUTER_API_KEY": "openrouter-key",
                 "OPENROUTER_BASE_URL": "https://openrouter.ai/api/v1",
             },
-            env_file=None,
+            env_file="",
         )
 
         self.assertEqual(settings.provider, "openai-compatible")
         self.assertEqual(settings.model, "google/gemini-2.5-flash")
         self.assertEqual(settings.api_key, "openrouter-key")
         self.assertEqual(settings.base_url, "https://openrouter.ai/api/v1")
+
+    def test_triage_findings_processes_every_finding_and_writes_unique_reports(self):
+        triage = load_triage_module()
+        calls = []
+
+        def fake_generate_ai_response(prompt, settings):
+            calls.append(prompt)
+            return f"report {len(calls)}"
+
+        triage.generate_ai_response = fake_generate_ai_response
+        settings = triage.AiSettings(
+            provider="openai-compatible",
+            model="google/gemini-2.5-flash",
+            api_key="openrouter-key",
+            base_url="https://openrouter.ai/api/v1",
+        )
+        findings = [
+            {
+                "check_id": "javascript.security.first-rule",
+                "path": "backend/server.js",
+                "start": {"line": 10},
+                "extra": {"message": "first issue", "lines": "const a = 1;"},
+            },
+            {
+                "check_id": "javascript.security.second-rule",
+                "path": "backend/routes.js",
+                "start": {"line": 20},
+                "extra": {"message": "second issue", "lines": "const b = 2;"},
+            },
+        ]
+
+        old_cwd = Path.cwd()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            os.chdir(tmpdir)
+            try:
+                output_files = triage.triage_findings(findings, settings)
+            finally:
+                os.chdir(old_cwd)
+
+            self.assertEqual(len(calls), 2)
+            self.assertEqual(
+                output_files,
+                [
+                    "AI_Triage_001_first-rule.md",
+                    "AI_Triage_002_second-rule.md",
+                ],
+            )
+            self.assertEqual(
+                (Path(tmpdir) / "AI_Triage_001_first-rule.md").read_text(encoding="utf-8"),
+                "# AI Triage Report: javascript.security.first-rule\n\nreport 1",
+            )
+            self.assertEqual(
+                (Path(tmpdir) / "AI_Triage_002_second-rule.md").read_text(encoding="utf-8"),
+                "# AI Triage Report: javascript.security.second-rule\n\nreport 2",
+            )
 
 
 if __name__ == "__main__":

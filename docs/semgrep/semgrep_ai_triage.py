@@ -209,6 +209,72 @@ def get_source_code_snippet(file_path, line_number, context_lines=5):
         print(f"Lỗi khi đọc file nguồn {file_path}: {e}")
         return None
 
+def make_report_slug(rule_id):
+    """Tạo phần tên file an toàn từ rule id của Semgrep."""
+    raw_slug = (rule_id or 'unknown-rule').split('.')[-1]
+    return ''.join(char if char.isalnum() or char in {'-', '_'} else '-' for char in raw_slug)
+
+def build_triage_prompt(finding):
+    rule_id = finding.get("check_id")
+    file_path = finding.get("path")
+    line = finding.get("start", {}).get("line")
+    message = finding.get("extra", {}).get("message")
+    code_lines = finding.get("extra", {}).get("lines", "")
+
+    # Fallback nếu code_lines bị ẩn ("requires login") hoặc trống
+    if not code_lines or code_lines == "requires login":
+        resolved_path = resolve_file_path(file_path)
+        if resolved_path:
+            print(f"-> Phát hiện trường 'lines' bị ẩn hoặc trống. Đang đọc trực tiếp từ file: {resolved_path}")
+            code_lines = get_source_code_snippet(resolved_path, line)
+        else:
+            print(f"-> Cảnh báo: Không thể định vị file nguồn '{file_path}' trên hệ thống để fallback đọc trực tiếp.")
+
+    prompt = f"""
+Tôi dùng công cụ Semgrep (SAST) để quét mã nguồn và phát hiện một lỗ hổng bảo mật.
+Bạn hãy đóng vai trò là một chuyên gia bảo mật ứng dụng (Application Security Expert) để thực hiện Triage (phân tích) lỗi này.
+
+Thông tin kỹ thuật trích xuất từ Semgrep:
+- Rule ID (Mã lỗi): {rule_id}
+- Tệp tin: {file_path}
+- Dòng báo lỗi: {line}
+- Cảnh báo của Semgrep: {message}
+- Đoạn mã nguồn bị lỗi (Source Code):
+```
+{code_lines}
+```
+
+Hãy cung cấp một báo cáo đánh giá chi tiết với các mục sau (Trình bày bằng Markdown):
+1. **Giải thích lỗ hổng**: Giải thích ngắn gọn lỗi này là gì, tại sao đoạn code trên lại mắc lỗi.
+2. **Proof of Concept (PoC)**: Viết một kịch bản/payload giả định để khai thác lỗi này.
+3. **Mức độ ảnh hưởng (Impact)**: Nếu bị khai thác thì hậu quả là gì.
+4. **Khuyến nghị khắc phục (Remediation)**: Viết lại đoạn code an toàn nhất để sửa lỗi trên.
+"""
+    return rule_id, file_path, line, prompt
+
+def triage_findings(findings, settings):
+    """Gửi từng finding sang AI và ghi mỗi finding thành một report riêng."""
+    output_files = []
+    total = len(findings)
+
+    for index, finding in enumerate(findings, start=1):
+        rule_id, file_path, line, prompt = build_triage_prompt(finding)
+        print(f"[{index}/{total}] Đang gửi dữ liệu phân tích cho lỗi [{rule_id}] tại {file_path} (dòng {line})...")
+        print(f"Provider: {settings.provider} | Model: {settings.model}")
+        try:
+            ai_text = generate_ai_response(prompt, settings)
+            output_file = f"AI_Triage_{index:03d}_{make_report_slug(rule_id)}.md"
+            with open(output_file, 'w', encoding='utf-8') as f:
+                f.write(f"# AI Triage Report: {rule_id}\n\n")
+                f.write(ai_text)
+
+            output_files.append(output_file)
+            print(f"[THÀNH CÔNG] Đã tạo báo cáo: {output_file}\n")
+        except Exception as e:
+            print(f"[THẤT BẠI] Lỗi khi gọi AI API cho finding {index}/{total}: {e}\n")
+
+    return output_files
+
 def main():
     # Kiểm tra xem người dùng có truyền file json vào không
     if len(sys.argv) < 2:
@@ -241,63 +307,8 @@ def main():
         print("Gợi ý: copy docs/semgrep/.env.example thành docs/semgrep/.env rồi điền API key.")
         sys.exit(1)
     
-    # 3. Tiến hành phân tích (Triage)
-    # Trong demo, chúng ta sẽ Triage lỗi đầu tiên tìm được để tránh tốn quá nhiều request.
-    # Trong thực tế, bạn có thể dùng vòng lặp `for finding in findings:` để xử lý tất cả.
-    finding = findings[0]
-    rule_id = finding.get("check_id")
-    file_path = finding.get("path")
-    line = finding.get("start", {}).get("line")
-    message = finding.get("extra", {}).get("message")
-    code_lines = finding.get("extra", {}).get("lines", "")
-
-    # Fallback nếu code_lines bị ẩn ("requires login") hoặc trống
-    if not code_lines or code_lines == "requires login":
-        resolved_path = resolve_file_path(file_path)
-        if resolved_path:
-            print(f"-> Phát hiện trường 'lines' bị ẩn hoặc trống. Đang đọc trực tiếp từ file: {resolved_path}")
-            code_lines = get_source_code_snippet(resolved_path, line)
-        else:
-            print(f"-> Cảnh báo: Không thể định vị file nguồn '{file_path}' trên hệ thống để fallback đọc trực tiếp.")
-    
-    # Chuẩn bị Prompt y hệt như những gì một Tester thực thụ cung cấp cho chuyên gia bảo mật
-    prompt = f"""
-Tôi dùng công cụ Semgrep (SAST) để quét mã nguồn và phát hiện một lỗ hổng bảo mật.
-Bạn hãy đóng vai trò là một chuyên gia bảo mật ứng dụng (Application Security Expert) để thực hiện Triage (phân tích) lỗi này.
-
-Thông tin kỹ thuật trích xuất từ Semgrep:
-- Rule ID (Mã lỗi): {rule_id}
-- Tệp tin: {file_path}
-- Dòng báo lỗi: {line}
-- Cảnh báo của Semgrep: {message}
-- Đoạn mã nguồn bị lỗi (Source Code):
-```
-{code_lines}
-```
-
-Hãy cung cấp một báo cáo đánh giá chi tiết với các mục sau (Trình bày bằng Markdown):
-1. **Giải thích lỗ hổng**: Giải thích ngắn gọn lỗi này là gì, tại sao đoạn code trên lại mắc lỗi.
-2. **Proof of Concept (PoC)**: Viết một kịch bản/payload giả định để khai thác lỗi này.
-3. **Mức độ ảnh hưởng (Impact)**: Nếu bị khai thác thì hậu quả là gì.
-4. **Khuyến nghị khắc phục (Remediation)**: Viết lại đoạn code an toàn nhất để sửa lỗi trên.
-"""
-    
-    print(f"Đang gửi dữ liệu phân tích cho lỗi [{rule_id}] tại {file_path} (dòng {line})...")
-    print(f"Provider: {settings.provider} | Model: {settings.model}")
-    try:
-        ai_text = generate_ai_response(prompt, settings)
-        
-        # 4. Lưu kết quả ra file Markdown
-        output_file = f"AI_Triage_{rule_id.split('.')[-1]}.md"
-        with open(output_file, 'w', encoding='utf-8') as f:
-            f.write(f"# AI Triage Report: {rule_id}\n\n")
-            f.write(ai_text)
-            
-        print(f"\n[THÀNH CÔNG] Báo cáo AI Triage đã được tạo và lưu tại: {output_file}")
-        print("Mở file Markdown trên để xem kết quả đánh giá, PoC và Code fix!")
-        
-    except Exception as e:
-        print(f"Lỗi khi gọi AI API: {e}")
+    output_files = triage_findings(findings, settings)
+    print(f"Hoàn tất AI Triage: tạo {len(output_files)}/{len(findings)} báo cáo.")
 
 if __name__ == "__main__":
     main()
