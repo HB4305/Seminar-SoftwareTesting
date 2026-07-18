@@ -2,12 +2,20 @@ import io
 import os
 import unittest
 import sys
+import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from scan_zap import build_parser, run
+from scan_zap import (
+    OWASP_TOP10_2025_POLICY_NAME,
+    build_parser,
+    configure_scan_policy,
+    execute_scan,
+    run,
+    write_report,
+)
 
 
 class ScanZapTests(unittest.TestCase):
@@ -30,6 +38,7 @@ class ScanZapTests(unittest.TestCase):
             "ZAP_FORCED_USER": "true",
             "ZAP_AJAX_SPIDER": "1",
             "ZAP_EXTERNAL_ZAP": "yes",
+            "ZAP_SCAN_MODE": "owasp-top10-2025",
             "ZAP_REPORT_FORMAT": "json",
             "ZAP_REPORT_FILE": "src/zap/output/from-env.json",
         },
@@ -45,6 +54,7 @@ class ScanZapTests(unittest.TestCase):
         self.assertTrue(args.forced_user)
         self.assertTrue(args.ajax_spider)
         self.assertTrue(args.external_zap)
+        self.assertEqual(args.scan_mode, "owasp-top10-2025")
         self.assertEqual(args.report_format, "json")
         self.assertEqual(args.report_file, "src/zap/output/from-env.json")
 
@@ -87,6 +97,7 @@ class ScanZapTests(unittest.TestCase):
             "ZAP_FORCED_USER",
             "ZAP_AJAX_SPIDER",
             "ZAP_EXTERNAL_ZAP",
+            "ZAP_SCAN_MODE",
             "ZAP_USER_EMAIL",
             "ZAP_USER_PASSWORD",
             "ZAP_ADMIN_EMAIL",
@@ -101,6 +112,128 @@ class ScanZapTests(unittest.TestCase):
         help_text = build_parser(load_env=False).format_help()
 
         self.assertIn("src/zap/output/zap_scan_report.html", help_text)
+
+    def test_output_file_alias_selects_report_path(self):
+        args = build_parser(load_env=False).parse_args(
+            ["--output-file", "src/zap/output/frontend_user.html"]
+        )
+
+        self.assertEqual(args.report_file, "src/zap/output/frontend_user.html")
+
+    def test_write_report_uses_official_reports_addon_for_html(self):
+        zap = MagicMock()
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output_path = Path(temp_dir) / "report.html"
+
+            write_report(zap, "html", output_path)
+
+        zap.reports.generate.assert_called_once_with(
+            title="EShop ZAP Scan Report",
+            template="modern",
+            reportfilename="report.html",
+            reportdir=str(Path(temp_dir)),
+            display="false",
+        )
+        zap.core.htmlreport.assert_not_called()
+
+    def test_write_report_falls_back_to_core_report_when_official_addon_missing(self):
+        zap = MagicMock()
+        zap.reports.generate.side_effect = RuntimeError("reports add-on missing")
+        zap.core.htmlreport.return_value = "<html>fallback</html>"
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output_path = Path(temp_dir) / "fallback.html"
+
+            write_report(zap, "html", output_path)
+
+            self.assertEqual(
+                output_path.resolve().read_text(encoding="utf-8"),
+                "<html>fallback</html>",
+            )
+
+    def test_configure_scan_policy_keeps_basic_mode_default_policy(self):
+        zap = MagicMock()
+
+        self.assertIsNone(configure_scan_policy(zap, "basic"))
+
+        zap.ascan.add_scan_policy.assert_not_called()
+        zap.ascan.enable_scanners.assert_not_called()
+
+    def test_configure_scan_policy_creates_owasp_top10_2025_policy_from_alert_tags(self):
+        zap = MagicMock()
+        zap.ascan.scanners.return_value = [
+            {"id": "40012", "name": "Cross Site Scripting", "alertTags": ["OWASP_2025_A03"]},
+            {"id": "40018", "name": "SQL Injection", "alertTags": {"OWASP_2025_A03": ""}},
+            {"id": "90001", "name": "Unrelated Scanner", "alertTags": ["CUSTOM"]},
+        ]
+
+        self.assertEqual(
+            configure_scan_policy(zap, "owasp-top10-2025"),
+            OWASP_TOP10_2025_POLICY_NAME,
+        )
+
+        zap.ascan.add_scan_policy.assert_called_once_with(OWASP_TOP10_2025_POLICY_NAME)
+        zap.ascan.disable_scanners.assert_called_once_with(
+            "40012,40018,90001",
+            scanpolicyname=OWASP_TOP10_2025_POLICY_NAME,
+        )
+        zap.ascan.enable_scanners.assert_called_once_with(
+            "40012,40018",
+            scanpolicyname=OWASP_TOP10_2025_POLICY_NAME,
+        )
+
+    def test_configure_scan_policy_uses_owasp_top10_2025_id_fallback_without_alert_tags(self):
+        zap = MagicMock()
+        zap.ascan.scanners.return_value = [
+            {"id": "40012", "name": "Cross Site Scripting"},
+            {"id": "90001", "name": "Unrelated Scanner"},
+        ]
+
+        self.assertEqual(
+            configure_scan_policy(zap, "owasp-top10-2025"),
+            OWASP_TOP10_2025_POLICY_NAME,
+        )
+
+        zap.ascan.disable_scanners.assert_called_once_with(
+            "40012,90001",
+            scanpolicyname=OWASP_TOP10_2025_POLICY_NAME,
+        )
+        zap.ascan.enable_scanners.assert_called_once_with(
+            "40012",
+            scanpolicyname=OWASP_TOP10_2025_POLICY_NAME,
+        )
+
+    def test_configure_scan_policy_rejects_owasp_mode_without_matching_scanners(self):
+        zap = MagicMock()
+        zap.ascan.scanners.return_value = [
+            {"id": "90001", "name": "Unrelated Scanner", "alertTags": ["CUSTOM"]},
+        ]
+
+        with self.assertRaisesRegex(RuntimeError, "OWASP Top 10 2025"):
+            configure_scan_policy(zap, "owasp-top10-2025")
+
+    @patch("scan_zap.wait_for_passive_scan")
+    @patch("scan_zap.check_scan_status")
+    @patch("scan_zap.time.sleep")
+    def test_execute_scan_uses_configured_policy_for_active_scan(
+        self, sleep, check_scan_status, wait_for_passive_scan
+    ):
+        zap = MagicMock()
+        zap.spider.scan.return_value = "spider-1"
+        zap.ascan.scan.return_value = "active-1"
+
+        execute_scan(
+            zap,
+            "http://localhost:3000",
+            context_id="7",
+            ajax_spider=False,
+            scan_policy_name=OWASP_TOP10_2025_POLICY_NAME,
+        )
+
+        zap.ascan.scan.assert_called_once_with(
+            "http://localhost:3000",
+            contextid="7",
+            scanpolicyname=OWASP_TOP10_2025_POLICY_NAME,
+        )
 
     @patch("scan_zap.ZAPv2")
     @patch("scan_zap.ZapDockerManager")
@@ -152,10 +285,42 @@ class ScanZapTests(unittest.TestCase):
         )
         verify_authenticated_session.assert_called_once_with(args.zap_url)
         execute_scan.assert_called_once_with(
-            zap_cls.return_value, args.target, "7", False
+            zap_cls.return_value, args.target, "7", False, None
         )
         cleanup_authenticated_context.assert_called_once_with(zap_cls.return_value, True)
         manager_cls.return_value.stop.assert_called_once()
+
+    @patch("scan_zap.write_report")
+    @patch("scan_zap.execute_scan")
+    @patch("scan_zap.print_alert_summary")
+    @patch("scan_zap.configure_scan_policy", return_value=None)
+    @patch("scan_zap.get_credential", return_value=None)
+    @patch("scan_zap.ensure_context", return_value="7")
+    @patch("scan_zap.wait_for_zap", return_value="2.17.0")
+    @patch("scan_zap.ZapDockerManager")
+    @patch("scan_zap.ZAPv2")
+    def test_run_mounts_report_output_directory_for_managed_zap(
+        self,
+        zap_cls,
+        manager_cls,
+        wait_for_zap,
+        ensure_context,
+        get_credential,
+        configure_scan_policy,
+        print_alert_summary,
+        execute_scan,
+        write_report,
+    ):
+        args = build_parser(load_env=False).parse_args(
+            ["--output-file", "tmp/zap/backend_owasp2025.html"]
+        )
+
+        self.assertEqual(run(args), 0)
+
+        manager_cls.assert_called_once_with(
+            port=8090,
+            writable_dir=str((Path.cwd() / "tmp/zap").resolve()),
+        )
 
     @patch("scan_zap.write_report")
     @patch("scan_zap.execute_scan")

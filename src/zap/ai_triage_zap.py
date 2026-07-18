@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-AI-assisted triage for OWASP ZAP reports.
+Tạo bản triage hỗ trợ bởi AI/offline template từ report HTML của OWASP ZAP.
 
-Default usage:
+Chạy mặc định:
     python src/zap/ai_triage_zap.py
 
-With OpenRouter:
+Chạy với OpenRouter:
     OPENROUTER_API_KEY=... python src/zap/ai_triage_zap.py --use-ai
 """
 
@@ -38,6 +38,8 @@ SUBMISSION_END = "<!-- ZAP_AI_TRIAGE_END -->"
 
 @dataclasses.dataclass(frozen=True)
 class Alert:
+    """Một finding đã parse từ report ZAP, dùng chung cho triage và markdown."""
+
     name: str
     risk: str
     confidence: str = ""
@@ -51,6 +53,7 @@ class Alert:
 
 
 def strip_tags(value: str) -> str:
+    """Xóa HTML tag trong một đoạn report nhưng giữ lại nội dung đọc được."""
     text = re.sub(r"<br\s*/?>", "\n", value, flags=re.IGNORECASE)
     text = re.sub(r"<[^>]+>", " ", text)
     text = html.unescape(text)
@@ -60,16 +63,19 @@ def strip_tags(value: str) -> str:
 
 
 def collapse_ws(value: str) -> str:
+    """Gộp whitespace để field report hiển thị gọn trong markdown."""
     return re.sub(r"\s+", " ", html.unescape(value)).strip()
 
 
 def extract_labeled_value(text: str, label: str) -> str:
+    """Lấy giá trị sau một nhãn như Parameter, Evidence hoặc Solution."""
     pattern = rf"{re.escape(label)}\s*:\s*(.+?)(?:\n|$)"
     match = re.search(pattern, text, flags=re.IGNORECASE)
     return collapse_ws(match.group(1)) if match else ""
 
 
 def split_method_url(text: str) -> tuple[str, str]:
+    """Tách HTTP method và URL từ một dòng mô tả request trong report."""
     match = re.search(r"\b(GET|POST|PUT|PATCH|DELETE|OPTIONS|HEAD)\s+(https?://[^\n]+)", text)
     if not match:
         return "", ""
@@ -77,6 +83,7 @@ def split_method_url(text: str) -> tuple[str, str]:
 
 
 def parse_table_rows(report_html: str) -> list[Alert]:
+    """Parse alert từ report dạng bảng của ZAP."""
     alerts: list[Alert] = []
     for row in re.findall(r"<tr\b[^>]*>(.*?)</tr>", report_html, flags=re.IGNORECASE | re.DOTALL):
         cells = re.findall(r"<t[dh]\b[^>]*>(.*?)</t[dh]>", row, flags=re.IGNORECASE | re.DOTALL)
@@ -111,6 +118,7 @@ def parse_table_rows(report_html: str) -> list[Alert]:
 
 
 def parse_details_sections(report_html: str) -> list[Alert]:
+    """Parse alert từ report HTML mới có các block details/summary."""
     alerts: list[Alert] = []
     risk_blocks = re.findall(
         r"<li id=\"alerts--risk-[^>]+>(.*?)(?=<li id=\"alerts--risk-|<section id=\"appendix\"|</main>)",
@@ -154,6 +162,7 @@ def parse_details_sections(report_html: str) -> list[Alert]:
 
 
 def parse_classic_results(report_html: str) -> list[Alert]:
+    """Parse alert từ report classic của ZAP có table class `results`."""
     alerts: list[Alert] = []
     tables = re.findall(
         r"<table\b[^>]*class=\"results\"[^>]*>(.*?)</table>",
@@ -176,6 +185,7 @@ def parse_classic_results(report_html: str) -> list[Alert]:
         current: dict[str, str] | None = None
 
         def flush_current() -> None:
+            """Đẩy request hiện tại vào danh sách alert khi đã có URL."""
             if not current or not current.get("URL"):
                 return
             alerts.append(
@@ -215,6 +225,7 @@ def parse_classic_results(report_html: str) -> list[Alert]:
 
 
 def dedupe_alerts(alerts: list[Alert]) -> list[Alert]:
+    """Loại alert trùng nhau sau khi parse từ nhiều layout HTML khác nhau."""
     seen: set[tuple[str, str, str, str, str]] = set()
     result: list[Alert] = []
     for alert in sorted(alerts, key=lambda item: (RISK_ORDER.get(item.risk, 9), item.name, item.url)):
@@ -227,6 +238,7 @@ def dedupe_alerts(alerts: list[Alert]) -> list[Alert]:
 
 
 def parse_zap_html(report_html: str) -> list[Alert]:
+    """Parse report HTML bằng các parser tương thích nhiều phiên bản ZAP."""
     alerts = parse_details_sections(report_html)
     alerts.extend(parse_classic_results(report_html))
     alerts.extend(parse_table_rows(report_html))
@@ -234,6 +246,7 @@ def parse_zap_html(report_html: str) -> list[Alert]:
 
 
 def load_dotenv(env_path: Path | None = None) -> None:
+    """Đọc `.env` cho cấu hình OpenRouter mà không ghi đè env có sẵn."""
     candidate = env_path or SCRIPT_DIR / ".env"
     if not candidate.exists():
         return
@@ -248,6 +261,7 @@ def load_dotenv(env_path: Path | None = None) -> None:
 
 
 def find_default_report(input_dir: Path) -> Path:
+    """Chọn report HTML mới nhất trong output, hoặc fallback `zap_report.html`."""
     candidates = sorted(input_dir.glob("*.html"), key=lambda path: path.stat().st_mtime, reverse=True)
     if candidates:
         return candidates[0]
@@ -258,6 +272,7 @@ def find_default_report(input_dir: Path) -> Path:
 
 
 def summarize_alerts(alerts: list[Alert], limit: int) -> str:
+    """Rút gọn danh sách alert để đưa vào prompt AI."""
     lines = []
     for index, alert in enumerate(alerts[:limit], start=1):
         fields = [
@@ -277,6 +292,7 @@ def summarize_alerts(alerts: list[Alert], limit: int) -> str:
 
 
 def build_prompt(alerts: list[Alert], source_name: str, limit: int) -> str:
+    """Tạo prompt tiếng Việt yêu cầu AI triage các alert quan trọng."""
     alert_summary = summarize_alerts(alerts, limit=limit)
     return textwrap.dedent(
         f"""
@@ -300,6 +316,7 @@ def build_prompt(alerts: list[Alert], source_name: str, limit: int) -> str:
 
 
 def call_openrouter(prompt: str, api_key: str, model: str, timeout: int = 20) -> str:
+    """Gọi OpenRouter Chat Completions và trả về nội dung markdown từ model."""
     url = OPENROUTER_ENDPOINT
     payload = {
         "model": model,
@@ -314,8 +331,8 @@ def call_openrouter(prompt: str, api_key: str, model: str, timeout: int = 20) ->
         headers={
             "Content-Type": "application/json",
             "Authorization": f"Bearer {api_key}",
-            "HTTP-Referer": "https://github.com", # Required by OpenRouter for ranking
-            "X-Title": "ZAP Triage AI" # Optional
+            "HTTP-Referer": "https://github.com",  # OpenRouter dùng để ranking nguồn gọi
+            "X-Title": "ZAP Triage AI",  # Tên ngắn cho request trên OpenRouter
         },
         method="POST",
     )
@@ -338,11 +355,13 @@ def call_openrouter(prompt: str, api_key: str, model: str, timeout: int = 20) ->
 
 
 def classify_noise(alert: Alert) -> bool:
+    """Nhận diện finding có khả năng là noise từ Vite/dev dependency."""
     dev_markers = ("/@vite", "/node_modules/.vite/", "vite-hmr", "@react-refresh")
     return any(marker in alert.url for marker in dev_markers) or any(marker in alert.evidence for marker in dev_markers)
 
 
 def build_poc(alert: Alert) -> str:
+    """Tạo PoC/testcase lab-safe theo loại alert phổ biến."""
     lower_name = alert.name.lower()
     if "cross site scripting" in lower_name or "xss" in lower_name:
         return textwrap.dedent(
@@ -396,6 +415,7 @@ def build_poc(alert: Alert) -> str:
 
 
 def build_offline_triage(alerts: list[Alert], source_name: str) -> str:
+    """Sinh triage markdown không cần AI khi không có API key hoặc call lỗi."""
     if not alerts:
         return "Không trích xuất được alert nào từ report. Cần kiểm tra lại định dạng report hoặc chạy lại ZAP."
 
@@ -442,6 +462,7 @@ def build_offline_triage(alerts: list[Alert], source_name: str) -> str:
 
 
 def impact_for(alert: Alert) -> str:
+    """Ước lượng impact ngắn gọn dựa trên tên alert."""
     name = alert.name.lower()
     if "xss" in name or "cross site scripting" in name:
         return "Có thể thực thi JavaScript trong browser nạn nhân, đánh cắp dữ liệu phiên hoặc thao tác thay người dùng."
@@ -457,6 +478,7 @@ def impact_for(alert: Alert) -> str:
 
 
 def fix_for(alert: Alert) -> str:
+    """Gợi ý fix thực dụng cho các alert ZAP thường gặp."""
     name = alert.name.lower()
     if "xss" in name or "cross site scripting" in name:
         return "Không dùng `innerHTML` với input/query/hash; render text bằng React escaping mặc định; sanitize nếu bắt buộc render HTML."
@@ -474,6 +496,7 @@ def fix_for(alert: Alert) -> str:
 
 
 def render_markdown(alerts: list[Alert], triage_text: str, source_name: str, model_name: str) -> str:
+    """Ghép summary, bảng alert, triage và submission block thành markdown."""
     counts: dict[str, int] = {}
     for alert in alerts:
         counts[alert.risk] = counts.get(alert.risk, 0) + 1
@@ -515,6 +538,7 @@ def render_markdown(alerts: list[Alert], triage_text: str, source_name: str, mod
 
 
 def build_submission_block(alerts: list[Alert], source_name: str) -> str:
+    """Tạo block có thể dán vào bài nộp seminar."""
     counts: dict[str, int] = {}
     for alert in alerts:
         counts[alert.risk] = counts.get(alert.risk, 0) + 1
@@ -551,6 +575,7 @@ def build_submission_block(alerts: list[Alert], source_name: str) -> str:
 
 
 def compact_submission_summary(alerts: list[Alert]) -> str:
+    """Tóm tắt vài alert đầu tiên cho phần submission."""
     if not alerts:
         return "- Chưa parse được alert; cần kiểm tra lại report."
     lines = []
@@ -560,6 +585,7 @@ def compact_submission_summary(alerts: list[Alert]) -> str:
 
 
 def update_submission_file(path: Path, block: str) -> None:
+    """Cập nhật block AI triage được quản lý trong file submission."""
     content = path.read_text(encoding="utf-8")
     managed = f"{SUBMISSION_START}\n{block.strip()}\n{SUBMISSION_END}"
     pattern = rf"{re.escape(SUBMISSION_START)}.*?{re.escape(SUBMISSION_END)}"
@@ -575,6 +601,7 @@ def update_submission_file(path: Path, block: str) -> None:
 
 
 def load_alerts(input_path: Path | None) -> tuple[Path, list[Alert]]:
+    """Đọc report HTML từ input hoặc default rồi parse thành alert."""
     report_path = input_path or find_default_report(DEFAULT_INPUT_DIR)
     report_path = report_path if report_path.is_absolute() else (Path.cwd() / report_path).resolve()
     report_html = report_path.read_text(encoding="utf-8", errors="ignore")
@@ -582,12 +609,14 @@ def load_alerts(input_path: Path | None) -> tuple[Path, list[Alert]]:
 
 
 def resolve_output_path(report_path: Path, output_path: Path | None) -> Path:
+    """Chuẩn hóa output path cho file markdown triage."""
     del report_path
     selected_path = output_path or DEFAULT_OUTPUT
     return selected_path if selected_path.is_absolute() else (Path.cwd() / selected_path).resolve()
 
 
 def main() -> int:
+    """CLI entrypoint cho workflow parse report và sinh triage markdown."""
     load_dotenv()
 
     parser = argparse.ArgumentParser(description="Generate AI triage markdown from OWASP ZAP HTML reports.")

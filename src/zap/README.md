@@ -10,14 +10,18 @@ Pipeline hiện tại:
 2. Tạo context `EShop` và chỉ đưa các URL local được phép vào scope.
 3. Nếu chọn `--auth-role user` hoặc `--auth-role admin`, script đăng nhập EShop, lấy JWT và cấu hình ZAP Replacer để tự gắn header `Authorization: Bearer ...`.
 4. Nếu có `--forced-user`, bật Forced User Mode để ZAP scan dưới user đã cấu hình.
-5. Chạy traditional spider, tùy chọn AJAX Spider cho SPA, chờ passive scan xử lý, rồi chạy active scan.
-6. Ghi report ra file, mặc định là `src/zap/output/zap_scan_report.html`.
-7. Sau khi scan xong, có thể chạy AI triage riêng từ report HTML để tạo bản tóm tắt ưu tiên xử lý.
+5. Chọn scan mode:
+   - `basic`: dùng các ZAP scanner/rule mặc định đang được enable trong daemon.
+   - `owasp-top10-2025`: tạo active scan policy riêng từ các scanner có tag `OWASP_2025_A*`; nếu ZAP API không trả metadata tag, script fallback sang danh sách active rule ID tương ứng OWASP Top 10 2025.
+6. Chạy traditional spider, tùy chọn AJAX Spider cho SPA, chờ passive scan xử lý, rồi chạy active scan.
+7. Ghi report bằng official ZAP Report Generation add-on ra file do người dùng chọn, mặc định là `src/zap/output/zap_scan_report.html`.
+8. Sau khi scan xong, có thể chạy AI triage riêng từ report HTML để tạo bản tóm tắt ưu tiên xử lý.
 
 ## Yêu cầu
 
 - Python 3
 - Docker daemon đang chạy, nếu không dùng `--external-zap`
+- ZAP Report Generation add-on; image `ghcr.io/zaproxy/zaproxy:stable` thường đã có sẵn add-on này. Nếu daemon ngoài không có add-on, script fallback sang core report cũ.
 - Cài thư viện ZAP API:
 
 ```bash
@@ -45,16 +49,29 @@ Anonymous scan backend mặc định:
 rtk python src/zap/scan_zap.py --target http://localhost:3000
 ```
 
+Backend scan theo OWASP Top 10 2025, output riêng:
+
+```bash
+rtk python src/zap/scan_zap.py --target http://localhost:3000 --scan-mode owasp-top10-2025 --output-file src/zap/output/backend_owasp2025.html
+```
+
 User scan cho frontend user/SPA:
 
 ```bash
-rtk python src/zap/scan_zap.py --target http://localhost:5173 --auth-role user --forced-user --ajax-spider
+rtk python src/zap/scan_zap.py --target http://localhost:5173 --auth-role user --forced-user --ajax-spider --output-file src/zap/output/frontend_user.html
 ```
 
 Admin scan cho frontend admin/SPA:
 
 ```bash
-rtk python src/zap/scan_zap.py --target http://localhost:5174 --auth-role admin --forced-user --ajax-spider
+rtk python src/zap/scan_zap.py --target http://localhost:5174 --auth-role admin --forced-user --ajax-spider --output-file src/zap/output/frontend_admin.html
+```
+
+Frontend user/admin theo OWASP Top 10 2025:
+
+```bash
+rtk python src/zap/scan_zap.py --target http://localhost:5173 --auth-role user --forced-user --ajax-spider --scan-mode owasp-top10-2025 --output-file src/zap/output/frontend_user_owasp2025.html
+rtk python src/zap/scan_zap.py --target http://localhost:5174 --auth-role admin --forced-user --ajax-spider --scan-mode owasp-top10-2025 --output-file src/zap/output/frontend_admin_owasp2025.html
 ```
 
 Scan với ZAP daemon tự quản lý bên ngoài:
@@ -73,6 +90,14 @@ Tùy chỉnh report:
 rtk python src/zap/scan_zap.py --target http://localhost:3000 --report-format md --report-file src/zap/output/zap_scan_report.md
 ```
 
+`--output-file` là alias rõ nghĩa của `--report-file`, dùng khi muốn đặt path/tên file theo target demo:
+
+```bash
+rtk python src/zap/scan_zap.py --target http://localhost:3000 --output-file src/zap/output/backend_basic.html
+```
+
+Report HTML mặc định dùng official template `modern` của ZAP Report Generation add-on. Template này có phần metadata/tag của alert, nên các tag dạng `OWASP_2021_Axx` hoặc `OWASP_2025_Axx` sẽ hiện trong report nếu scanner/alert của ZAP daemon có metadata đó. Với `--external-zap` chạy trong Docker riêng, hãy mount thư mục output vào container ZAP; với container do script tự chạy, script tự mount thư mục chứa report.
+
 ## Tài khoản và biến môi trường
 
 Các biến trong `src/zap/.env.example` có thể điều khiển scan mà không cần sửa code:
@@ -85,6 +110,7 @@ Các biến trong `src/zap/.env.example` có thể điều khiển scan mà khô
 - `ZAP_FORCED_USER`
 - `ZAP_AJAX_SPIDER`
 - `ZAP_EXTERNAL_ZAP`
+- `ZAP_SCAN_MODE` (`basic`, `owasp-top10-2025`)
 - `ZAP_REPORT_FORMAT`
 - `ZAP_REPORT_FILE`
 - `ZAP_USER_EMAIL`
@@ -106,6 +132,14 @@ Ví dụ chạy hoàn toàn bằng `.env`:
 
 ```bash
 rtk python src/zap/scan_zap.py
+```
+
+Ví dụ `.env` cho backend theo OWASP Top 10 2025:
+
+```env
+ZAP_TARGET=http://localhost:3000
+ZAP_SCAN_MODE=owasp-top10-2025
+ZAP_REPORT_FILE=src/zap/output/backend_owasp2025.html
 ```
 
 ## Output và AI triage
@@ -136,6 +170,7 @@ rtk python src/zap/ai_triage_zap.py --input src/zap/output/zap_scan_report.html 
 
 - Script chỉ allowlist target local EShop: `http://localhost` hoặc `http://127.0.0.1` trên cổng `3000`, `5173`, `5174`.
 - Với authenticated scan, `--zap-url` cũng phải là ZAP daemon HTTP local để tránh gửi credentials qua proxy từ xa hoặc không tin cậy.
+- `owasp-top10-2025` chỉ giới hạn active scan vào các scanner OWASP 2025 mà ZAP daemon hiện tại có cài; nếu daemon không trả `alertTags`, script dùng fallback theo active rule ID. Chế độ này không chứng minh tự động rằng toàn bộ OWASP Top 10 đã được cover đầy đủ.
 - Chỉ scan hệ thống bạn được phép kiểm thử.
 - Active Scan có thể gửi payload tấn công, tạo dữ liệu rác, khóa tài khoản test hoặc thay đổi trạng thái ứng dụng.
 - Kết quả ZAP và AI triage là tín hiệu hỗ trợ; cần con người xác thực lại trước khi kết luận hoặc tạo issue bảo mật.
@@ -147,4 +182,5 @@ rtk python src/zap/ai_triage_zap.py --input src/zap/output/zap_scan_report.html 
 - EShop login failure: đảm bảo backend ở `http://localhost:3000`, tài khoản/password đúng, API `/api/login` trả token và biến môi trường không bị cấu hình sai.
 - Locked test account: reset dữ liệu test hoặc đổi sang tài khoản test khác qua `ZAP_USER_EMAIL`/`ZAP_USER_PASSWORD` hoặc `ZAP_ADMIN_EMAIL`/`ZAP_ADMIN_PASSWORD`.
 - Missing Replacer/API: đảm bảo ZAP daemon bật API và hỗ trợ Replacer; với Docker mặc định script chạy ZAP bằng `api.disablekey=true`.
+- Missing OWASP tags trong report: đảm bảo dùng report HTML official add-on, không phải core report fallback; kiểm tra log không có dòng `Official Report Generation failed`.
 - Empty AJAX coverage: xác nhận frontend đúng port, SPA đã build/chạy ổn định, route cần scan reachable sau đăng nhập, và command có `--ajax-spider`.

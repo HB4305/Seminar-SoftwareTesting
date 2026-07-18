@@ -1,3 +1,10 @@
+"""Các helper runtime dùng chung cho workflow OWASP ZAP của EShop.
+
+File này gom các phần không thuộc CLI: validate target local, đọc `.env`,
+cấu hình context/auth trong ZAP, đăng nhập lấy JWT, xác minh session, và quản
+lý container ZAP khi script tự khởi động Docker.
+"""
+
 from __future__ import annotations
 
 import dataclasses
@@ -20,12 +27,14 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 def _format_command(command: object) -> str:
+    """Chuyển command sang chuỗi dễ đọc để in trong thông báo lỗi."""
     if isinstance(command, (list, tuple)):
         return " ".join(str(part) for part in command)
     return str(command)
 
 
 def load_dotenv(env_path: str | os.PathLike[str] | None = None) -> None:
+    """Đọc file `.env` đơn giản mà không ghi đè biến môi trường đã có."""
     candidate = os.fspath(env_path) if env_path is not None else os.path.join(SCRIPT_DIR, ".env")
     if not os.path.exists(candidate):
         return
@@ -41,6 +50,7 @@ def load_dotenv(env_path: str | os.PathLike[str] | None = None) -> None:
 
 
 def _docker_start_error(command: object, exc: Exception) -> str:
+    """Tạo thông báo lỗi đầy đủ khi Docker/ZAP container không khởi động được."""
     parts = [
         "Docker must be installed/running to start ZAP",
         f"command failed: {_format_command(command)}",
@@ -58,17 +68,22 @@ def _docker_start_error(command: object, exc: Exception) -> str:
 
 @dataclasses.dataclass(frozen=True)
 class Credential:
+    """Thông tin đăng nhập seed user/admin dùng cho authenticated scan."""
+
     email: str
     password: str
 
 
 @dataclasses.dataclass(frozen=True)
 class AuthState:
+    """ID context và user sau khi cấu hình authentication trong ZAP."""
+
     context_id: str
     user_id: str
 
 
 def validate_target(target: str) -> str:
+    """Chỉ cho phép scan EShop local trên các port đã định nghĩa trước."""
     parsed = urlparse(target)
     try:
         port = parsed.port
@@ -84,6 +99,7 @@ def validate_target(target: str) -> str:
 
 
 def get_credential(role: str) -> Credential | None:
+    """Lấy credential theo role, ưu tiên biến môi trường nếu có cấu hình."""
     if role == "none":
         return None
     defaults = {
@@ -101,6 +117,7 @@ def get_credential(role: str) -> Credential | None:
 
 
 def ensure_context(zap) -> str:
+    """Tạo hoặc reset ZAP context để scope chỉ bao gồm URL local EShop."""
     if CONTEXT_NAME not in zap.context.context_list:
         context_id = str(zap.context.new_context(CONTEXT_NAME))
         zap.context.include_in_context(CONTEXT_NAME, CONTEXT_REGEX)
@@ -117,6 +134,7 @@ def ensure_context(zap) -> str:
 
 
 def _user_id(zap, context_id: str, email: str) -> str:
+    """Tìm hoặc tạo ZAP user tương ứng với email trong context hiện tại."""
     for user in zap.users.users_list(context_id):
         if user.get("name") == email:
             user_id = str(user["id"])
@@ -133,6 +151,7 @@ def configure_authenticated_context(
     token: str,
     forced_user: bool,
 ) -> AuthState:
+    """Cấu hình ZAP để tự gắn JWT Authorization header khi scan có đăng nhập."""
     context_id = ensure_context(zap)
     user_id = _user_id(zap, context_id, credential.email)
     try:
@@ -165,6 +184,7 @@ def configure_authenticated_context(
 
 
 def cleanup_authenticated_context(zap, forced_user: bool) -> None:
+    """Xóa rule chứa JWT và tắt Forced User Mode sau authenticated scan."""
     try:
         zap.replacer.remove_rule(REPLACER_RULE)
     finally:
@@ -173,12 +193,14 @@ def cleanup_authenticated_context(zap, forced_user: bool) -> None:
 
 
 def _proxy_opener(zap_url: str):
+    """Tạo urllib opener gửi request qua ZAP proxy để request được ghi vào ZAP."""
     return urllib.request.build_opener(
         urllib.request.ProxyHandler({"http": zap_url, "https": zap_url})
     )
 
 
 def login_for_token(zap_url: str, credential: Credential, timeout: int = 15) -> str:
+    """Đăng nhập EShop qua ZAP proxy và trích xuất JWT từ response."""
     request = urllib.request.Request(
         LOGIN_URL,
         data=json.dumps(dataclasses.asdict(credential)).encode("utf-8"),
@@ -203,6 +225,7 @@ def login_for_token(zap_url: str, credential: Credential, timeout: int = 15) -> 
 
 
 def verify_authenticated_session(zap_url: str, timeout: int = 15) -> None:
+    """Gửi request `/api/users/me` qua ZAP proxy để xác nhận JWT hoạt động."""
     request = urllib.request.Request(VERIFY_URL, method="GET")
     try:
         with _proxy_opener(zap_url).open(request, timeout=timeout) as response:
@@ -215,27 +238,39 @@ def verify_authenticated_session(zap_url: str, timeout: int = 15) -> None:
 
 
 class ZapDockerManager:
+    """Quản lý ZAP Docker container dùng một lần cho scan local."""
+
     def __init__(
         self,
         port: int = 8090,
         container_name: str | None = None,
         image: str | None = None,
+        writable_dir: str | None = None,
     ) -> None:
+        """Lưu cấu hình container nhưng chưa khởi động Docker."""
         self.port = port
         self.container_name = container_name or f"eshop-zap-{os.getpid()}"
         self.image = image or os.getenv("ZAP_IMAGE", ZAP_IMAGE)
+        self.writable_dir = writable_dir
         self.started = False
 
     def start(self) -> None:
+        """Kiểm tra Docker rồi chạy ZAP daemon ở chế độ API không cần key."""
         command = ["docker", "version"]
         try:
             subprocess.run(command, check=True, capture_output=True, text=True)
             command = [
                 "docker", "run", "--rm", "-d", "--name", self.container_name,
-                "--network", "host", self.image, "zap.sh", "-daemon",
+                "--network", "host",
+            ]
+            if self.writable_dir:
+                # Mount cùng path host/container để official Report Generation API ghi đúng file output.
+                command.extend(["-v", f"{self.writable_dir}:{self.writable_dir}"])
+            command.extend([
+                self.image, "zap.sh", "-daemon",
                 "-port", str(self.port), "-host", "0.0.0.0",
                 "-config", "api.disablekey=true",
-            ]
+            ])
             subprocess.run(command, check=True, capture_output=True, text=True)
         except (FileNotFoundError, subprocess.CalledProcessError) as exc:
             failed_command = getattr(exc, "cmd", None) or command
@@ -243,6 +278,7 @@ class ZapDockerManager:
         self.started = True
 
     def stop(self) -> None:
+        """Dừng container nếu manager đã khởi động nó trong phiên scan này."""
         if not self.started:
             return
         try:
