@@ -11,15 +11,15 @@
 
 ### 2.1. Bảng nhiệm vụ
 
-| **Nhiệm vụ**                                                                                                                                                                             | **Họ tên**                       |
-| :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------- |
-| Hoàn thiện Track Semgrep AI Triage: cấu hình OpenRouter với model Gemini, sửa script để xử lý toàn bộ findings trong JSON, bổ sung pipeline/output và kiểm thử lại luồng offline triage. | Lê Mai Hoài Bảo                  |
-| Sắp xếp lại cấu trúc Track Semgrep: tài liệu để trong`docs/semgrep/`, script/pipeline/runtime để trong `src/semgrep/`, đồng thời cập nhật hướng dẫn chạy từ root project.                | Lê Mai Hoài Bảo                  |
-| Cài đặt và chạy cơ bản Track ZAP trên môi trường local để nắm luồng scan ban đầu của công cụ.                                                                                            | Lê Mai Hoài Bảo, Lâm Hữu Khánh   |
-| Rà soát bộ evidence Track ZAP, đối chiếu các tùy chọn CLI và bổ sung hướng dẫn chạy lại basic scan từ root project.                                                                      | Lâm Hữu Khánh                    |
-| Cài đặt và chạy cơ bản Track Semgrep trên môi trường local để nắm luồng scan ban đầu của công cụ.                                                                                        | Lê Trung Kiên, Mai Thị Kim Duyên |
-| Cấu hình authenticated scan cho ZAP với luồng đăng nhập EShop,`auth-role`, `forced-user`, AJAX Spider và inject JWT qua ZAP Replacer.                                                    | Mai Thị Kim Duyên                |
-| Tùy biến output report ZAP theo path/tên file người dùng chọn, hỗ trợ`html` hoặc `json`, đồng thời thêm scan mode `basic` và `owasp-top10-2025`.                                         | Lê Trung Kiên                    |
+| **Nhiệm vụ**                                                                                                                                                                                       | **Họ tên**                   |
+| :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----------------------------------- |
+| Hoàn thiện Track Semgrep AI Triage: cấu hình OpenRouter với model Gemini, sửa script để xử lý toàn bộ findings trong JSON, bổ sung pipeline/output và kiểm thử lại luồng offline triage. | Lê Mai Hoài Bảo                   |
+| Sắp xếp lại cấu trúc Track Semgrep: tài liệu để trong`docs/semgrep/`, script/pipeline/runtime để trong `src/semgrep/`, đồng thời cập nhật hướng dẫn chạy từ root project.         | Lê Mai Hoài Bảo                   |
+| Cài đặt và chạy cơ bản Track ZAP trên môi trường local để nắm luồng scan ban đầu của công cụ.                                                                                          | Lê Mai Hoài Bảo, Lâm Hữu Khánh |
+| Rà soát bộ evidence Track ZAP, đối chiếu các tùy chọn CLI và bổ sung hướng dẫn chạy lại basic scan từ root project.                                                                       | Lâm Hữu Khánh                     |
+| Cài đặt và chạy cơ bản Track Semgrep trên môi trường local để nắm luồng scan ban đầu của công cụ.                                                                                      | Lê Trung Kiên, Mai Thị Kim Duyên |
+| Cấu hình authenticated scan cho ZAP với luồng đăng nhập EShop,`auth-role`, `forced-user`, AJAX Spider và inject JWT qua ZAP Replacer.                                                          | Mai Thị Kim Duyên                  |
+| Tùy biến output report ZAP theo path/tên file người dùng chọn, hỗ trợ`html` hoặc `json`, đồng thời thêm scan mode `basic` và `owasp-top10-2025`.                                    | Lê Trung Kiên                      |
 
 ### 2.2. Minh chứng
 
@@ -122,12 +122,12 @@
 - Tài liệu official đã đối chiếu:
   - `https://www.zaproxy.org/docs/desktop/cmdline/`
   - `https://www.zaproxy.org/docs/desktop/addons/report-generation/`
-- Audit chi tiết: `AI_Audit_Draft.md`.
 
 ### 3.4. Lê Mai Hoài Bảo
 
 - Công cụ: Codex/ChatGPT, OpenRouter, model Gemini qua OpenRouter (`google/gemini-2.5-flash-lite`).
 - Prompt đã sử dụng:
+
   - Yêu cầu AI đọc tài liệu Semgrep trong repo và hướng dẫn cách chạy Semgrep từ bước cài đặt, scan đến AI triage.
   - Yêu cầu AI sửa cấu hình `.env.example` để dùng OpenRouter với model Gemini thay vì dùng trực tiếp `GEMINI_API_KEY`.
   - Yêu cầu AI sửa script để đọc `OPENROUTER_API_KEY`/`OPENROUTER_BASE_URL`.
@@ -135,17 +135,17 @@
   - Yêu cầu AI giải thích lỗi OpenRouter `402` và đề xuất model/token phù hợp hơn.
   - Yêu cầu AI sửa script để chạy tất cả findings theo số lượng lỗi trong JSON, không hardcode một lỗi.
   - Yêu cầu AI sắp xếp lại repo: tài liệu ở `docs/semgrep/`, script/pipeline/runtime ở `src/semgrep/`, đồng thời viết hướng dẫn chạy từ root.
-
 - Mục đích sử dụng: Hỗ trợ hoàn thiện workflow Semgrep AI Triage cho dự án EShop, chuẩn hóa cấu hình OpenRouter, sửa lỗi runtime, tự động hóa xử lý nhiều findings và làm rõ cấu trúc tài liệu/script trong repo.
 - Nội dung AI tạo ra:
+
   - Đề xuất cấu hình `.env.example` dùng OpenRouter với model Gemini.
   - Bản sửa logic đọc API key/base URL từ `OPENROUTER_API_KEY` và `OPENROUTER_BASE_URL`.
   - Bản sửa script để lặp qua toàn bộ findings trong `results` thay vì chỉ xử lý `findings[0]`.
   - Pipeline `run_semgrep_pipeline.sh` để chạy scan và AI triage từ root.
   - Hướng dẫn chạy trong `docs/semgrep/README.md`.
   - Unit test kiểm tra cấu hình OpenRouter và luồng xử lý findings.
-
 - Nội dung tự thực hiện/kiểm chứng:
+
   - Kiểm tra lại cấu trúc thư mục để đảm bảo tài liệu nằm trong `docs/semgrep/`, code/script nằm trong `src/semgrep/`.
   - Tự chạy lệnh cài đặt trong `.venv`, scan Semgrep và chạy script triage.
   - Đối chiếu log Semgrep cho thấy có 12 findings và kiểm tra script xử lý đủ 12 findings trong chế độ offline.
@@ -154,20 +154,20 @@
 
 ## 4. Task tuần sau
 
-| **Id** | **Task name**                                                                                                    | **Member**                       |
-| :----: | :--------------------------------------------------------------------------------------------------------------- | :------------------------------- |
-|   1    | Chuẩn bị slide và user guide cho OWASP Top 10 mục 1 và 2, kèm phần giới thiệu ngắn.                              | Lê Trung Kiên                    |
-|   2    | Chuẩn bị slide và user guide cho OWASP Top 10 mục 3, 4 và 5, kèm phần giới thiệu ngắn.                           | Mai Thị Kim Duyên                |
-|   3    | Chuẩn bị slide và user guide cho OWASP Top 10 mục 6 và 7, kèm phần giới thiệu ngắn.                              | Lê Mai Hoài Bảo                  |
-|   4    | Chuẩn bị slide và user guide cho OWASP Top 10 mục 8, 9 và 10, kèm phần giới thiệu ngắn.                          | Lâm Hữu Khánh                    |
-|   5    | Viết slide và user guide giới thiệu SAST, Semgrep, hướng dẫn cài đặt/setup Semgrep.                              | Lê Mai Hoài Bảo                  |
-|   6    | Viết slide và user guide hướng dẫn chạy basic scan và cách chạy Semgrep trong pipeline.                          | Lâm Hữu Khánh                    |
-|   7    | Viết slide và user guide giới thiệu DAST, OWASP ZAP, hướng dẫn cài đặt/setup ZAP và cách chạy basic scan qua UI. | Lê Trung Kiên                    |
-|   8    | Viết slide và user guide giới thiệu script ZAP của nhóm, gồm cách dùng các flag chính và ý nghĩa output.         | Mai Thị Kim Duyên                |
-|   9    | Tạo test case để xác nhận output scan từ ZAP khớp với PoC do AI triage bên Semgrep sinh ra.                      | Lê Trung Kiên                    |
-|   10   | Lên outline cho phần thuyết trình của nhóm.                                                                      | Lê Trung Kiên                    |
-|   11   | Phối hợp quay video demo workflow.                                                                               | Mai Thị Kim Duyên, Lâm Hữu Khánh |
-|   12   | Thực hiện AI audit và rà soát lại nội dung kỹ thuật trước khi nhóm chốt tài liệu.                                | Lê Mai Hoài Bảo                  |
+| **Id** | **Task name**                                                                                                           | **Member**                      |
+| :----------: | :---------------------------------------------------------------------------------------------------------------------------- | :------------------------------------ |
+|      1      | Chuẩn bị slide và user guide cho OWASP Top 10 mục 1 và 2, kèm phần giới thiệu ngắn.                                 | Lê Trung Kiên                       |
+|      2      | Chuẩn bị slide và user guide cho OWASP Top 10 mục 3, 4 và 5, kèm phần giới thiệu ngắn.                              | Mai Thị Kim Duyên                   |
+|      3      | Chuẩn bị slide và user guide cho OWASP Top 10 mục 6 và 7, kèm phần giới thiệu ngắn.                                 | Lê Mai Hoài Bảo                    |
+|      4      | Chuẩn bị slide và user guide cho OWASP Top 10 mục 8, 9 và 10, kèm phần giới thiệu ngắn.                             | Lâm Hữu Khánh                      |
+|      5      | Viết slide và user guide giới thiệu SAST, Semgrep, hướng dẫn cài đặt/setup Semgrep.                                 | Lê Mai Hoài Bảo                    |
+|      6      | Viết slide và user guide hướng dẫn chạy basic scan và cách chạy Semgrep trong pipeline.                              | Lâm Hữu Khánh                      |
+|      7      | Viết slide và user guide giới thiệu DAST, OWASP ZAP, hướng dẫn cài đặt/setup ZAP và cách chạy basic scan qua UI. | Lê Trung Kiên                       |
+|      8      | Viết slide và user guide giới thiệu script ZAP của nhóm, gồm cách dùng các flag chính và ý nghĩa output.        | Mai Thị Kim Duyên                   |
+|      9      | Tạo test case để xác nhận output scan từ ZAP khớp với PoC do AI triage bên Semgrep sinh ra.                          | Lê Trung Kiên                       |
+|      10      | Lên outline cho phần thuyết trình của nhóm.                                                                             | Lê Trung Kiên                       |
+|      11      | Phối hợp quay video demo workflow.                                                                                          | Mai Thị Kim Duyên, Lâm Hữu Khánh |
+|      12      | Thực hiện AI audit và rà soát lại nội dung kỹ thuật trước khi nhóm chốt tài liệu.                              | Lê Mai Hoài Bảo                    |
 
 ## 5. Vấn đề phát sinh
 

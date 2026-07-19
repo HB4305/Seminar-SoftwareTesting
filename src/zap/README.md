@@ -43,35 +43,152 @@ Script tự đọc `src/zap/.env`. Thứ tự ưu tiên là CLI flag > biến m�
 
 ## Chạy scan
 
-Anonymous scan backend mặc định:
+Các command bên dưới dùng ZAP container do script tự khởi động. Mỗi lần chạy nên ghi ra một file riêng theo đúng target để tránh nhầm report backend/frontend. Nếu dùng `--external-zap`, hãy tạo session mới hoặc clear history trước khi scan.
+
+### Backend API (`http://localhost:3000`)
+
+Basic scan:
 
 ```bash
-python src/zap/scan_zap.py --target http://localhost:3000
+python src/zap/scan_zap.py \
+  --target http://localhost:3000 \
+  --report-format html \
+  --output-file src/zap/output/backend_basic.html
 ```
 
-Backend scan theo OWASP Top 10 2025, output riêng:
+Basic scan xuất JSON:
 
 ```bash
-python src/zap/scan_zap.py --target http://localhost:3000 --scan-mode owasp-top10-2025 --output-file src/zap/output/backend_owasp2025.html
+python src/zap/scan_zap.py \
+  --target http://localhost:3000 \
+  --report-format json \
+  --output-file src/zap/output/backend_basic.json
 ```
 
-User scan cho frontend user/SPA:
+OWASP Top 10 2025 scan:
 
 ```bash
-python src/zap/scan_zap.py --target http://localhost:5173 --auth-role user --forced-user --ajax-spider --output-file src/zap/output/frontend_user.html
+python src/zap/scan_zap.py \
+  --target http://localhost:3000 \
+  --scan-mode owasp-top10-2025 \
+  --report-format html \
+  --output-file src/zap/output/backend_owasp2025.html
 ```
 
-Admin scan cho frontend admin/SPA:
+OWASP Top 10 2025 scan xuất JSON:
 
 ```bash
-python src/zap/scan_zap.py --target http://localhost:5174 --auth-role admin --forced-user --ajax-spider --output-file src/zap/output/frontend_admin.html
+python src/zap/scan_zap.py \
+  --target http://localhost:3000 \
+  --scan-mode owasp-top10-2025 \
+  --report-format json \
+  --output-file src/zap/output/backend_owasp2025.json
 ```
 
-Frontend user/admin theo OWASP Top 10 2025:
+Backend thường không cần `--ajax-spider` vì mục tiêu là API/server HTML trên cổng `3000`.
+
+### Frontend Web/User (`http://localhost:5173`)
+
+Basic scan:
 
 ```bash
-python src/zap/scan_zap.py --target http://localhost:5173 --auth-role user --forced-user --ajax-spider --scan-mode owasp-top10-2025 --output-file src/zap/output/frontend_user_owasp2025.html
-python src/zap/scan_zap.py --target http://localhost:5174 --auth-role admin --forced-user --ajax-spider --scan-mode owasp-top10-2025 --output-file src/zap/output/frontend_admin_owasp2025.html
+python src/zap/scan_zap.py \
+  --target http://localhost:5173 \
+  --auth-role user \
+  --forced-user \
+  --ajax-spider \
+  --report-format html \
+  --output-file src/zap/output/frontend_user_basic.html
+```
+
+Basic scan xuất JSON:
+
+```bash
+python src/zap/scan_zap.py \
+  --target http://localhost:5173 \
+  --auth-role user \
+  --forced-user \
+  --ajax-spider \
+  --report-format json \
+  --output-file src/zap/output/frontend_user_basic.json
+```
+
+OWASP Top 10 2025 scan:
+
+```bash
+python src/zap/scan_zap.py \
+  --target http://localhost:5173 \
+  --auth-role user \
+  --forced-user \
+  --ajax-spider \
+  --scan-mode owasp-top10-2025 \
+  --report-format html \
+  --output-file src/zap/output/frontend_user_owasp2025.html
+```
+
+OWASP Top 10 2025 scan xuất JSON:
+
+```bash
+python src/zap/scan_zap.py \
+  --target http://localhost:5173 \
+  --auth-role user \
+  --forced-user \
+  --ajax-spider \
+  --scan-mode owasp-top10-2025 \
+  --report-format json \
+  --output-file src/zap/output/frontend_user_owasp2025.json
+```
+
+### Frontend Admin (`http://localhost:5174`)
+
+Basic scan:
+
+```bash
+python src/zap/scan_zap.py \
+  --target http://localhost:5174 \
+  --auth-role admin \
+  --forced-user \
+  --ajax-spider \
+  --report-format html \
+  --output-file src/zap/output/frontend_admin_basic.html
+```
+
+Basic scan xuất JSON:
+
+```bash
+python src/zap/scan_zap.py \
+  --target http://localhost:5174 \
+  --auth-role admin \
+  --forced-user \
+  --ajax-spider \
+  --report-format json \
+  --output-file src/zap/output/frontend_admin_basic.json
+```
+
+OWASP Top 10 2025 scan:
+
+```bash
+python src/zap/scan_zap.py \
+  --target http://localhost:5174 \
+  --auth-role admin \
+  --forced-user \
+  --ajax-spider \
+  --scan-mode owasp-top10-2025 \
+  --report-format html \
+  --output-file src/zap/output/frontend_admin_owasp2025.html
+```
+
+OWASP Top 10 2025 scan xuất JSON:
+
+```bash
+python src/zap/scan_zap.py \
+  --target http://localhost:5174 \
+  --auth-role admin \
+  --forced-user \
+  --ajax-spider \
+  --scan-mode owasp-top10-2025 \
+  --report-format json \
+  --output-file src/zap/output/frontend_admin_owasp2025.json
 ```
 
 Scan với ZAP daemon tự quản lý bên ngoài:
