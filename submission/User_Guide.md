@@ -125,9 +125,62 @@ semgrep scan \
 
 ## 5. Flow Semgrep của nhóm
 
-Flow đầy đủ gồm scan source, xuất JSON, đọc từng finding, trích source context và sinh báo cáo triage.
+Flow đầy đủ bắt đầu từ quét mã nguồn bằng Semgrep, sau đó xuất kết quả JSON, kiểm tra finding thô, đưa vào AI triage, kiểm chứng lại bằng source context và cuối cùng ghi báo cáo.
 
-### 5.1. Cấu hình AI provider
+### 5.1. Xác định source code cần quét
+
+Chạy các lệnh từ root repo `Seminar-SoftwareTesting`. Mặc định nhóm đặt source EShop cùng cấp với repo seminar:
+
+```text
+parent-folder/
+├── Seminar-SoftwareTesting/
+└── eshop-sut/
+```
+
+Nếu source nằm đúng vị trí trên, đường dẫn scan là `../eshop-sut`. Nếu source nằm nơi khác, thay `../eshop-sut` bằng đường dẫn thật, ví dụ `/Users/mac/projects/eshop-sut`.
+
+Trước khi quét, kiểm tra nhanh thư mục source:
+
+```bash
+ls ../eshop-sut
+```
+
+Không quét các thư mục dependency hoặc build output như `node_modules`, `dist`, `build`, `.next` vì chúng làm kết quả nhiễu và tốn thời gian.
+
+### 5.3. Quét mã nguồn và xuất kết quả JSON
+
+Trong flow chính, nhóm chạy một lần với cả ruleset OWASP Top 10 và Node.js, đồng thời xuất kết quả ra JSON. Ruleset OWASP giúp rà soát các nhóm lỗi bảo mật phổ biến, còn `p/nodejs` bổ sung rule phù hợp với backend/frontend JavaScript của EShop:
+
+```bash
+mkdir -p src/semgrep/output
+semgrep scan \
+  --config "p/owasp-top-ten" \
+  --config "p/nodejs" \
+  --exclude node_modules \
+  --exclude dist \
+  --exclude build \
+  --exclude .next \
+  --json \
+  -o src/semgrep/output/semgrep_results.json \
+  ../eshop-sut
+```
+
+Ở bước này, đọc nhanh output trên terminal để nắm:
+
+- File và dòng code có cảnh báo.
+- Rule ID, severity và message của Semgrep.
+- Đoạn code bị đánh dấu.
+- Nhóm lỗi OWASP hoặc loại lỗi tương ứng, ví dụ secret hardcoded, HTTP không mã hóa, injection pattern.
+
+Kiểm tra file kết quả đã được tạo:
+
+```bash
+ls src/semgrep/output/semgrep_results.json
+```
+
+File `semgrep_results.json` là bằng chứng scan gốc, nên giữ lại để đối chiếu với báo cáo triage và kết quả demo.
+
+### 5.4. Cấu hình AI provider cho bước triage
 
 ```bash
 cp src/semgrep/.env.example src/semgrep/.env
@@ -142,7 +195,20 @@ OPENROUTER_API_KEY=sk-or-v1-...
 OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
 ```
 
-Không commit file `.env` thật. Nếu không có API key, vẫn có thể chạy triage offline để sinh prompt, skeleton output và báo cáo tổng hợp:
+Không commit file `.env` thật vì có chứa API key.
+
+### 5.5. Chạy AI triage trên kết quả Semgrep
+
+Sau khi có `src/semgrep/output/semgrep_results.json`, chạy script triage:
+
+```bash
+python src/semgrep/semgrep_ai_triage.py \
+  src/semgrep/output/semgrep_results.json \
+  --source-root ../eshop-sut \
+  --output-dir src/semgrep/output
+```
+
+Script sẽ đọc từng finding trong JSON, lấy source context từ `--source-root`, tạo prompt phân tích và sinh báo cáo tổng hợp. Nếu không có API key, vẫn có thể chạy triage offline để sinh prompt, skeleton output và báo cáo tổng hợp:
 
 ```bash
 python src/semgrep/semgrep_ai_triage.py \
@@ -152,25 +218,28 @@ python src/semgrep/semgrep_ai_triage.py \
   --offline
 ```
 
-### 5.2. Chạy pipeline tự động
+### 5.6. Kiểm tra output triage
 
-Mặc định pipeline quét `../eshop-sut` và ghi kết quả vào `src/semgrep/output/`:
-
-```bash
-bash src/semgrep/run_semgrep_pipeline.sh
-```
-
-Nếu source EShop nằm ở vị trí khác:
+Sau khi triage xong, kiểm tra các file chính:
 
 ```bash
-SOURCE_ROOT="/path/to/eshop-sut" bash src/semgrep/run_semgrep_pipeline.sh
+ls src/semgrep/output
+ls src/semgrep/output/findings
 ```
 
-Output cần kiểm tra:
+Output cần nộp hoặc dùng khi demo:
 
-- `src/semgrep/output/semgrep_results.json`: kết quả scan gốc.
-- `src/semgrep/output/semgrep_triage_report.md`: bảng tổng hợp finding.
+- `src/semgrep/output/semgrep_results.json`: kết quả scan gốc từ Semgrep.
+- `src/semgrep/output/semgrep_triage_report.md`: báo cáo tổng hợp sau triage.
 - `src/semgrep/output/findings/`: prompt và output riêng cho từng finding.
+
+Khi đọc báo cáo, nhóm cần kiểm chứng lại từng finding bằng source code thật:
+
+- Finding có nằm trong code tự viết của EShop hay chỉ nằm trong dependency/build output.
+- Dữ liệu người dùng có đi tới sink nguy hiểm hay không.
+- Secret, token, URL HTTP hoặc cấu hình yếu có dùng ở runtime hay chỉ là sample/test.
+- AI có giải thích đúng file, dòng code, impact và remediation hay không.
+- Kết luận cuối cùng là `True Positive`, `False Positive`, `Needs Manual Review` hoặc `Not Applicable`.
 
 Trong output hiện có, Semgrep ghi nhận 12 findings, gồm hardcoded JWT secret trong `backend/server.js` và nhiều request HTTP không mã hóa trong `frontend-mobile/App.js`.
 
@@ -462,7 +531,7 @@ Kết quả cần ghi nhận:
 | Vấn đề | Dấu hiệu | Nguyên nhân thường gặp | Cách xử lý |
 | --- | --- | --- | --- |
 | Không cài được package Python global | `externally-managed-environment` | Distro chặn cài pip vào system Python | Dùng `.venv` rồi cài dependency trong virtual environment. |
-| Semgrep không tìm thấy source | Pipeline báo không có `../eshop-sut` | Source EShop nằm khác vị trí mặc định | Chạy `SOURCE_ROOT="/path/to/eshop-sut" bash src/semgrep/run_semgrep_pipeline.sh`. |
+| Semgrep không tìm thấy source | Lệnh scan báo không có `../eshop-sut` | Source EShop nằm khác vị trí mặc định | Thay `../eshop-sut` trong lệnh Semgrep bằng đường dẫn source thật. |
 | OpenRouter trả `402` | AI triage lỗi billing/credit | Hết credit hoặc model quá tốn token | Dùng model nhẹ hơn, nạp credit hoặc chạy/đọc output offline. |
 | ZAP không khởi động | Docker unavailable hoặc image pull lỗi | Docker chưa chạy, thiếu quyền, mạng chậm | Kiểm tra Docker daemon, pull trước image ZAP hoặc dùng ZAP GUI/external daemon. |
 | Authenticated ZAP scan lỗi `401/403` | Login hoặc `/api/users/me` fail | Sai credential, account bị khóa, backend chưa chạy | Reset dữ liệu test, đổi credential trong `.env`, kiểm tra backend `3000`. |
