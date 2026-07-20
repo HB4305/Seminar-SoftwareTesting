@@ -157,11 +157,19 @@ Mục tiêu tiếp theo của nhóm là chạy quét ZAP trên toàn bộ các t
    ```
 
 3. **Chạy AI Triage trực tuyến (Online Triage)**:
-   Nếu muốn gọi OpenRouter để AI phân tích chi tiết và đề xuất PoC tự động, hãy thiết lập `OPENROUTER_API_KEY` trong `.env` và chạy script triage với tham số `--use-ai`:
-   ```bash
-   python src/zap/ai_triage_zap.py --input src/zap/output/backend_basic.json --use-ai
-   ```
-   Báo cáo chi tiết sẽ được ghi đè vào file `src/zap/output/zap_ai_triage_report.md`.
+   Nếu muốn gọi OpenRouter để AI phân tích chi tiết và đề xuất PoC tự động, hãy thiết lập `OPENROUTER_API_KEY` trong `.env` và chạy một trong hai script triage sau:
+
+   * **Cách A: Sinh báo cáo Triage tổng hợp (ai_triage_zap.py)**
+     ```bash
+      python src/zap/openrouter_zap_json_extract.py     --input src/zap/output/backend_basic.json src/zap/output/frontend_user_basic.json     --format markdown     --output src/zap/output/zap_openrouter_result.md
+     ```
+     Báo cáo chi tiết sẽ được ghi đè vào file `src/zap/output/zap_ai_triage_report.md`.
+
+   * **Cách B: Trích xuất chi tiết từng instance lỗi và sinh PoC cụ thể (openrouter_zap_json_extract.py)**
+     ```bash
+     python src/zap/openrouter_zap_json_extract.py --input src/zap/output/backend_basic.json --format markdown --output src/zap/output/zap_openrouter_result.md
+     ```
+     Báo cáo trích xuất chi tiết và danh sách PoC sẽ được ghi vào file `src/zap/output/zap_openrouter_result.md`.
 
 ---
 

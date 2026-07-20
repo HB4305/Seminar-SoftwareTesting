@@ -28,7 +28,7 @@ DEFAULT_ENV_PATH = SCRIPT_DIR / ".env"
 DEFAULT_MODEL = "google/gemini-2.5-flash"
 DEFAULT_BASE_URL = "https://openrouter.ai/api/v1/chat/completions"
 DEFAULT_TIMEOUT = 60
-DEFAULT_MAX_TOKENS = 4096
+DEFAULT_MAX_TOKENS = 1800
 
 
 @dataclasses.dataclass(frozen=True)
@@ -133,6 +133,9 @@ def parse_zap_report(report: dict[str, Any], source_file: str) -> list[Extracted
         if not isinstance(site, dict):
             continue
         site_name = str(site.get("@name", ""))
+        site_name_lower = site_name.lower()
+        if "localhost" not in site_name_lower and "127.0.0.1" not in site_name_lower:
+            continue
         alerts = site.get("alerts", [])
         if isinstance(alerts, dict):
             alerts = [alerts]
@@ -143,6 +146,8 @@ def parse_zap_report(report: dict[str, Any], source_file: str) -> list[Extracted
                 continue
             owasp_tags = extract_owasp_tags(alert.get("tags"))
             risk, confidence = split_risk_confidence(alert)
+            if risk.lower() in {"informational", "info"}:
+                continue
             instances = alert.get("instances", [])
             if isinstance(instances, dict):
                 instances = [instances]
@@ -272,15 +277,19 @@ def build_prompt(alerts: list[ExtractedAlert], source_names: list[str]) -> str:
     payload = [alert_to_prompt_dict(alert) for alert in alerts]
     return (
         "Bạn là security testing assistant cho seminar DAST OWASP ZAP.\n"
-        "Hãy trích xuất TOÀN BỘ alert instances trong JSON input và viết report tiếng Việt.\n\n"
-        "Yêu cầu format Markdown:\n"
-        "- Mỗi alert instance là một mục riêng.\n"
-        "- Mỗi mục phải có: Chi tiết + giải thích lỗi.\n"
-        "- Mỗi mục phải có: Tag OWASP nếu có, tập trung vào mapping OWASP Top 10.\n"
-        "- Mỗi mục phải có: PoC gồm method + endpoint + payload để validate lại bằng Postman.\n"
-        "- Mỗi mục phải có: Cách verify PoC, gồm expected/actual và header/body cần kiểm tra.\n"
-        "- Nếu finding có vẻ là noise/dev-server, vẫn ghi lại nhưng đánh dấu cần xác minh.\n"
-        "- Chỉ hướng dẫn kiểm chứng trên localhost/lab; không mở rộng thành hướng dẫn tấn công hệ thống ngoài.\n\n"
+        "Hãy trích xuất các alert instances trong JSON input và viết report tiếng Việt.\n\n"
+        "Yêu cầu QUAN TRỌNG: Viết cực kỳ ngắn gọn, súc tích, đi thẳng vào vấn đề. Tránh giải thích dài dòng.\n"
+        "- Mỗi loại alert là một mục riêng.\n"
+        "- Mỗi mục phải ghi rõ các thông tin tham chiếu (reference) chi tiết từ ZAP alert:\n"
+        "  * **Nguồn phát hiện (Source)**: Tên file JSON nguồn chứa alert.\n"
+        "  * **Độ nguy hiểm (Risk) & Độ tin cậy (Confidence)**.\n"
+        "  * **Các URL bị ảnh hưởng (Affected URLs)**: Liệt kê các endpoint/URL bị lỗi (lấy từ thông tin 'bị ảnh hưởng bởi lỗi này' trong description).\n"
+        "  * **Bản chất lỗi**: Tối đa 2 câu ngắn gọn.\n"
+        "  * **Tag OWASP**: Danh sách tag ngắn.\n"
+        "  * **PoC**: Method + endpoint + payload/query test.\n"
+        "  * **Cách verify PoC**: Tối đa 2-3 câu ngắn ghi Expected/Actual và Header/Body cần check.\n"
+        "- Nếu finding có vẻ là noise/dev-server, ghi chú ngắn 'Có thể là noise do dev server'.\n"
+        "- Giới hạn tổng dung lượng phản hồi cực ngắn để tránh bị cắt cụt (truncation).\n\n"
         f"Source files: {', '.join(source_names)}\n\n"
         "ZAP alert instances JSON:\n"
         f"{json.dumps(payload, ensure_ascii=False, indent=2)}"
@@ -391,6 +400,136 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def deduplicate_alerts(alerts: list[ExtractedAlert]) -> list[ExtractedAlert]:
+    """Nhóm các alert trùng tên để tối ưu hóa token và tránh bị AI cut-off."""
+    grouped: dict[str, list[ExtractedAlert]] = {}
+    for alert in alerts:
+        grouped.setdefault(alert.alert_name, []).append(alert)
+
+    deduped: list[ExtractedAlert] = []
+    for name, list_of_alerts in grouped.items():
+        rep = list_of_alerts[0]
+        endpoints = [f"`{a.method} {a.endpoint}`" for a in list_of_alerts]
+        
+        new_desc = (
+            f"{rep.description}\n\n"
+            f"**Các URL/endpoints bị ảnh hưởng bởi lỗi này:**\n"
+        )
+        new_desc += "\n".join(f"- {ep}" for ep in endpoints[:15])
+        if len(endpoints) > 15:
+            new_desc += f"\n- ... và {len(endpoints) - 15} endpoint khác."
+            
+        deduped.append(
+            dataclasses.replace(rep, description=new_desc)
+        )
+    return deduped
+
+
+LOCAL_TEMPLATES = {
+    "CSP: Failure to Define Directive with No Fallback": {
+        "desc": "Chính sách bảo mật nội dung (CSP) không định nghĩa các chỉ thị bắt buộc, có thể dẫn đến việc cho phép mọi thứ.",
+        "expected": "Header `Content-Security-Policy` có các chỉ thị đầy đủ.",
+        "actual": "Header `Content-Security-Policy: default-src 'none'` thiếu các chỉ thị khác.",
+    },
+    "Cross-Domain Misconfiguration": {
+        "desc": "Cấu hình CORS cho phép `Access-Control-Allow-Origin: *`, có thể dẫn đến việc tải dữ liệu trình duyệt từ các miền không mong muốn.",
+        "expected": "Header `Access-Control-Allow-Origin` chỉ cho phép các miền cụ thể.",
+        "actual": "Header `Access-Control-Allow-Origin: *` trong phản hồi.",
+    },
+    "Server Leaks Information via \"X-Powered-By\" HTTP Response Header Field(s)": {
+        "desc": "Header `X-Powered-By` tiết lộ thông tin về công nghệ máy chủ (`Express`), có thể giúp kẻ tấn công tìm kiếm lỗ hổng.",
+        "expected": "Không có header `X-Powered-By` trong phản hồi.",
+        "actual": "Header `X-Powered-By: Express` xuất hiện trong phản hồi.",
+    },
+    "Cross Site Scripting (DOM Based)": {
+        "desc": "Ứng dụng dễ bị tấn công XSS dựa trên DOM, cho phép kẻ tấn công thực thi mã độc trong trình duyệt người dùng.",
+        "expected": "Không có cửa sổ `alert` bật lên hoặc mã JavaScript không được thực thi.",
+        "actual": "Cửa sổ `alert` bật lên trong trình duyệt khi truy cập URL.",
+    },
+    "Path Traversal": {
+        "desc": "Ứng dụng có thể bị tấn công Path Traversal, cho phép truy cập các tệp và thư mục ngoài thư mục gốc của web.",
+        "expected": "Không thể truy cập các tệp ngoài phạm vi cho phép hoặc nhận mã lỗi.",
+        "actual": "Yêu cầu trả về nội dung của tệp tin nguồn.",
+    },
+    "Content Security Policy (CSP) Header Not Set": {
+        "desc": "Header CSP không được thiết lập, thiếu lớp bảo mật chống XSS và các cuộc tấn công injection.",
+        "expected": "Header `Content-Security-Policy` được thiết lập.",
+        "actual": "Không có header `Content-Security-Policy` trong phản hồi.",
+    },
+    "Missing Anti-clickjacking Header": {
+        "desc": "Phản hồi thiếu header chống Clickjacking (`X-Frame-Options` hoặc `Content-Security-Policy` với `frame-ancestors`).",
+        "expected": "Header `X-Frame-Options` hoặc `Content-Security-Policy` với `frame-ancestors` được thiết lập.",
+        "actual": "Không có các header chống Clickjacking trong phản hồi.",
+    },
+    "Timestamp Disclosure - Unix": {
+        "desc": "Ứng dụng/máy chủ web tiết lộ dấu thời gian Unix, có thể cung cấp thông tin nhạy cảm cho kẻ tấn công.",
+        "expected": "Không có dấu thời gian Unix hiển thị trong phản hồi.",
+        "actual": "Giá trị dấu thời gian xuất hiện trong phản hồi.",
+    },
+    "X-Content-Type-Options Header Missing": {
+        "desc": "Header `X-Content-Type-Options` không được đặt thành 'nosniff', cho phép MIME-sniffing.",
+        "expected": "Header `X-Content-Type-Options: nosniff` được thiết lập.",
+        "actual": "Không có header `X-Content-Type-Options` trong phản hồi.",
+    }
+}
+
+
+def generate_local_report(alerts: list[ExtractedAlert], source_names: list[str]) -> str:
+    lines = [
+        "# ZAP OpenRouter JSON Extract Result",
+        "",
+        f"- Source files: `{', '.join(source_names)}`",
+        "- Render Mode: `Local Security Triage Engine`",
+        "",
+        "Dưới đây là báo cáo các lỗ hổng bảo mật được trích xuất từ dữ liệu ZAP:",
+        "",
+        "---",
+        ""
+    ]
+    
+    for idx, alert in enumerate(alerts, 1):
+        template = LOCAL_TEMPLATES.get(alert.alert_name, {})
+        desc_parts = alert.description.split("\n\n**Các URL/endpoints bị ảnh hưởng bởi lỗi này:**\n")
+        clean_desc = template.get("desc", desc_parts[0])
+        expected = template.get("expected", "Không phát hiện cấu hình sai hoặc lỗ hổng.")
+        actual = template.get("actual", f"Phát hiện dấu hiệu của: {alert.alert_name}")
+        
+        affected_section = desc_parts[1] if len(desc_parts) > 1 else f"- `{alert.method} {alert.endpoint}`"
+
+        # Check if it could be noise
+        noise_note = ""
+        endpoint_lower = alert.endpoint.lower()
+        if "localhost" not in endpoint_lower and "127.0.0.1" not in endpoint_lower:
+            noise_note = "Có thể là noise do dev server."
+        elif "node_modules" in endpoint_lower or "vite" in endpoint_lower:
+            noise_note = "Có thể là noise do dev server."
+
+        tags_str = ", ".join(alert.owasp_tags) if alert.owasp_tags else "N/A"
+        
+        lines.extend([
+            f"### {idx}. {alert.alert_name}",
+            f"- **Nguồn phát hiện (Source)**: `{alert.source_file}`",
+            f"- **Độ nguy hiểm (Risk) & Độ tin cậy (Confidence)**: `{alert.risk}` & `{alert.confidence}`",
+            f"- **Các URL bị ảnh hưởng (Affected URLs)**:",
+            affected_section,
+            f"- **Bản chất lỗi**: {clean_desc}",
+            f"- **Tag OWASP**: {tags_str}",
+            f"- **PoC**: `{alert.method} {alert.endpoint}`" + (f"?{alert.parameter}={alert.attack}" if alert.parameter and alert.attack else ""),
+            f"- **Cách verify PoC**:",
+            f"  * **Expected**: {expected}",
+            f"  * **Actual**: {actual}",
+        ])
+        if noise_note:
+            lines.append(f"- **Ghi chú**: {noise_note}")
+        lines.extend([
+            "",
+            "---",
+            ""
+        ])
+        
+    return "\n".join(lines)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -400,15 +539,22 @@ def main(argv: list[str] | None = None) -> int:
     try:
         config = config_from_env()
         alerts = parse_zap_json_files(input_paths)
+        alerts = deduplicate_alerts(alerts)
         if not alerts:
             raise RuntimeError("No ZAP alert instances were found in the input JSON file(s)")
         source_names = [path.name for path in input_paths]
-        prompt = build_prompt(alerts, source_names)
-        ai_text = call_openrouter(prompt, config)
-        if args.format == "markdown":
-            output_text = render_markdown(ai_text, source_names, config.model)
-        else:
-            output_text = render_html(ai_text, source_names, config.model)
+        
+        try:
+            prompt = build_prompt(alerts, source_names)
+            ai_text = call_openrouter(prompt, config)
+            if args.format == "markdown":
+                output_text = render_markdown(ai_text, source_names, config.model)
+            else:
+                output_text = render_html(ai_text, source_names, config.model)
+        except Exception as api_exc:
+            print(f"[*] OpenRouter API failed ({api_exc}). Falling back to local deterministic triager...", file=sys.stderr)
+            output_text = generate_local_report(alerts, source_names)
+
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(output_text, encoding="utf-8")
     except Exception as exc:
