@@ -82,7 +82,7 @@ Total alerts : N
 Mỗi target một dòng — không cộng chung nếu chưa chắc scope sạch.
 Triage offline (tùy chọn):
 ```bash
-python src/zap/ai_triage_zap.py --input src/zap/output/backend_basic.json
+python ai_triage_zap.py --input output/backend_basic.json --output output/zap_ai_triage_report.md
 ```
 - Nếu gặp lỗi: `[!] Cannot read ZAP report: [Errno 2] No such file or directory: '/home/melyen/Documents/class/testing/seminar/Seminar-SoftwareTesting/src/zap/output/backend_basic.html'` (hoặc `.json`)
 - Cách xử lí: 

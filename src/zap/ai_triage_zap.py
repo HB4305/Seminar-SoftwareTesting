@@ -70,6 +70,7 @@ class Alert:
     solution: str = ""
     description: str = ""
     site: str = ""
+    tags: str = ""
 
 
 def strip_tags(value: str) -> str:
@@ -281,6 +282,17 @@ def parse_zap_json(report_json: dict) -> list[Alert]:
             description = alert.get("desc", "")
             solution = alert.get("solution", "")
 
+            tags_list = alert.get("tags", [])
+            tags_str = ""
+            if isinstance(tags_list, list):
+                parsed_tags = []
+                for t in tags_list:
+                    if isinstance(t, dict) and "tag" in t:
+                        parsed_tags.append(t["tag"])
+                    elif isinstance(t, str):
+                        parsed_tags.append(t)
+                tags_str = ", ".join(parsed_tags)
+
             instances = alert.get("instances", [])
             if not instances:
                 alerts.append(
@@ -294,6 +306,7 @@ def parse_zap_json(report_json: dict) -> list[Alert]:
                         evidence=collapse_ws(alert.get("evidence", "")),
                         solution=collapse_ws(solution),
                         description=collapse_ws(description),
+                        tags=collapse_ws(tags_str),
                     )
                 )
                 continue
@@ -316,6 +329,7 @@ def parse_zap_json(report_json: dict) -> list[Alert]:
                         evidence=collapse_ws(evidence),
                         solution=collapse_ws(solution),
                         description=collapse_ws(description),
+                        tags=collapse_ws(tags_str),
                     )
                 )
 
@@ -366,20 +380,24 @@ def build_prompt(alerts: list[Alert], source_name: str, limit: int) -> str:
     alert_summary = summarize_alerts(alerts, limit=limit)
     return textwrap.dedent(
         f"""
-        Bạn là security testing assistant cho seminar T09 Security Testing.
-        Hãy đọc các alert OWASP ZAP dưới đây và viết phần AI-Triage cho Zap track bằng tiếng Việt.
+        Bạn là chuyên gia và trợ lý bảo mật cho seminar T09 Security Testing.
+        Hãy đọc các alert OWASP ZAP dưới đây và viết báo cáo AI-Triage bằng tiếng Việt.
 
-        Yêu cầu output markdown:
-        1. Ưu tiên triage theo risk và khả năng tái lập.
-        2. Với mỗi finding quan trọng, ghi: ZAP Alert Note, nhận định thật/false positive, impact, PoC/reproducer, testcase, expected/actual result, fix suggestion.
-        3. Nếu alert có vẻ do môi trường development như Vite dev server, ghi rõ là false positive/noise cần scan lại production build.
-        4. Phần PoC chỉ dùng cho localhost/lab EShop, không hướng dẫn tấn công hệ thống bên ngoài.
-        5. Thêm Human Audit Checklist để nhóm kiểm chứng output AI.
-        6. Thêm Metrics/Failure Modes ngắn cho M3/M5.
+        Đối với mỗi phát hiện (finding) quan trọng được liệt kê, bạn bắt buộc phải cung cấp đầy đủ các phần sau:
+        1. **Mô tả lỗ hổng (Vulnerability Description)**: Giải thích chi tiết lỗ hổng này là gì, cơ chế hoạt động, và tại sao nó lại được ZAP gắn cờ.
+        2. **Proof of Concept (PoC)**: Đề xuất kịch bản kiểm thử hoặc lệnh check (ví dụ: lệnh curl cụ thể, script JS chạy trên console) được thiết kế riêng cho EShop để tái hiện lỗi.
+        3. **Xác thực với phản hồi thực tế của EShop (Confirm against real EShop response)**: Hướng dẫn chi tiết cách so khớp và kiểm chứng thủ công với response thực tế (Headers, Status Codes, Body) từ server EShop đang chạy để khẳng định đây là lỗi thật hay chỉ là cảnh báo giả (False Positive).
+        4. **Nhận định (Triage)**: Nhận định xem đây là lỗi Thật hay False Positive kèm lý giải ngữ cảnh (ví dụ: do cấu hình mặc định của dev server Vite/Node).
+        5. **Tác động (Impact)**: Đánh giá thiệt hại thực tế đối với ứng dụng EShop và dữ liệu người dùng.
+        6. **Đề xuất khắc phục (Fix suggestion)**: Code hoặc cấu hình cụ thể để vá lỗi cho hệ thống EShop (Express.js backend hoặc Vite frontend).
 
-        Source report: {source_name}
+        Ngoài ra, hãy bổ sung:
+        - **Human Audit Checklist**: Danh sách kiểm tra thủ công cho nhóm thực hiện đối chiếu.
+        - **Metrics & Failure Modes**: Các chỉ số đo lường quá trình quét và các điểm lỗi/rủi ro trong quy trình quét của ZAP (như thiếu authentication context).
 
-        ZAP alerts:
+        Tài liệu report nguồn: {source_name}
+
+        Danh sách ZAP alerts:
         {alert_summary}
         """
     ).strip()
@@ -433,103 +451,48 @@ def classify_noise(alert: Alert) -> bool:
 def build_poc(alert: Alert) -> str:
     """Tạo PoC/testcase lab-safe theo loại alert phổ biến."""
     lower_name = alert.name.lower()
+    
     if "cross site scripting" in lower_name or "xss" in lower_name:
-        return textwrap.dedent(
-            f"""
-            **PoC DOM XSS**
-            1. Mở trình duyệt tại `{alert.url}`.
-            2. Nếu app có ô nhập tương ứng, nhập lại payload từ URL/evidence.
-            3. Quan sát popup `alert(...)` hoặc DOM bị chèn thẻ HTML.
+        check_script = f"1. Mở trình duyệt tại: `{alert.url}`\n2. Chèn payload XSS vào tham số `{alert.parameter or 'query/hash'}`."
+        verify_steps = (
+            f"- **Expected**: Trình duyệt sanitize đầu vào hoặc escaping ký tự đặc biệt, không chạy JavaScript.\n"
+            f"- **Actual theo ZAP**: Trình duyệt thực thi script (ví dụ: hiển thị hộp thoại alert)."
+        )
+    elif "cross-domain" in lower_name or "cors" in lower_name:
+        check_script = f"curl -i -H \"Origin: http://evil.example\" {alert.url}"
+        verify_steps = (
+            f"- **Expected**: Không phản hồi header `Access-Control-Allow-Origin: *` đối với các domain ngoài danh sách trắng.\n"
+            f"- **Actual theo ZAP**: Response trả về header `Access-Control-Allow-Origin: *` (Evidence: `{alert.evidence or 'Access-Control-Allow-Origin: *'}`)."
+        )
+    elif "content security policy" in lower_name or "clickjacking" in lower_name or "content-type-options" in lower_name:
+        check_script = f"curl -i {alert.url}"
+        verify_steps = (
+            f"- **Expected**: Phản hồi có chứa các header bảo vệ đầy đủ (ví dụ: CSP, X-Frame-Options, X-Content-Type-Options).\n"
+            f"- **Actual theo ZAP**: Thiếu header bảo vệ hoặc cấu hình thiếu directive an toàn (Evidence: `{alert.evidence or 'thiếu header'}`)."
+        )
+    else:
+        check_script = f"curl -i -X {alert.method or 'GET'} {alert.url}"
+        verify_steps = (
+            f"- **Expected**: Ứng dụng xử lý an toàn, không trả về thông tin nhạy cảm hoặc cấu hình sai.\n"
+            f"- **Actual theo ZAP**: Phát hiện bằng chứng: `{alert.evidence or alert.name}`."
+        )
 
-            **Testcase**
-            - Input: `{alert.parameter or "query/hash payload"}`
-            - Expected: payload được render như text an toàn, không chạy JavaScript.
-            - Actual theo ZAP: payload có thể kích hoạt script trong browser.
-            """
-        ).strip()
-    if "cross-domain" in lower_name or "cors" in lower_name:
-        return textwrap.dedent(
-            f"""
-            **PoC CORS**
-            1. Gửi request đến `{alert.url}` với header `Origin: http://evil.example`.
-            2. Kiểm tra response header.
+    tags_str = alert.tags if alert.tags else "N/A"
 
-            **Testcase**
-            - Expected: backend chỉ cho phép origin tin cậy như frontend EShop.
-            - Actual theo ZAP: response có bằng chứng `{alert.evidence or "Access-Control-Allow-Origin quá rộng"}`.
-            """
-        ).strip()
-    if "content security policy" in lower_name or "clickjacking" in lower_name or "content-type-options" in lower_name:
-        return textwrap.dedent(
-            f"""
-            **PoC Security Header**
-            1. Gửi `curl -I {alert.url}`.
-            2. Kiểm tra header bảo vệ liên quan.
-
-            **Testcase**
-            - Expected: response có CSP/frame-ancestors hoặc `X-Content-Type-Options: nosniff` tùy finding.
-            - Actual theo ZAP: header bị thiếu hoặc chưa đạt yêu cầu.
-            """
-        ).strip()
     return textwrap.dedent(
         f"""
-        **PoC/Reproducer**
-        1. Gửi request `{alert.method} {alert.url}` trong môi trường lab.
-        2. So sánh response header/body với evidence của ZAP.
-
-        **Testcase**
-        - Expected: không xuất hiện evidence rủi ro.
-        - Actual theo ZAP: `{alert.evidence or alert.name}`.
+        **PoC / Testcase kiểm chứng**:
+        - **Loại lỗi**: {alert.name} ({alert.risk})
+        - **Chi tiết lỗi**: {alert.description or 'Cần đánh giá theo evidence và dữ liệu endpoint trả về.'} (Parameter: `{alert.parameter or 'N/A'}`, Evidence: `{alert.evidence or 'N/A'}`)
+        - **Tag**: {tags_str}
+        - **Cách check (script)**:
+          ```bash
+          {check_script}
+          ```
+        - **Cách verify**:
+          {verify_steps}
         """
     ).strip()
-
-
-def build_offline_triage(alerts: list[Alert], source_name: str) -> str:
-    """Sinh triage markdown không cần AI khi không có API key hoặc call lỗi."""
-    if not alerts:
-        return "Không trích xuất được alert nào từ report. Cần kiểm tra lại định dạng report hoặc chạy lại ZAP."
-
-    sections = [
-        "## AI Triage Note",
-        f"Nguồn dữ liệu: `{source_name}`. Bản này dùng offline template vì chưa gọi AI hoặc AI không khả dụng.",
-        "",
-        "### Ưu tiên xử lý",
-    ]
-    for alert in alerts[:8]:
-        noise_note = " Có dấu hiệu noise do dev server, nên xác nhận lại bằng production build." if classify_noise(alert) else ""
-        title = f"#### {alert.risk} - {alert.name}"
-        details = [
-            title,
-            f"- ZAP Alert Note: `{alert.method} {alert.url}`",
-            f"- Confidence: {alert.confidence or 'N/A'}",
-            f"- Parameter: {alert.parameter or 'N/A'}",
-            f"- Evidence: {alert.evidence or 'N/A'}",
-            f"- Triage: {'Cần reproduce thủ công.' if not classify_noise(alert) else 'Có khả năng false positive/noise.'}{noise_note}",
-            f"- Impact: {impact_for(alert)}",
-            "",
-            build_poc(alert),
-            "",
-            f"- Fix suggestion: {fix_for(alert)}",
-            "",
-        ]
-        sections.extend(details)
-    sections.extend(
-        [
-            "### Human Audit Checklist",
-            "- Đối chiếu URL/request trong ZAP với app EShop đang chạy.",
-            "- Reproduce lại finding trên localhost và ghi screenshot/log.",
-            "- Kiểm tra source code hoặc cấu hình server tương ứng trước khi kết luận fix.",
-            "- Đánh dấu false positive nếu finding chỉ xuất hiện trên Vite/dev dependency.",
-            "",
-            "### Metrics / Failure Modes",
-            "- Metrics cần ghi: thời gian scan, số alert theo risk, số finding reproduce được.",
-            "- Failure mode 1: ZAP có thể báo security header thiếu trên dev server thay vì production server.",
-            "- Failure mode 2: AI có thể viết PoC/fix quá chung, cần kiểm chứng bằng request/response thật.",
-            "- Failure mode 3: Nếu ZAP thiếu auth context, các endpoint sau đăng nhập có thể bị bỏ sót.",
-        ]
-    )
-    return "\n".join(sections)
-
 
 def impact_for(alert: Alert) -> str:
     """Ước lượng impact ngắn gọn dựa trên tên alert."""
@@ -708,24 +671,22 @@ def main() -> int:
         print(f"[!] Cannot read ZAP report: {exc}", file=sys.stderr)
         return 1
 
-    model_name = "offline-template"
-    triage_text = ""
-    if args.use_ai:
-        api_key = os.getenv("OPENROUTER_API_KEY")
-        if not api_key:
-            print("[!] OPENROUTER_API_KEY is not set. Falling back to offline triage.", file=sys.stderr)
-        else:
-            try:
-                prompt = build_prompt(alerts, source_name=str(report_path), limit=args.max_alerts)
-                triage_text = call_openrouter(prompt, api_key=api_key, model=args.model)
-                model_name = args.model
-            except KeyboardInterrupt:
-                print("[!] OpenRouter request interrupted. Falling back to offline triage.", file=sys.stderr)
-            except (urllib.error.URLError, TimeoutError, RuntimeError, json.JSONDecodeError) as exc:
-                print(f"[!] OpenRouter call failed: {exc}. Falling back to offline triage.", file=sys.stderr)
+    api_key = os.getenv("OPENROUTER_API_KEY")
+    if not api_key:
+        print("[!] Error: OPENROUTER_API_KEY is not set in environment or .env file.", file=sys.stderr)
+        return 1
 
-    if not triage_text:
-        triage_text = build_offline_triage(alerts, source_name=str(report_path))
+    try:
+        print(f"[*] Calling AI Model ({args.model}) for triage...")
+        prompt = build_prompt(alerts, source_name=str(report_path), limit=args.max_alerts)
+        triage_text = call_openrouter(prompt, api_key=api_key, model=args.model)
+        model_name = args.model
+    except KeyboardInterrupt:
+        print("[!] OpenRouter request interrupted.", file=sys.stderr)
+        return 1
+    except (urllib.error.URLError, TimeoutError, RuntimeError, json.JSONDecodeError) as exc:
+        print(f"[!] OpenRouter call failed: {exc}", file=sys.stderr)
+        return 1
 
     output_path = resolve_output_path(report_path, args.output if args.output != DEFAULT_OUTPUT else None)
 

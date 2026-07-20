@@ -9,7 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from ai_triage_zap import (
     Alert,
     DEFAULT_MODEL,
-    build_offline_triage,
+    build_poc,
     load_dotenv,
     parse_zap_html,
     render_markdown,
@@ -68,7 +68,7 @@ class AiTriageZapTests(unittest.TestCase):
         self.assertEqual(alerts[0].parameter, "name")
         self.assertIn("onerror=alert(1)", alerts[0].evidence)
 
-    def test_offline_triage_includes_poc_and_testcase_for_xss(self):
+    def test_build_poc_includes_structured_fields_for_xss(self):
         alert = Alert(
             name="Cross Site Scripting (DOM Based)",
             risk="High",
@@ -80,12 +80,13 @@ class AiTriageZapTests(unittest.TestCase):
             solution="Encode output before rendering user-controlled values.",
         )
 
-        triage = build_offline_triage([alert], source_name="sample.html")
+        poc = build_poc(alert)
 
-        self.assertIn("DOM XSS", triage)
-        self.assertIn("PoC", triage)
-        self.assertIn("Testcase", triage)
-        self.assertIn("http://localhost:5173/?name=abc", triage)
+        self.assertIn("Loại lỗi", poc)
+        self.assertIn("Chi tiết lỗi", poc)
+        self.assertIn("Cách check (script)", poc)
+        self.assertIn("Cách verify", poc)
+        self.assertIn("http://localhost:5173/?name=abc", poc)
 
     def test_parse_zap_html_extracts_alert_from_classic_report(self):
         alerts = parse_zap_html(CLASSIC_REPORT)
