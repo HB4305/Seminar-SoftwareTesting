@@ -341,8 +341,10 @@ def write_report(zap, report_format: str, report_file: Path) -> None:
             reportdir=str(report_path.parent),
             display="false",
         )
-        print(f"[+] Report written to: {report_path}")
-        return
+        if report_path.exists():
+            print(f"[+] Report written to: {report_path}")
+            return
+        print(f"[!] Official Report Generation did not create the file {report_path}; falling back to core report.")
     except Exception as exc:
         print(f"[!] Official Report Generation failed, falling back to core report: {exc}")
 

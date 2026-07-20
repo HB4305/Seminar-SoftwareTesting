@@ -26,10 +26,30 @@ from pathlib import Path
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
+
+
+def load_dotenv(env_path: Path | None = None) -> None:
+    """Đọc `.env` cho cấu hình OpenRouter mà không ghi đè env có sẵn."""
+    candidate = env_path or SCRIPT_DIR / ".env"
+    if not candidate.exists():
+        return
+    for line in candidate.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip().strip('"').strip("'")
+        os.environ.setdefault(key, value)
+
+
+# Nạp biến môi trường từ file .env trước khi định nghĩa các hằng số
+load_dotenv()
+
 DEFAULT_INPUT_DIR = SCRIPT_DIR / "output"
-DEFAULT_OUTPUT = DEFAULT_INPUT_DIR / "zap_ai_triage_report.md"
-DEFAULT_SUBMISSION = Path("submission/Team_Work_Assignment.md")
-DEFAULT_MODEL = "google/gemini-2.5-flash"
+DEFAULT_OUTPUT = Path(os.getenv("ZAP_TRIAGE_OUTPUT_FILE", str(DEFAULT_INPUT_DIR / "zap_ai_triage_report.md")))
+DEFAULT_SUBMISSION = Path(os.getenv("ZAP_SUBMISSION_FILE", "submission/Team_Work_Assignment.md"))
+DEFAULT_MODEL = os.getenv("OPENROUTER_MODEL", "google/gemini-2.5-flash")
 OPENROUTER_ENDPOINT = "https://openrouter.ai/api/v1/chat/completions"
 RISK_ORDER = {"High": 0, "Medium": 1, "Low": 2, "Informational": 3, "Info": 3, "Unknown": 4}
 SUBMISSION_START = "<!-- ZAP_AI_TRIAGE_START -->"
@@ -245,30 +265,80 @@ def parse_zap_html(report_html: str) -> list[Alert]:
     return dedupe_alerts(alerts)
 
 
-def load_dotenv(env_path: Path | None = None) -> None:
-    """Đọc `.env` cho cấu hình OpenRouter mà không ghi đè env có sẵn."""
-    candidate = env_path or SCRIPT_DIR / ".env"
-    if not candidate.exists():
-        return
-    for line in candidate.read_text(encoding="utf-8").splitlines():
-        line = line.strip()
-        if not line or line.startswith("#") or "=" not in line:
-            continue
-        key, value = line.split("=", 1)
-        key = key.strip()
-        value = value.strip().strip('"').strip("'")
-        os.environ.setdefault(key, value)
+def parse_zap_json(report_json: dict) -> list[Alert]:
+    """Parse ZAP JSON report thành danh sách alert để triage."""
+    alerts: list[Alert] = []
+
+    sites = report_json.get("site", [])
+    if isinstance(sites, dict):
+        sites = [sites]
+
+    for site in sites:
+        for alert in site.get("alerts", []):
+            name = alert.get("alert", alert.get("name", ""))
+            risk = alert.get("risk", "Unknown")
+            confidence = alert.get("confidence", "")
+            description = alert.get("desc", "")
+            solution = alert.get("solution", "")
+
+            instances = alert.get("instances", [])
+            if not instances:
+                alerts.append(
+                    Alert(
+                        name=collapse_ws(name),
+                        risk=collapse_ws(risk),
+                        confidence=collapse_ws(confidence),
+                        method="",
+                        url=collapse_ws(alert.get("url", "")),
+                        parameter=collapse_ws(alert.get("param", "")),
+                        evidence=collapse_ws(alert.get("evidence", "")),
+                        solution=collapse_ws(solution),
+                        description=collapse_ws(description),
+                    )
+                )
+                continue
+
+            for inst in instances:
+                uri = inst.get("uri", "")
+                method = inst.get("method", "")
+                parameter = inst.get("param", "")
+                evidence = inst.get("evidence", "")
+                if not uri:
+                    uri = alert.get("url", "")
+                alerts.append(
+                    Alert(
+                        name=collapse_ws(name),
+                        risk=collapse_ws(risk),
+                        confidence=collapse_ws(confidence),
+                        method=collapse_ws(method),
+                        url=collapse_ws(uri),
+                        parameter=collapse_ws(parameter),
+                        evidence=collapse_ws(evidence),
+                        solution=collapse_ws(solution),
+                        description=collapse_ws(description),
+                    )
+                )
+
+    return dedupe_alerts(alerts)
+
+
+# load_dotenv đã được chuyển lên đầu file để nạp cấu hình sớm
 
 
 def find_default_report(input_dir: Path) -> Path:
-    """Chọn report HTML mới nhất trong output, hoặc fallback `zap_report.html`."""
-    candidates = sorted(input_dir.glob("*.html"), key=lambda path: path.stat().st_mtime, reverse=True)
-    if candidates:
-        return candidates[0]
+    """Chọn report mới nhất trong output: ưu tiên HTML, nếu không có thì JSON."""
+    html_candidates = sorted(input_dir.glob("*.html"), key=lambda path: path.stat().st_mtime, reverse=True)
+    if html_candidates:
+        return html_candidates[0]
+
+    json_candidates = sorted(input_dir.glob("*.json"), key=lambda path: path.stat().st_mtime, reverse=True)
+    if json_candidates:
+        return json_candidates[0]
+
     root_report = Path("zap_report.html")
     if root_report.exists():
         return root_report
-    raise FileNotFoundError(f"No ZAP HTML report found in {input_dir} or ./zap_report.html")
+    raise FileNotFoundError(f"No ZAP HTML or JSON report found in {input_dir} or ./zap_report.html")
 
 
 def summarize_alerts(alerts: list[Alert], limit: int) -> str:
@@ -601,11 +671,14 @@ def update_submission_file(path: Path, block: str) -> None:
 
 
 def load_alerts(input_path: Path | None) -> tuple[Path, list[Alert]]:
-    """Đọc report HTML từ input hoặc default rồi parse thành alert."""
+    """Đọc report HTML hoặc JSON từ input hoặc default rồi parse thành alert."""
     report_path = input_path or find_default_report(DEFAULT_INPUT_DIR)
     report_path = report_path if report_path.is_absolute() else (Path.cwd() / report_path).resolve()
-    report_html = report_path.read_text(encoding="utf-8", errors="ignore")
-    return report_path, parse_zap_html(report_html)
+    text = report_path.read_text(encoding="utf-8", errors="ignore")
+    if report_path.suffix.lower() == ".json":
+        report_json = json.loads(text)
+        return report_path, parse_zap_json(report_json)
+    return report_path, parse_zap_html(text)
 
 
 def resolve_output_path(report_path: Path, output_path: Path | None) -> Path:

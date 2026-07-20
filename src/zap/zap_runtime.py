@@ -10,19 +10,12 @@ from __future__ import annotations
 import dataclasses
 import json
 import os
+import re
 import subprocess
 import urllib.error
 import urllib.request
 from urllib.parse import urlparse
 
-ALLOWED_HOSTS = {"localhost", "127.0.0.1"}
-ALLOWED_PORTS = {3000, 5173, 5174}
-CONTEXT_NAME = "EShop"
-CONTEXT_REGEX = r"^http://(?:localhost|127\.0\.0\.1):(?:3000|5173|5174)(?:[/?#].*)?$"
-LOGIN_URL = "http://localhost:3000/api/login"
-REPLACER_RULE = "EShop JWT Authorization"
-VERIFY_URL = "http://localhost:3000/api/users/me"
-ZAP_IMAGE = "ghcr.io/zaproxy/zaproxy:stable"
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
@@ -47,6 +40,32 @@ def load_dotenv(env_path: str | os.PathLike[str] | None = None) -> None:
             key = key.strip()
             value = value.strip().strip('"').strip("'")
             os.environ.setdefault(key, value)
+
+
+# Nạp biến môi trường từ file .env trước khi định nghĩa các hằng số
+load_dotenv()
+
+# Các cấu hình cho phép ghi đè từ file .env
+ALLOWED_HOSTS = set(os.getenv("ZAP_ALLOWED_HOSTS", "localhost,127.0.0.1").split(","))
+
+allowed_ports_env = os.getenv("ZAP_ALLOWED_PORTS", "3000,5173,5174")
+try:
+    ALLOWED_PORTS = {int(p.strip()) for p in allowed_ports_env.split(",") if p.strip()}
+except ValueError:
+    ALLOWED_PORTS = {3000, 5173, 5174}
+
+CONTEXT_NAME = os.getenv("ZAP_CONTEXT_NAME", "EShop")
+
+# Tạo regex cho context dựa trên các host và port được cấu hình
+allowed_hosts_regex = "|".join(re.escape(h) for h in ALLOWED_HOSTS)
+allowed_ports_regex = "|".join(str(p) for p in ALLOWED_PORTS)
+DEFAULT_CONTEXT_REGEX = rf"^http://(?:{allowed_hosts_regex}):(?:{allowed_ports_regex})(?:[/?#].*)?$"
+CONTEXT_REGEX = os.getenv("ZAP_CONTEXT_REGEX", DEFAULT_CONTEXT_REGEX)
+
+LOGIN_URL = os.getenv("ESHOP_LOGIN_URL", "http://localhost:3000/api/login")
+REPLACER_RULE = os.getenv("ZAP_REPLACER_RULE", "EShop JWT Authorization")
+VERIFY_URL = os.getenv("ESHOP_VERIFY_URL", "http://localhost:3000/api/users/me")
+ZAP_IMAGE = os.getenv("ZAP_IMAGE", "ghcr.io/zaproxy/zaproxy:stable")
 
 
 def _docker_start_error(command: object, exc: Exception) -> str:

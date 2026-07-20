@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>zap_ai_triage_report.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<h1 id="zap-ai-triage-report">ZAP AI Triage Report</h1>
+<ul>
+<li>Source report: <code>/home/melyen/Documents/class/testing/seminar/Seminar-SoftwareTesting/src/zap/output/backend_basic.json</code></li>
+<li>AI/model mode: <code>google/gemini-2.5-flash</code></li>
+<li>Alerts parsed: <code>12</code></li>
+</ul>
+<h2 id="risk-summary">Risk Summary</h2>
+<ul>
+<li>Unknown: 12</li>
+</ul>
+<h2 id="parsed-alerts">Parsed Alerts</h2>
+<table>
+<thead>
+<tr>
+<th>Risk</th>
+<th>Confidence</th>
+<th>Alert</th>
+<th>Request</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Unknown</td>
+<td>3</td>
+<td>CSP: Failure to Define Directive with No Fallback</td>
+<td><code>GET http://localhost:3000</code></td>
+</tr>
+<tr>
+<td>Unknown</td>
+<td>3</td>
+<td>CSP: Failure to Define Directive with No Fallback</td>
+<td><code>GET http://localhost:3000/</code></td>
+</tr>
+<tr>
+<td>Unknown</td>
+<td>3</td>
+<td>CSP: Failure to Define Directive with No Fallback</td>
+<td><code>GET http://localhost:3000/robots.txt</code></td>
+</tr>
+<tr>
+<td>Unknown</td>
+<td>3</td>
+<td>CSP: Failure to Define Directive with No Fallback</td>
+<td><code>GET http://localhost:3000/sitemap.xml</code></td>
+</tr>
+<tr>
+<td>Unknown</td>
+<td>2</td>
+<td>Cross-Domain Misconfiguration</td>
+<td><code>GET http://localhost:3000</code></td>
+</tr>
+<tr>
+<td>Unknown</td>
+<td>2</td>
+<td>Cross-Domain Misconfiguration</td>
+<td><code>GET http://localhost:3000/</code></td>
+</tr>
+<tr>
+<td>Unknown</td>
+<td>2</td>
+<td>Cross-Domain Misconfiguration</td>
+<td><code>GET http://localhost:3000/robots.txt</code></td>
+</tr>
+<tr>
+<td>Unknown</td>
+<td>2</td>
+<td>Cross-Domain Misconfiguration</td>
+<td><code>GET http://localhost:3000/sitemap.xml</code></td>
+</tr>
+<tr>
+<td>Unknown</td>
+<td>2</td>
+<td>Server Leaks Information via &quot;X-Powered-By&quot; HTTP Response Header Field(s)</td>
+<td><code>GET http://localhost:3000</code></td>
+</tr>
+<tr>
+<td>Unknown</td>
+<td>2</td>
+<td>Server Leaks Information via &quot;X-Powered-By&quot; HTTP Response Header Field(s)</td>
+<td><code>GET http://localhost:3000/</code></td>
+</tr>
+<tr>
+<td>Unknown</td>
+<td>2</td>
+<td>Server Leaks Information via &quot;X-Powered-By&quot; HTTP Response Header Field(s)</td>
+<td><code>GET http://localhost:3000/robots.txt</code></td>
+</tr>
+<tr>
+<td>Unknown</td>
+<td>2</td>
+<td>Server Leaks Information via &quot;X-Powered-By&quot; HTTP Response Header Field(s)</td>
+<td><code>GET http://localhost:3000/sitemap.xml</code></td>
+</tr>
+</tbody>
+</table>
+<p>Tuyệt vời! Dưới đây là phần AI-Triage cho các cảnh báo OWASP ZAP của bạn, được trình bày theo yêu cầu.</p>
+<hr>
+<h1 id="ai-triage-report---zap-scan-t09-security-testing">AI-Triage Report - ZAP Scan (T09 Security Testing)</h1>
+<p><strong>Ngày tạo:</strong> 2023-10-27
+<strong>Nguồn báo cáo:</strong> <code>/home/melyen/Documents/class/testing/seminar/Seminar-SoftwareTesting/src/zap/output/backend_basic.json</code>
+<strong>Môi trường:</strong> Localhost/Lab EShop (Development)</p>
+<h2 id="t%C3%B3m-t%E1%BA%AFt-chung">Tóm tắt chung</h2>
+<p>Báo cáo ZAP này chủ yếu tập trung vào các vấn đề cấu hình bảo mật liên quan đến HTTP headers, cụ thể là <code>Content-Security-Policy</code> (CSP) và <code>Access-Control-Allow-Origin</code> (CORS). Các cảnh báo này có vẻ xuất phát từ môi trường phát triển (localhost:3000), có thể là do cấu hình mặc định của một dev server (ví dụ: Vite, Webpack Dev Server).</p>
+<p><strong>Ưu tiên triage:</strong></p>
+<ol>
+<li><strong>Cross-Domain Misconfiguration (CORS):</strong> Mặc dù đang ở môi trường dev, việc sử dụng <code>Access-Control-Allow-Origin: *</code> là một lỗ hổng tiềm ẩn nghiêm trọng nếu được triển khai lên production mà không có kiểm soát. Cần kiểm tra kỹ lưỡng.</li>
+<li><strong>CSP: Failure to Define Directive with No Fallback:</strong> Đây là một cảnh báo quan trọng về bảo mật, nhưng trong môi trường dev, nó có thể là do cấu hình mặc định hoặc chưa được tối ưu. Cần đảm bảo CSP được cấu hình đúng đắn trên môi trường production.</li>
+</ol>
+<hr>
+<h2 id="chi-ti%E1%BA%BFt-c%C3%A1c-finding">Chi tiết các Finding</h2>
+<h3 id="1-cross-domain-misconfiguration-cors">1. Cross-Domain Misconfiguration (CORS)</h3>
+<ul>
+<li>
+<p><strong>ZAP Alert Note:</strong> Unknown - Cross-Domain Misconfiguration</p>
+<ul>
+<li><strong>URL:</strong> <code>GET http://localhost:3000</code>, <code>GET http://localhost:3000/</code>, <code>GET http://localhost:3000/robots.txt</code>, <code>GET http://localhost:3000/sitemap.xml</code></li>
+<li><strong>Confidence:</strong> 2 (Medium)</li>
+<li><strong>Parameter:</strong> N/A</li>
+<li><strong>Evidence:</strong> <code>Access-Control-Allow-Origin: *</code></li>
+</ul>
+</li>
+<li>
+<p><strong>Nhận định thật/false positive:</strong></p>
+<ul>
+<li><strong>Thật:</strong> Đây là một cảnh báo thật về cấu hình, nhưng mức độ nghiêm trọng phụ thuộc vào môi trường.</li>
+<li><strong>False Positive/Noise (trong môi trường dev):</strong> Trong môi trường phát triển, việc sử dụng <code>Access-Control-Allow-Origin: *</code> là khá phổ biến để tiện lợi cho việc phát triển frontend và backend trên các cổng khác nhau. Tuy nhiên, nó trở thành một lỗ hổng nghiêm trọng nếu được triển khai lên môi trường production.</li>
+</ul>
+</li>
+<li>
+<p><strong>Impact:</strong></p>
+<ul>
+<li><strong>Trong môi trường Production:</strong> Cho phép bất kỳ tên miền nào thực hiện các yêu cầu cross-origin đến tài nguyên của ứng dụng. Điều này có thể dẫn đến các cuộc tấn công như Cross-Site Request Forgery (CSRF) hoặc thông tin nhạy cảm bị rò rỉ nếu ứng dụng không có các biện pháp bảo vệ khác (ví dụ: kiểm tra <code>Origin</code> header, sử dụng token CSRF). Kẻ tấn công có thể tạo một trang web độc hại và thực hiện các yêu cầu AJAX đến ứng dụng của bạn, đọc phản hồi nếu không có các biện pháp bảo vệ khác.</li>
+<li><strong>Trong môi trường Development:</strong> Impact thấp, chủ yếu là cảnh báo về cấu hình tiềm ẩn nguy hiểm nếu không được sửa trước khi triển khai.</li>
+</ul>
+</li>
+<li>
+<p><strong>PoC/Reproducer (trên localhost/lab EShop):</strong></p>
+<ol>
+<li>Mở trình duyệt web (ví dụ: Chrome).</li>
+<li>Mở Developer Tools (F12).</li>
+<li>Chuyển đến tab &quot;Console&quot;.</li>
+<li>Truy cập một trang web bất kỳ (ví dụ: <code>about:blank</code>).</li>
+<li>Trong Console, nhập và chạy đoạn mã JavaScript sau:<pre class="hljs"><code><div>fetch(<span class="hljs-string">'http://localhost:3000/'</span>)
+  .then(<span class="hljs-function"><span class="hljs-params">response</span> =&gt;</span> response.text())
+  .then(<span class="hljs-function"><span class="hljs-params">data</span> =&gt;</span> <span class="hljs-built_in">console</span>.log(data))
+  .catch(<span class="hljs-function"><span class="hljs-params">error</span> =&gt;</span> <span class="hljs-built_in">console</span>.error(<span class="hljs-string">'Error:'</span>, error));
+</div></code></pre>
+</li>
+<li><strong>Expected Result:</strong> Trình duyệt sẽ chặn yêu cầu do Same-Origin Policy (SOP) nếu <code>Access-Control-Allow-Origin</code> không được cấu hình hoặc được cấu hình hạn chế.</li>
+<li><strong>Actual Result:</strong> Yêu cầu sẽ thành công và nội dung của <code>http://localhost:3000/</code> sẽ được in ra console, chứng tỏ <code>Access-Control-Allow-Origin: *</code> đang cho phép truy cập từ bất kỳ origin nào.</li>
+</ol>
+</li>
+<li>
+<p><strong>Testcase:</strong></p>
+<ul>
+<li><strong>Mô tả:</strong> Kiểm tra xem header <code>Access-Control-Allow-Origin</code> có được cấu hình là <code>*</code> trên các endpoint công khai hay không.</li>
+<li><strong>Bước thực hiện:</strong>
+<ol>
+<li>Gửi yêu cầu GET đến <code>http://localhost:3000/</code>.</li>
+<li>Kiểm tra HTTP response headers.</li>
+</ol>
+</li>
+<li><strong>Expected Result:</strong> Header <code>Access-Control-Allow-Origin</code> không nên có giá trị <code>*</code> trên môi trường production. Lý tưởng nhất là chỉ định rõ các origin được phép hoặc không có header này nếu không cần CORS.</li>
+<li><strong>Actual Result:</strong> Header <code>Access-Control-Allow-Origin: *</code> được tìm thấy.</li>
+</ul>
+</li>
+<li>
+<p><strong>Fix Suggestion:</strong></p>
+<ul>
+<li><strong>Đối với môi trường Production:</strong>
+<ul>
+<li>Thay đổi <code>Access-Control-Allow-Origin: *</code> thành một danh sách các tên miền cụ thể được phép truy cập (ví dụ: <code>Access-Control-Allow-Origin: https://yourfrontend.com</code>).</li>
+<li>Nếu ứng dụng không cần CORS, hãy xóa hoàn toàn header <code>Access-Control-Allow-Origin</code>.</li>
+<li>Sử dụng các thư viện hoặc framework có sẵn để quản lý CORS một cách an toàn (ví dụ: <code>cors</code> middleware trong Express.js).</li>
+</ul>
+</li>
+<li><strong>Đối với môi trường Development:</strong> Có thể giữ nguyên để tiện phát triển, nhưng cần có quy trình kiểm tra và đảm bảo rằng cấu hình này không bị đẩy lên production.</li>
+</ul>
+</li>
+</ul>
+<h3 id="2-csp-failure-to-define-directive-with-no-fallback">2. CSP: Failure to Define Directive with No Fallback</h3>
+<ul>
+<li>
+<p><strong>ZAP Alert Note:</strong> Unknown - CSP: Failure to Define Directive with No Fallback</p>
+<ul>
+<li><strong>URL:</strong> <code>GET http://localhost:3000</code>, <code>GET http://localhost:3000/</code>, <code>GET http://localhost:3000/robots.txt</code>, <code>GET http://localhost:3000/sitemap.xml</code></li>
+<li><strong>Confidence:</strong> 3 (High)</li>
+<li><strong>Parameter:</strong> <code>Content-Security-Policy</code></li>
+<li><strong>Evidence:</strong> <code>default-src 'none'</code></li>
+</ul>
+</li>
+<li>
+<p><strong>Nhận định thật/false positive:</strong></p>
+<ul>
+<li><strong>Thật:</strong> Đây là một cảnh báo thật về việc cấu hình CSP không đầy đủ hoặc quá hạn chế, có thể gây ra lỗi chức năng hoặc không cung cấp bảo vệ đầy đủ.</li>
+<li><strong>False Positive/Noise (trong môi trường dev):</strong> Trong môi trường phát triển, đặc biệt là với các dev server như Vite, đôi khi CSP được cấu hình rất hạn chế (<code>default-src 'none'</code>) hoặc không được cấu hình đầy đủ để tránh xung đột với các công cụ phát triển hoặc để đơn giản hóa. Điều này có thể gây ra các lỗi hiển thị hoặc chức năng trong trình duyệt.</li>
+</ul>
+</li>
+<li>
+<p><strong>Impact:</strong></p>
+<ul>
+<li><strong><code>default-src 'none'</code>:</strong> Cấu hình này cực kỳ hạn chế, ngăn chặn mọi tài nguyên (script, style, image, font, v.v.) được tải từ bất kỳ nguồn nào, bao gồm cả cùng một origin. Điều này gần như chắc chắn sẽ làm hỏng chức năng của ứng dụng web, vì không có tài nguyên nào có thể được tải.</li>
+<li><strong>Thiếu các directive fallback:</strong> Nếu <code>default-src</code> không được định nghĩa, trình duyệt sẽ sử dụng các directive cụ thể khác làm fallback. Việc thiếu <code>default-src</code> hoặc các directive quan trọng khác có thể làm giảm hiệu quả của CSP, khiến ứng dụng dễ bị tấn công Cross-Site Scripting (XSS) hoặc các cuộc tấn công tiêm mã khác.</li>
+<li><strong>Trong trường hợp này (<code>default-src 'none'</code>):</strong> Impact là ứng dụng sẽ không hoạt động đúng cách. Nếu đây là một cấu hình cố ý để chặn mọi thứ, thì nó đang hoạt động như mong đợi, nhưng thường thì đây là một cấu hình lỗi hoặc chưa hoàn thiện.</li>
+</ul>
+</li>
+<li>
+<p><strong>PoC/Reproducer (trên localhost/lab EShop):</strong></p>
+<ol>
+<li>Truy cập <code>http://localhost:3000/</code> trong trình duyệt.</li>
+<li>Mở Developer Tools (F12).</li>
+<li>Chuyển đến tab &quot;Console&quot;.</li>
+<li><strong>Expected Result:</strong> Ứng dụng web sẽ tải và hiển thị bình thường.</li>
+<li><strong>Actual Result:</strong> Console sẽ hiển thị nhiều lỗi liên quan đến Content Security Policy, ví dụ: &quot;Refused to load the script '...' because it violates the following Content Security Policy directive: &quot;default-src 'none'&quot;.&quot;, &quot;Refused to load the stylesheet '...' because it violates the following Content Security Policy directive: &quot;default-src 'none'&quot;.&quot;, v.v. Trang web có thể không hiển thị đúng hoặc hoàn toàn trống.</li>
+</ol>
+</li>
+<li>
+<p><strong>Testcase:</strong></p>
+<ul>
+<li><strong>Mô tả:</strong> Kiểm tra xem header <code>Content-Security-Policy</code> có được cấu hình đúng đắn và không quá hạn chế (<code>default-src 'none'</code>) hoặc quá lỏng lẻo trên môi trường production.</li>
+<li><strong>Bước thực hiện:</strong>
+<ol>
+<li>Gửi yêu cầu GET đến <code>http://localhost:3000/</code>.</li>
+<li>Kiểm tra HTTP response headers để tìm <code>Content-Security-Policy</code>.</li>
+<li>Kiểm tra các lỗi CSP trong console của trình duyệt khi truy cập trang.</li>
+</ol>
+</li>
+<li><strong>Expected Result:</strong> Header <code>Content-Security-Policy</code> nên được cấu hình để cho phép các tài nguyên cần thiết và chặn các nguồn không an toàn. Không nên có <code>default-src 'none'</code> trừ khi có lý do rất cụ thể và các directive khác được định nghĩa rõ ràng.</li>
+<li><strong>Actual Result:</strong> Header <code>Content-Security-Policy: default-src 'none'</code> được tìm thấy, gây ra lỗi tải tài nguyên.</li>
+</ul>
+</li>
+<li>
+<p><strong>Fix Suggestion:</strong></p>
+<ul>
+<li><strong>Đối với môi trường Production:</strong>
+<ul>
+<li>Xác định tất cả các nguồn tài nguyên (script, style, image, font, media, connect, frame, v.v.) mà ứng dụng của bạn cần tải.</li>
+<li>Cấu hình <code>Content-Security-Policy</code> một cách chi tiết, chỉ định rõ các nguồn được phép cho từng loại tài nguyên.</li>
+<li>Ví dụ: <code>Content-Security-Policy: default-src 'self'; script-src 'self' https://trusted.cdn.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:;</code></li>
+<li>Sử dụng <code>report-uri</code> hoặc <code>report-to</code> để thu thập các vi phạm CSP và điều chỉnh chính sách.</li>
+<li>Tránh sử dụng <code>'unsafe-inline'</code> và <code>'unsafe-eval'</code> nếu có thể.</li>
+</ul>
+</li>
+<li><strong>Đối với môi trường Development:</strong> Nếu đây là do dev server, hãy kiểm tra cấu hình của dev server hoặc đảm bảo rằng CSP được cấu hình đúng đắn khi build cho production. <strong>Cần scan lại trên bản build production để có kết quả chính xác về CSP.</strong></li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="human-audit-checklist">Human Audit Checklist</h2>
+<p>Để nhóm kiểm chứng output AI này:</p>
+<ol>
+<li><strong>Xác nhận môi trường:</strong> Kiểm tra xem các cảnh báo này có thực sự xuất hiện trên môi trường <code>localhost:3000</code> (dev server) hay không.</li>
+<li><strong>Kiểm tra cấu hình Dev Server:</strong> Xác định xem dev server (Vite, Webpack, v.v.) có đang tự động thêm các header CORS (<code>Access-Control-Allow-Origin: *</code>) và CSP (<code>Content-Security-Policy: default-src 'none'</code>) hay không.</li>
+<li><strong>Kiểm tra mã nguồn:</strong>
+<ul>
+<li>Tìm kiếm trong mã nguồn backend (nếu có) các nơi cấu hình HTTP headers, đặc biệt là <code>Access-Control-Allow-Origin</code> và <code>Content-Security-Policy</code>.</li>
+<li>Xác nhận rằng các cấu hình này không được đẩy lên production.</li>
+</ul>
+</li>
+<li><strong>Thực hiện PoC/Testcase:</strong> Tự mình thực hiện các bước PoC và Testcase đã nêu để xác nhận <code>Actual Result</code> và <code>Expected Result</code>.</li>
+<li><strong>Đánh giá Impact:</strong> Đánh giá lại impact trong ngữ cảnh cụ thể của dự án EShop.</li>
+<li><strong>Kiểm tra Fix Suggestion:</strong> Đảm bảo các đề xuất sửa lỗi là khả thi và phù hợp với kiến trúc của ứng dụng.</li>
+<li><strong>Scan Production Build:</strong> <strong>Quan trọng nhất:</strong> Thực hiện lại scan ZAP trên một bản build production của ứng dụng để xem các cảnh báo này có còn tồn tại hay không. Các vấn đề về CSP và CORS thường được cấu hình khác nhau giữa môi trường dev và prod.</li>
+</ol>
+<hr>
+<h2 id="metricsfailure-modes-m3m5">Metrics/Failure Modes (M3/M5)</h2>
+<ul>
+<li><strong>M3 (Recall):</strong>
+<ul>
+<li><strong>Failure Mode:</strong> AI bỏ sót các cảnh báo quan trọng hoặc không nhận diện được các lỗ hổng thực sự.</li>
+<li><strong>Metric:</strong> Tỷ lệ cảnh báo quan trọng bị bỏ sót bởi AI so với tổng số cảnh báo quan trọng được phát hiện bởi chuyên gia bảo mật.</li>
+</ul>
+</li>
+<li><strong>M5 (Precision):</strong>
+<ul>
+<li><strong>Failure Mode:</strong> AI tạo ra quá nhiều false positives (cảnh báo sai), làm tốn thời gian của chuyên gia để kiểm tra.</li>
+<li><strong>Metric:</strong> Tỷ lệ cảnh báo thật được AI xác định đúng so với tổng số cảnh báo mà AI đưa ra. (Trong trường hợp này, việc AI nhận diện các cảnh báo dev-specific là &quot;noise&quot; hoặc &quot;false positive trong môi trường dev&quot; là một dấu hiệu của precision tốt).</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="submission-block">Submission Block</h2>
+<p>Dán phần này vào <code>submission/Team_Work_Assignment.md</code> dưới Track B - ZAP flow hoặc Pha 2:</p>
+<pre class="hljs"><code><div><span class="hljs-section">### AI-Triage cho ZAP Track</span>
+<span class="hljs-bullet">
+- </span>Input: <span class="hljs-code">`/home/melyen/Documents/class/testing/seminar/Seminar-SoftwareTesting/src/zap/output/backend_basic.json`</span>
+<span class="hljs-bullet">- </span>Tool: OWASP ZAP report + OpenRouter/offline AI triage script <span class="hljs-code">`src/zap/ai_triage_zap.py`</span>
+<span class="hljs-bullet">- </span>Tổng alert đã parse: 12
+<span class="hljs-bullet">- </span>Unknown: 12
+
+Kết quả triage chính:
+<span class="hljs-bullet">- </span><span class="hljs-code">`Unknown`</span> <span class="hljs-code">`CSP: Failure to Define Directive with No Fallback`</span> tại <span class="hljs-code">`http://localhost:3000`</span>: Cần đánh giá theo evidence và dữ liệu endpoint trả về.
+<span class="hljs-bullet">- </span><span class="hljs-code">`Unknown`</span> <span class="hljs-code">`CSP: Failure to Define Directive with No Fallback`</span> tại <span class="hljs-code">`http://localhost:3000/`</span>: Cần đánh giá theo evidence và dữ liệu endpoint trả về.
+<span class="hljs-bullet">- </span><span class="hljs-code">`Unknown`</span> <span class="hljs-code">`CSP: Failure to Define Directive with No Fallback`</span> tại <span class="hljs-code">`http://localhost:3000/robots.txt`</span>: Cần đánh giá theo evidence và dữ liệu endpoint trả về.
+<span class="hljs-bullet">- </span><span class="hljs-code">`Unknown`</span> <span class="hljs-code">`CSP: Failure to Define Directive with No Fallback`</span> tại <span class="hljs-code">`http://localhost:3000/sitemap.xml`</span>: Cần đánh giá theo evidence và dữ liệu endpoint trả về.
+<span class="hljs-bullet">- </span><span class="hljs-code">`Unknown`</span> <span class="hljs-code">`Cross-Domain Misconfiguration`</span> tại <span class="hljs-code">`http://localhost:3000`</span>: Origin không tin cậy có thể đọc dữ liệu API nếu endpoint trả dữ liệu nhạy cảm hoặc được bảo vệ bằng mạng nội bộ.
+
+PoC/reproducer ưu tiên:
+<span class="hljs-strong">**PoC/Reproducer**</span>
+<span class="hljs-bullet">1. </span>Gửi request <span class="hljs-code">`GET http://localhost:3000`</span> trong môi trường lab.
+<span class="hljs-bullet">2. </span>So sánh response header/body với evidence của ZAP.
+
+<span class="hljs-strong">**Testcase**</span>
+<span class="hljs-bullet">- </span>Expected: không xuất hiện evidence rủi ro.
+<span class="hljs-bullet">- </span>Actual theo ZAP: <span class="hljs-code">`default-src 'none'`</span>.
+
+Testcase/evidence cần nộp:
+<span class="hljs-bullet">- </span>ZAP report gốc trong <span class="hljs-code">`src/zap/output`</span> hoặc <span class="hljs-code">`zap_report.html`</span>.
+<span class="hljs-bullet">- </span>AI triage output trong <span class="hljs-code">`src/zap/output/zap_ai_triage_report.md`</span>.
+<span class="hljs-bullet">- </span>Screenshot/log khi reproduce finding ưu tiên cao nhất.
+<span class="hljs-bullet">- </span>Human audit note: AI chỉ hỗ trợ draft; nhóm kiểm chứng bằng request/response thật và source/runtime evidence.
+
+Failure modes quan sát được:
+<span class="hljs-bullet">- </span>ZAP có thể báo noise trên Vite/dev server, ví dụ dependency trong <span class="hljs-code">`/node_modules/.vite`</span> hoặc <span class="hljs-code">`@react-refresh`</span>.
+<span class="hljs-bullet">- </span>AI có thể gợi ý fix quá chung; cần đối chiếu source code/backend config.
+<span class="hljs-bullet">- </span>Nếu ZAP không có auth context, scan có thể bỏ sót endpoint sau đăng nhập.
+</div></code></pre>
+
+</body>
+</html>

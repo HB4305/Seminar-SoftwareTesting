@@ -1,5 +1,7 @@
 # OWASP ZAP Workflow for EShop
 
+Tài liệu lý thuyết, checklist kiểm chứng và so sánh GUI vs script: [`docs/zap/zap_theory_and_verification.md`](../../docs/zap/zap_theory_and_verification.md).
+
 ## ZAP đang làm gì?
 
 OWASP ZAP được dùng để chạy DAST (Dynamic Application Security Testing): kiểm thử bảo mật trên ứng dụng đang chạy thật, từ góc nhìn HTTP/browser, thay vì chỉ đọc mã nguồn.
@@ -197,7 +199,12 @@ Scan với ZAP daemon tự quản lý bên ngoài:
 python src/zap/scan_zap.py --target http://localhost:5173 --auth-role user --forced-user --ajax-spider --external-zap --zap-url http://localhost:8090
 ```
 
-Nếu external ZAP daemon bật bảo vệ API key, truyền thêm `--api-key ...`.
+Nếu external ZAP daemon bật bảo vệ API key, truyền thêm `--api-key ...` (hoặc cấu hình `ZAP_API_KEY` trong `.env`).
+
+**Cách lấy API Key từ ZAP Desktop GUI:**
+1. Mở ZAP GUI, chọn **Tools** (Công cụ) -> **Options...** (Tùy chọn...).
+2. Chọn mục **API** ở danh sách danh mục bên trái.
+3. Sao chép chuỗi ký tự tại ô **API Key** (hoặc bấm *Generate* để tạo khóa mới).
 
 Khi dùng `--external-zap` cùng `--auth-role`, chỉ trỏ `--zap-url` đến ZAP daemon local (`http://localhost...` hoặc `http://127.0.0.1...`). ZAP bên ngoài có thể lưu request đăng nhập và JWT trong history/session; hãy dùng session/container ZAP local dùng một lần, hoặc tự clear session/history sau khi scan. Script chỉ tự dọn secret cho ZAP container do script quản lý, không đảm bảo xóa sạch history/session của ZAP external.
 
@@ -237,6 +244,18 @@ Các biến trong `src/zap/.env.example` có thể điều khiển scan mà khô
 - `ZAP_ADMIN_PASSWORD`
 - `OPENROUTER_API_KEY`
 - `OPENROUTER_MODEL`
+
+Các biến cấu hình mở rộng (Tùy chọn cấu hình thêm khi thay đổi môi trường):
+
+- `ZAP_ALLOWED_HOSTS`: Các hosts được phép quét (Mặc định: `localhost,127.0.0.1`).
+- `ZAP_ALLOWED_PORTS`: Các cổng được phép quét (Mặc định: `3000,5173,5174`).
+- `ZAP_CONTEXT_NAME`: Tên context của ZAP (Mặc định: `EShop`).
+- `ZAP_CONTEXT_REGEX`: Regex cấu hình scope trong ZAP (Mặc định tự động sinh từ host/port).
+- `ESHOP_LOGIN_URL`: Endpoint API đăng nhập EShop (Mặc định: `http://localhost:3000/api/login`).
+- `ESHOP_VERIFY_URL`: Endpoint API xác thực session (Mặc định: `http://localhost:3000/api/users/me`).
+- `ZAP_REPLACER_RULE`: Tên rule ZAP Replacer tiêm JWT (Mặc định: `EShop JWT Authorization`).
+- `ZAP_TRIAGE_OUTPUT_FILE`: Đường dẫn lưu báo cáo AI Triage (Mặc định: `src/zap/output/zap_ai_triage_report.md`).
+- `ZAP_SUBMISSION_FILE`: Đường dẫn file báo cáo nộp bài của nhóm (Mặc định: `submission/Team_Work_Assignment.md`).
 
 Script có tài khoản test mặc định cho `user` và `admin`, nhưng nên override bằng `.env`, biến môi trường shell, hoặc CI secret. Không in hoặc commit giá trị thật của các biến secret.
 

@@ -1,0 +1,839 @@
+{
+    "@programName": "ZAP",
+    "@version": "2.17.0",
+    "@generated": "Sun, 19 Jul 2026 16:42:31",
+	"created": "2026-07-19T16:42:31.762669949Z",
+	"insights":[
+		{
+			"level": "Info",
+			"reason": "Informational",
+			"site": "",
+			"key": "insight.network.failure",
+			"description": "Percentage of network failures",
+			"statistic": "5"
+		},
+		{
+			"level": "Info",
+			"reason": "Informational",
+			"site": "http://localhost:3000",
+			"key": "insight.code.4xx",
+			"description": "Percentage of responses with status code 4xx",
+			"statistic": "100"
+		},
+		{
+			"level": "Info",
+			"reason": "Informational",
+			"site": "http://localhost:3000",
+			"key": "insight.endpoint.ctype.text/html",
+			"description": "Percentage of endpoints with content type text/html",
+			"statistic": "100"
+		},
+		{
+			"level": "Info",
+			"reason": "Informational",
+			"site": "http://localhost:3000",
+			"key": "insight.endpoint.method.GET",
+			"description": "Percentage of endpoints with method GET",
+			"statistic": "100"
+		},
+		{
+			"level": "Info",
+			"reason": "Informational",
+			"site": "http://localhost:3000",
+			"key": "insight.endpoint.total",
+			"description": "Count of total endpoints",
+			"statistic": "3"
+		}
+    ],
+	"site":[ 
+        {
+            "@name": "http://localhost:3000",
+            "@host": "localhost",
+            "@port": "3000",
+            "@ssl": "false",
+            "alerts": [ 
+                {
+                    "pluginid": "10055",
+                    "alertRef": "10055-13",
+                    "alert": "CSP: Failure to Define Directive with No Fallback",
+                    "name": "CSP: Failure to Define Directive with No Fallback",
+                    "riskcode": "2",
+                    "confidence": "3",
+                    "riskdesc": "Medium (High)",
+                    "desc": "<p>The Content Security Policy fails to define one of the directives that has no fallback. Missing/excluding them is the same as allowing anything.</p>",
+                    "instances":[ 
+                        {
+                            "id": "3",
+                            "uri": "http://localhost:3000",
+                            "nodeName": "http:\/\/localhost:3000",
+                            "method": "GET",
+                            "param": "Content-Security-Policy",
+                            "attack": "",
+                            "evidence": "default-src 'none'",
+                            "otherinfo": "The directive(s): frame-ancestors, form-action is/are among the directives that do not fallback to default-src.",
+                            "request-header": "GET http://localhost:3000 HTTP/1.1\r\nhost: localhost:3000\r\nuser-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36\r\npragma: no-cache\r\ncache-control: no-cache\r\n\r\n",
+                            "request-body": "",
+                            "response-header": "HTTP/1.1 404 Not Found\r\nX-Powered-By: Express\r\nAccess-Control-Allow-Origin: *\r\nContent-Security-Policy: default-src 'none'\r\nX-Content-Type-Options: nosniff\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: 139\r\nDate: Sun, 19 Jul 2026 16:42:11 GMT\r\nConnection: keep-alive\r\nKeep-Alive: timeout=5\r\n\r\n",
+                            "response-body": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot GET /</pre>\n</body>\n</html>\n"
+                        },
+                        {
+                            "id": "0",
+                            "uri": "http://localhost:3000/",
+                            "nodeName": "http:\/\/localhost:3000\/",
+                            "method": "GET",
+                            "param": "Content-Security-Policy",
+                            "attack": "",
+                            "evidence": "default-src 'none'",
+                            "otherinfo": "The directive(s): frame-ancestors, form-action is/are among the directives that do not fallback to default-src.",
+                            "request-header": "GET http://localhost:3000/ HTTP/1.1\r\nhost: localhost:3000\r\nUser-Agent: python-requests/2.34.2\r\nAccept: */*\r\nConnection: keep-alive\r\n\r\n",
+                            "request-body": "",
+                            "response-header": "HTTP/1.1 404 Not Found\r\nX-Powered-By: Express\r\nAccess-Control-Allow-Origin: *\r\nContent-Security-Policy: default-src 'none'\r\nX-Content-Type-Options: nosniff\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: 139\r\nDate: Sun, 19 Jul 2026 16:42:09 GMT\r\nConnection: keep-alive\r\nKeep-Alive: timeout=5\r\n\r\n",
+                            "response-body": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot GET /</pre>\n</body>\n</html>\n"
+                        },
+                        {
+                            "id": "6",
+                            "uri": "http://localhost:3000/robots.txt",
+                            "nodeName": "http:\/\/localhost:3000\/robots.txt",
+                            "method": "GET",
+                            "param": "Content-Security-Policy",
+                            "attack": "",
+                            "evidence": "default-src 'none'",
+                            "otherinfo": "The directive(s): frame-ancestors, form-action is/are among the directives that do not fallback to default-src.",
+                            "request-header": "GET http://localhost:3000/robots.txt HTTP/1.1\r\nhost: localhost:3000\r\nuser-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36\r\npragma: no-cache\r\ncache-control: no-cache\r\n\r\n",
+                            "request-body": "",
+                            "response-header": "HTTP/1.1 404 Not Found\r\nX-Powered-By: Express\r\nAccess-Control-Allow-Origin: *\r\nContent-Security-Policy: default-src 'none'\r\nX-Content-Type-Options: nosniff\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: 149\r\nDate: Sun, 19 Jul 2026 16:42:11 GMT\r\nConnection: keep-alive\r\nKeep-Alive: timeout=5\r\n\r\n",
+                            "response-body": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot GET /robots.txt</pre>\n</body>\n</html>\n"
+                        },
+                        {
+                            "id": "4",
+                            "uri": "http://localhost:3000/sitemap.xml",
+                            "nodeName": "http:\/\/localhost:3000\/sitemap.xml",
+                            "method": "GET",
+                            "param": "Content-Security-Policy",
+                            "attack": "",
+                            "evidence": "default-src 'none'",
+                            "otherinfo": "The directive(s): frame-ancestors, form-action is/are among the directives that do not fallback to default-src.",
+                            "request-header": "GET http://localhost:3000/sitemap.xml HTTP/1.1\r\nhost: localhost:3000\r\nuser-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36\r\npragma: no-cache\r\ncache-control: no-cache\r\n\r\n",
+                            "request-body": "",
+                            "response-header": "HTTP/1.1 404 Not Found\r\nX-Powered-By: Express\r\nAccess-Control-Allow-Origin: *\r\nContent-Security-Policy: default-src 'none'\r\nX-Content-Type-Options: nosniff\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: 150\r\nDate: Sun, 19 Jul 2026 16:42:11 GMT\r\nConnection: keep-alive\r\nKeep-Alive: timeout=5\r\n\r\n",
+                            "response-body": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot GET /sitemap.xml</pre>\n</body>\n</html>\n"
+                        }
+                    ],
+                    "count": "4",
+                    "systemic": false,
+                    "solution": "<p>Ensure that your web server, application server, load balancer, etc. is properly configured to set the Content-Security-Policy header.</p>",
+                    "otherinfo": "<p>The directive(s): frame-ancestors, form-action is/are among the directives that do not fallback to default-src.</p>",
+                    "reference": "<p>https://www.w3.org/TR/CSP/</p><p>https://caniuse.com/#search=content+security+policy</p><p>https://content-security-policy.com/</p><p>https://github.com/HtmlUnit/htmlunit-csp</p><p>https://web.dev/articles/csp#resource-options</p>",
+                    "cweid": "693",
+                    "wascid": "15",
+                    "sourceid": "7",
+                    "tags":[ 
+                        {
+                            "tag": "OWASP_2021_A05",
+                            "link": "https:\/\/owasp.org\/Top10\/A05_2021-Security_Misconfiguration\/"
+                        },
+                        {
+                            "tag": "POLICY_QA_STD",
+                            "link": ""
+                        },
+                        {
+                            "tag": "POLICY_PENTEST",
+                            "link": ""
+                        },
+                        {
+                            "tag": "SYSTEMIC",
+                            "link": "https:\/\/www.zaproxy.org\/docs\/desktop\/addons\/common-library\/alerttags\/#systemic"
+                        },
+                        {
+                            "tag": "CWE-693",
+                            "link": "https:\/\/cwe.mitre.org\/data\/definitions\/693.html"
+                        },
+                        {
+                            "tag": "OWASP_2017_A06",
+                            "link": "https:\/\/owasp.org\/www-project-top-ten\/2017\/A6_2017-Security_Misconfiguration.html"
+                        },
+                        {
+                            "tag": "OWASP_2025_A02",
+                            "link": "https:\/\/owasp.org\/Top10\/2025\/A02_2025-Security_Misconfiguration\/"
+                        },
+                        {
+                            "tag": "POLICY_DEV_STD",
+                            "link": ""
+                        }
+                    ]
+                },
+                {
+                    "pluginid": "10098",
+                    "alertRef": "10098",
+                    "alert": "Cross-Domain Misconfiguration",
+                    "name": "Cross-Domain Misconfiguration",
+                    "riskcode": "2",
+                    "confidence": "2",
+                    "riskdesc": "Medium (Medium)",
+                    "desc": "<p>Web browser data loading may be possible, due to a Cross Origin Resource Sharing (CORS) misconfiguration on the web server.</p>",
+                    "instances":[ 
+                        {
+                            "id": "8",
+                            "uri": "http://localhost:3000",
+                            "nodeName": "http:\/\/localhost:3000",
+                            "method": "GET",
+                            "param": "",
+                            "attack": "",
+                            "evidence": "Access-Control-Allow-Origin: *",
+                            "otherinfo": "The CORS misconfiguration on the web server permits cross-domain read requests from arbitrary third party domains, using unauthenticated APIs on this domain. Web browser implementations do not permit arbitrary third parties to read the response from authenticated APIs, however. This reduces the risk somewhat. This misconfiguration could be used by an attacker to access data that is available in an unauthenticated manner, but which uses some other form of security, such as IP address white-listing.",
+                            "request-header": "GET http://localhost:3000 HTTP/1.1\r\nhost: localhost:3000\r\nuser-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36\r\npragma: no-cache\r\ncache-control: no-cache\r\n\r\n",
+                            "request-body": "",
+                            "response-header": "HTTP/1.1 404 Not Found\r\nX-Powered-By: Express\r\nAccess-Control-Allow-Origin: *\r\nContent-Security-Policy: default-src 'none'\r\nX-Content-Type-Options: nosniff\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: 139\r\nDate: Sun, 19 Jul 2026 16:42:11 GMT\r\nConnection: keep-alive\r\nKeep-Alive: timeout=5\r\n\r\n",
+                            "response-body": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot GET /</pre>\n</body>\n</html>\n"
+                        },
+                        {
+                            "id": "1",
+                            "uri": "http://localhost:3000/",
+                            "nodeName": "http:\/\/localhost:3000\/",
+                            "method": "GET",
+                            "param": "",
+                            "attack": "",
+                            "evidence": "Access-Control-Allow-Origin: *",
+                            "otherinfo": "The CORS misconfiguration on the web server permits cross-domain read requests from arbitrary third party domains, using unauthenticated APIs on this domain. Web browser implementations do not permit arbitrary third parties to read the response from authenticated APIs, however. This reduces the risk somewhat. This misconfiguration could be used by an attacker to access data that is available in an unauthenticated manner, but which uses some other form of security, such as IP address white-listing.",
+                            "request-header": "GET http://localhost:3000/ HTTP/1.1\r\nhost: localhost:3000\r\nUser-Agent: python-requests/2.34.2\r\nAccept: */*\r\nConnection: keep-alive\r\n\r\n",
+                            "request-body": "",
+                            "response-header": "HTTP/1.1 404 Not Found\r\nX-Powered-By: Express\r\nAccess-Control-Allow-Origin: *\r\nContent-Security-Policy: default-src 'none'\r\nX-Content-Type-Options: nosniff\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: 139\r\nDate: Sun, 19 Jul 2026 16:42:09 GMT\r\nConnection: keep-alive\r\nKeep-Alive: timeout=5\r\n\r\n",
+                            "response-body": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot GET /</pre>\n</body>\n</html>\n"
+                        },
+                        {
+                            "id": "9",
+                            "uri": "http://localhost:3000/robots.txt",
+                            "nodeName": "http:\/\/localhost:3000\/robots.txt",
+                            "method": "GET",
+                            "param": "",
+                            "attack": "",
+                            "evidence": "Access-Control-Allow-Origin: *",
+                            "otherinfo": "The CORS misconfiguration on the web server permits cross-domain read requests from arbitrary third party domains, using unauthenticated APIs on this domain. Web browser implementations do not permit arbitrary third parties to read the response from authenticated APIs, however. This reduces the risk somewhat. This misconfiguration could be used by an attacker to access data that is available in an unauthenticated manner, but which uses some other form of security, such as IP address white-listing.",
+                            "request-header": "GET http://localhost:3000/robots.txt HTTP/1.1\r\nhost: localhost:3000\r\nuser-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36\r\npragma: no-cache\r\ncache-control: no-cache\r\n\r\n",
+                            "request-body": "",
+                            "response-header": "HTTP/1.1 404 Not Found\r\nX-Powered-By: Express\r\nAccess-Control-Allow-Origin: *\r\nContent-Security-Policy: default-src 'none'\r\nX-Content-Type-Options: nosniff\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: 149\r\nDate: Sun, 19 Jul 2026 16:42:11 GMT\r\nConnection: keep-alive\r\nKeep-Alive: timeout=5\r\n\r\n",
+                            "response-body": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot GET /robots.txt</pre>\n</body>\n</html>\n"
+                        },
+                        {
+                            "id": "7",
+                            "uri": "http://localhost:3000/sitemap.xml",
+                            "nodeName": "http:\/\/localhost:3000\/sitemap.xml",
+                            "method": "GET",
+                            "param": "",
+                            "attack": "",
+                            "evidence": "Access-Control-Allow-Origin: *",
+                            "otherinfo": "The CORS misconfiguration on the web server permits cross-domain read requests from arbitrary third party domains, using unauthenticated APIs on this domain. Web browser implementations do not permit arbitrary third parties to read the response from authenticated APIs, however. This reduces the risk somewhat. This misconfiguration could be used by an attacker to access data that is available in an unauthenticated manner, but which uses some other form of security, such as IP address white-listing.",
+                            "request-header": "GET http://localhost:3000/sitemap.xml HTTP/1.1\r\nhost: localhost:3000\r\nuser-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36\r\npragma: no-cache\r\ncache-control: no-cache\r\n\r\n",
+                            "request-body": "",
+                            "response-header": "HTTP/1.1 404 Not Found\r\nX-Powered-By: Express\r\nAccess-Control-Allow-Origin: *\r\nContent-Security-Policy: default-src 'none'\r\nX-Content-Type-Options: nosniff\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: 150\r\nDate: Sun, 19 Jul 2026 16:42:11 GMT\r\nConnection: keep-alive\r\nKeep-Alive: timeout=5\r\n\r\n",
+                            "response-body": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot GET /sitemap.xml</pre>\n</body>\n</html>\n"
+                        }
+                    ],
+                    "count": "4",
+                    "systemic": false,
+                    "solution": "<p>Ensure that sensitive data is not available in an unauthenticated manner (using IP address white-listing, for instance).</p><p>Configure the \"Access-Control-Allow-Origin\" HTTP header to a more restrictive set of domains, or remove all CORS headers entirely, to allow the web browser to enforce the Same Origin Policy (SOP) in a more restrictive manner.</p>",
+                    "otherinfo": "<p>The CORS misconfiguration on the web server permits cross-domain read requests from arbitrary third party domains, using unauthenticated APIs on this domain. Web browser implementations do not permit arbitrary third parties to read the response from authenticated APIs, however. This reduces the risk somewhat. This misconfiguration could be used by an attacker to access data that is available in an unauthenticated manner, but which uses some other form of security, such as IP address white-listing.</p>",
+                    "reference": "<p>https://vulncat.fortify.com/en/detail?category=HTML5&subcategory=Overly%20Permissive%20CORS%20Policy</p>",
+                    "cweid": "264",
+                    "wascid": "14",
+                    "sourceid": "7",
+                    "tags":[ 
+                        {
+                            "tag": "OWASP_2021_A01",
+                            "link": "https:\/\/owasp.org\/Top10\/A01_2021-Broken_Access_Control\/"
+                        },
+                        {
+                            "tag": "POLICY_QA_STD",
+                            "link": ""
+                        },
+                        {
+                            "tag": "POLICY_PENTEST",
+                            "link": ""
+                        },
+                        {
+                            "tag": "SYSTEMIC",
+                            "link": "https:\/\/www.zaproxy.org\/docs\/desktop\/addons\/common-library\/alerttags\/#systemic"
+                        },
+                        {
+                            "tag": "OWASP_2025_A01",
+                            "link": "https:\/\/owasp.org\/Top10\/2025\/A01_2025-Broken_Access_Control\/"
+                        },
+                        {
+                            "tag": "OWASP_2017_A05",
+                            "link": "https:\/\/owasp.org\/www-project-top-ten\/2017\/A5_2017-Broken_Access_Control.html"
+                        },
+                        {
+                            "tag": "CWE-264",
+                            "link": "https:\/\/cwe.mitre.org\/data\/definitions\/264.html"
+                        }
+                    ]
+                },
+                {
+                    "pluginid": "10037",
+                    "alertRef": "10037",
+                    "alert": "Server Leaks Information via \"X-Powered-By\" HTTP Response Header Field(s)",
+                    "name": "Server Leaks Information via \"X-Powered-By\" HTTP Response Header Field(s)",
+                    "riskcode": "1",
+                    "confidence": "2",
+                    "riskdesc": "Low (Medium)",
+                    "desc": "<p>The web/application server is leaking information via one or more \"X-Powered-By\" HTTP response headers. Access to such information may facilitate attackers identifying other frameworks/components your web application is reliant upon and the vulnerabilities such components may be subject to.</p>",
+                    "instances":[ 
+                        {
+                            "id": "11",
+                            "uri": "http://localhost:3000",
+                            "nodeName": "http:\/\/localhost:3000",
+                            "method": "GET",
+                            "param": "",
+                            "attack": "",
+                            "evidence": "X-Powered-By: Express",
+                            "otherinfo": "",
+                            "request-header": "GET http://localhost:3000 HTTP/1.1\r\nhost: localhost:3000\r\nuser-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36\r\npragma: no-cache\r\ncache-control: no-cache\r\n\r\n",
+                            "request-body": "",
+                            "response-header": "HTTP/1.1 404 Not Found\r\nX-Powered-By: Express\r\nAccess-Control-Allow-Origin: *\r\nContent-Security-Policy: default-src 'none'\r\nX-Content-Type-Options: nosniff\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: 139\r\nDate: Sun, 19 Jul 2026 16:42:11 GMT\r\nConnection: keep-alive\r\nKeep-Alive: timeout=5\r\n\r\n",
+                            "response-body": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot GET /</pre>\n</body>\n</html>\n"
+                        },
+                        {
+                            "id": "2",
+                            "uri": "http://localhost:3000/",
+                            "nodeName": "http:\/\/localhost:3000\/",
+                            "method": "GET",
+                            "param": "",
+                            "attack": "",
+                            "evidence": "X-Powered-By: Express",
+                            "otherinfo": "",
+                            "request-header": "GET http://localhost:3000/ HTTP/1.1\r\nhost: localhost:3000\r\nUser-Agent: python-requests/2.34.2\r\nAccept: */*\r\nConnection: keep-alive\r\n\r\n",
+                            "request-body": "",
+                            "response-header": "HTTP/1.1 404 Not Found\r\nX-Powered-By: Express\r\nAccess-Control-Allow-Origin: *\r\nContent-Security-Policy: default-src 'none'\r\nX-Content-Type-Options: nosniff\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: 139\r\nDate: Sun, 19 Jul 2026 16:42:09 GMT\r\nConnection: keep-alive\r\nKeep-Alive: timeout=5\r\n\r\n",
+                            "response-body": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot GET /</pre>\n</body>\n</html>\n"
+                        },
+                        {
+                            "id": "13",
+                            "uri": "http://localhost:3000/robots.txt",
+                            "nodeName": "http:\/\/localhost:3000\/robots.txt",
+                            "method": "GET",
+                            "param": "",
+                            "attack": "",
+                            "evidence": "X-Powered-By: Express",
+                            "otherinfo": "",
+                            "request-header": "GET http://localhost:3000/robots.txt HTTP/1.1\r\nhost: localhost:3000\r\nuser-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36\r\npragma: no-cache\r\ncache-control: no-cache\r\n\r\n",
+                            "request-body": "",
+                            "response-header": "HTTP/1.1 404 Not Found\r\nX-Powered-By: Express\r\nAccess-Control-Allow-Origin: *\r\nContent-Security-Policy: default-src 'none'\r\nX-Content-Type-Options: nosniff\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: 149\r\nDate: Sun, 19 Jul 2026 16:42:11 GMT\r\nConnection: keep-alive\r\nKeep-Alive: timeout=5\r\n\r\n",
+                            "response-body": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot GET /robots.txt</pre>\n</body>\n</html>\n"
+                        },
+                        {
+                            "id": "12",
+                            "uri": "http://localhost:3000/sitemap.xml",
+                            "nodeName": "http:\/\/localhost:3000\/sitemap.xml",
+                            "method": "GET",
+                            "param": "",
+                            "attack": "",
+                            "evidence": "X-Powered-By: Express",
+                            "otherinfo": "",
+                            "request-header": "GET http://localhost:3000/sitemap.xml HTTP/1.1\r\nhost: localhost:3000\r\nuser-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36\r\npragma: no-cache\r\ncache-control: no-cache\r\n\r\n",
+                            "request-body": "",
+                            "response-header": "HTTP/1.1 404 Not Found\r\nX-Powered-By: Express\r\nAccess-Control-Allow-Origin: *\r\nContent-Security-Policy: default-src 'none'\r\nX-Content-Type-Options: nosniff\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: 150\r\nDate: Sun, 19 Jul 2026 16:42:11 GMT\r\nConnection: keep-alive\r\nKeep-Alive: timeout=5\r\n\r\n",
+                            "response-body": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>Cannot GET /sitemap.xml</pre>\n</body>\n</html>\n"
+                        }
+                    ],
+                    "count": "4",
+                    "systemic": false,
+                    "solution": "<p>Ensure that your web server, application server, load balancer, etc. is configured to suppress \"X-Powered-By\" headers.</p>",
+                    "otherinfo": "",
+                    "reference": "<p>https://owasp.org/www-project-web-security-testing-guide/v42/4-Web_Application_Security_Testing/01-Information_Gathering/08-Fingerprint_Web_Application_Framework</p><p>https://www.troyhunt.com/shhh-dont-let-your-response-headers/</p>",
+                    "cweid": "497",
+                    "wascid": "13",
+                    "sourceid": "7",
+                    "tags":[ 
+                        {
+                            "tag": "OWASP_2021_A01",
+                            "link": "https:\/\/owasp.org\/Top10\/A01_2021-Broken_Access_Control\/"
+                        },
+                        {
+                            "tag": "WSTG-v42-INFO-08",
+                            "link": "https:\/\/owasp.org\/www-project-web-security-testing-guide\/v42\/4-Web_Application_Security_Testing\/01-Information_Gathering\/08-Fingerprint_Web_Application_Framework"
+                        },
+                        {
+                            "tag": "POLICY_QA_STD",
+                            "link": ""
+                        },
+                        {
+                            "tag": "POLICY_PENTEST",
+                            "link": ""
+                        },
+                        {
+                            "tag": "SYSTEMIC",
+                            "link": "https:\/\/www.zaproxy.org\/docs\/desktop\/addons\/common-library\/alerttags\/#systemic"
+                        },
+                        {
+                            "tag": "OWASP_2017_A03",
+                            "link": "https:\/\/owasp.org\/www-project-top-ten\/2017\/A3_2017-Sensitive_Data_Exposure.html"
+                        },
+                        {
+                            "tag": "OWASP_2025_A01",
+                            "link": "https:\/\/owasp.org\/Top10\/2025\/A01_2025-Broken_Access_Control\/"
+                        },
+                        {
+                            "tag": "CWE-497",
+                            "link": "https:\/\/cwe.mitre.org\/data\/definitions\/497.html"
+                        }
+                    ]
+                }
+            ],
+            "statistics":{ 
+                "stats.responseTime.16": 3
+                ,
+                "stats.contentType.text\/html; charset=utf-8": 165
+                ,
+                "stats.responseTime.2": 23
+                ,
+                "stats.code.404": 165
+                ,
+                "stats.responseTime.4": 100
+                ,
+                "stats.responseTime.8": 41
+                ,
+                "stats.code.400": 2
+                
+            }
+        }
+    ],
+    "sequences":[
+    ],
+    "statistics":{ 
+        "stats.ascan.90035.started": 1
+        ,
+        "stats.pscan.10027.time": 0
+        ,
+        "stats.ascan.40035.started": 1
+        ,
+        "stats.ascan.40027.time": 6
+        ,
+        "stats.pscan.10037.alerts": 5
+        ,
+        "stats.pscan.90022.time": 6
+        ,
+        "stats.ascan.20017.time": 6
+        ,
+        "stats.pscan.10112.time": 2
+        ,
+        "stats.ascan.40026.started": 1
+        ,
+        "stats.pscan.10042.time": 0
+        ,
+        "stats.ascan.40044.time": 184
+        ,
+        "stats.ascan.10058.started": 1
+        ,
+        "stats.pscan.10056.time": 0
+        ,
+        "stats.ascan.40029.started": 1
+        ,
+        "stats.pscan.10061.time": 0
+        ,
+        "stats.ascan.10106.started": 1
+        ,
+        "stats.spider.url.found": 4
+        ,
+        "stats.pscan.10109.time": 1
+        ,
+        "stats.ascan.40008.time": 2
+        ,
+        "stats.ascan.90029.started": 1
+        ,
+        "stats.ascan.40044.started": 1
+        ,
+        "stats.ascan.20015.time": 7
+        ,
+        "stats.ascan.20015.urls": 3
+        ,
+        "stats.ascan.40003.started": 1
+        ,
+        "stats.ascan.40032.started": 1
+        ,
+        "stats.ascan.40017.started": 1
+        ,
+        "stats.selenium.launch.2.firefox-headless": 4
+        ,
+        "stats.ascan.20017.started": 1
+        ,
+        "stats.ascan.0.started": 1
+        ,
+        "stats.ascan.90034.time": 38
+        ,
+        "stats.pscan.90003.time": 3
+        ,
+        "stats.script.error.Graal.js.active": 2
+        ,
+        "stats.pscan.10040.time": 0
+        ,
+        "stats.ascan.started.policy.dock-default": 1
+        ,
+        "stats.pscan.10023.time": 3
+        ,
+        "stats.ascan.90023.started": 1
+        ,
+        "stats.ascan.90034.urls": 13
+        ,
+        "stats.pscan.10029.time": 0
+        ,
+        "stats.ascan.90017.started": 1
+        ,
+        "stats.ascan.10047.time": 2
+        ,
+        "stats.api.call.json.context.action.newContext": 1
+        ,
+        "stats.pscan.10017.time": 0
+        ,
+        "stats.ascan.40014.started": 1
+        ,
+        "stats.ascan.10047.started": 1
+        ,
+        "stats.pscan.10011.time": 0
+        ,
+        "stats.ascan.40034.urls": 1
+        ,
+        "stats.pscan.10030.time": 1
+        ,
+        "domxss.scan.count": 4
+        ,
+        "stats.ascan.40034.time": 4
+        ,
+        "stats.pscan.10039.time": 1
+        ,
+        "stats.pscan.10052.time": 0
+        ,
+        "stats.api.call.json.core.view.version": 1
+        ,
+        "stats.ascan.90026.started": 1
+        ,
+        "stats.pscan.10105.time": 1
+        ,
+        "stats.ascan.90037.time": 5
+        ,
+        "stats.pscan.10035.time": 0
+        ,
+        "stats.ascan.90037.started": 1
+        ,
+        "stats.pscan.90001.time": 0
+        ,
+        "stats.config.api.disablekey": 1
+        ,
+        "stats.ascan.90036.time": 4
+        ,
+        "stats.pscan.10020.time": 0
+        ,
+        "stats.ascan.90020.started": 1
+        ,
+        "stats.pscan.10034.time": 0
+        ,
+        "stats.ascan.10058.time": 2
+        ,
+        "stats.ascan.40022.time": 8
+        ,
+        "stats.ascan.90035.time": 37
+        ,
+        "stats.ascan.30001.started": 1
+        ,
+        "stats.pscan.90030.time": 1
+        ,
+        "stats.ascan.6.started": 1
+        ,
+        "stats.ascan.20015.started": 1
+        ,
+        "stats.ascan.40027.started": 1
+        ,
+        "stats.ascan.40019.time": 8
+        ,
+        "stats.ascan.40003.time": 4
+        ,
+        "stats.spider.started": 1
+        ,
+        "stats.pscan.10097.time": 1
+        ,
+        "stats.api.call.json.core.view.alerts": 1
+        ,
+        "stats.pscan.10202.time": 3
+        ,
+        "stats.ascan.6.time": 21
+        ,
+        "stats.ascan.40008.started": 1
+        ,
+        "stats.ascan.40021.started": 1
+        ,
+        "stats.ascan.40029.time": 8
+        ,
+        "stats.ascan.90020.time": 5
+        ,
+        "stats.pscan.10054.time": 0
+        ,
+        "stats.ascan.0.time": 8
+        ,
+        "stats.ascan.40032.time": 4
+        ,
+        "stats.ascan.90017.time": 3
+        ,
+        "stats.ascan.40032.urls": 1
+        ,
+        "stats.pscan.90011.time": 9
+        ,
+        "stats.pscan.10015.time": 0
+        ,
+        "stats.ascan.7.time": 12
+        ,
+        "stats.ascan.90019.started": 1
+        ,
+        "stats.ascan.40042.started": 1
+        ,
+        "stats.api.call.json.pscan.view.recordsToScan": 1
+        ,
+        "stats.ascan.50000.time": 2
+        ,
+        "stats.ascan.40029.urls": 4
+        ,
+        "stats.pscan.90002.time": 0
+        ,
+        "stats.ascan.40045.started": 1
+        ,
+        "stats.pscan.10025.time": 0
+        ,
+        "stats.api.call.json.spider.view.status": 2
+        ,
+        "stats.pscan.10098.time": 36
+        ,
+        "stats.ascan.0.urls": 4
+        ,
+        "stats.ascan.started": 1
+        ,
+        "stats.ascan.40012.started": 1
+        ,
+        "stats.ascan.30002.time": 4
+        ,
+        "stats.network.send.success": 212
+        ,
+        "stats.pscan.50001.time": 5
+        ,
+        "stats.ascan.40048.time": 5
+        ,
+        "stats.ascan.40042.urls": 2
+        ,
+        "stats.pscan.10044.time": 0
+        ,
+        "stats.pscan.10113.time": 2
+        ,
+        "stats.ascan.40048.urls": 1
+        ,
+        "stats.ascan.40042.time": 10
+        ,
+        "stats.ascan.90026.time": 2
+        ,
+        "stats.network.send.failure": 13
+        ,
+        "stats.ascan.40043.time": 2
+        ,
+        "stats.ascan.40022.started": 1
+        ,
+        "stats.ascan.40043.skipped": 1
+        ,
+        "stats.ascan.10104.time": 55
+        ,
+        "stats.script.call.Graal.js.active": 4
+        ,
+        "stats.pscan.10043.time": 0
+        ,
+        "stats.ascan.40009.time": 4
+        ,
+        "stats.pscan.10057.time": 8
+        ,
+        "stats.ascan.30001.time": 11
+        ,
+        "stats.ascan.10104.urls": 48
+        ,
+        "stats.ascan.40028.time": 5
+        ,
+        "stats.pscan.10111.time": 2
+        ,
+        "stats.ascan.10048.started": 1
+        ,
+        "stats.ascan.20018.time": 17
+        ,
+        "stats.ascan.40014.time": 7
+        ,
+        "stats.pscan.50003.time": 12
+        ,
+        "stats.ascan.20018.urls": 8
+        ,
+        "stats.ascan.10106.time": 12
+        ,
+        "stats.ascan.40028.urls": 1
+        ,
+        "stats.ascan.10048.time": 23
+        ,
+        "stats.ascan.40048.started": 1
+        ,
+        "stats.pscan.10010.time": 1
+        ,
+        "stats.pscan.2.time": 2
+        ,
+        "stats.ascan.90034.started": 1
+        ,
+        "stats.pscan.10024.time": 0
+        ,
+        "stats.ascan.10104.started": 1
+        ,
+        "stats.pscan.10062.time": 17
+        ,
+        "stats.api.call.json.ascan.view.status": 4
+        ,
+        "stats.pscan.10115.time": 0
+        ,
+        "stats.pscan.-1.time": 10
+        ,
+        "stats.ascan.90021.time": 6
+        ,
+        "stats.ascan.40043.started": 1
+        ,
+        "stats.ascan.7.started": 1
+        ,
+        "stats.ascan.40018.started": 1
+        ,
+        "stats.pscan.10033.time": 0
+        ,
+        "stats.pscan.10108.time": 1
+        ,
+        "stats.ascan.20018.started": 1
+        ,
+        "stats.pscan.10036.time": 0
+        ,
+        "stats.ascan.40012.time": 4
+        ,
+        "stats.pscan.10055.time": 111
+        ,
+        "stats.ascan.30002.started": 1
+        ,
+        "stats.api.call.json.context.action.setContextInScope": 1
+        ,
+        "stats.pscan.10021.time": 0
+        ,
+        "stats.ascan.40018.time": 9
+        ,
+        "stats.pscan.recordsToScan": 136
+        ,
+        "stats.ascan.40009.started": 1
+        ,
+        "stats.ascan.40020.started": 1
+        ,
+        "stats.ascan.90023.time": 4
+        ,
+        "stats.ascan.40035.time": 198
+        ,
+        "stats.pscan.10096.time": 4
+        ,
+        "stats.pscan.10055.alerts": 5
+        ,
+        "stats.ascan.40035.urls": 52
+        ,
+        "stats.ascan.40021.time": 7
+        ,
+        "stats.ascan.90019.time": 5
+        ,
+        "stats.ascan.time": 14383
+        ,
+        "stats.ascan.90024.time": 4
+        ,
+        "stats.pscan.10050.time": 0
+        ,
+        "stats.api.call.json.context.action.includeInContext": 1
+        ,
+        "stats.ascan.40017.time": 12
+        ,
+        "stats.pscan.90033.time": 0
+        ,
+        "stats.ascan.10045.urls": 4
+        ,
+        "stats.pscan.10098.alerts": 5
+        ,
+        "stats.ascan.40019.started": 1
+        ,
+        "stats.api.call.json.ascan.action.scan": 1
+        ,
+        "stats.ascan.40017.urls": 4
+        ,
+        "stats.pscan.10019.time": 0
+        ,
+        "domxss.gets.count": 48
+        ,
+        "stats.ascan.urls": 163
+        ,
+        "stats.spider.time": 66
+        ,
+        "stats.ascan.40034.started": 1
+        ,
+        "stats.pscan.3.time": 0
+        ,
+        "stats.ascan.20019.started": 1
+        ,
+        "stats.ascan.10045.time": 25
+        ,
+        "stats.ascan.50000.skipped": 1
+        ,
+        "stats.pscan.10032.time": 0
+        ,
+        "stats.ascan.90036.started": 1
+        ,
+        "stats.api.call.json.context.view.contextList": 1
+        ,
+        "stats.pscan.10038.time": 0
+        ,
+        "stats.ascan.40016.time": 3
+        ,
+        "stats.pscan.10037.time": 21
+        ,
+        "stats.ascan.90021.started": 1
+        ,
+        "stats.api.call.json.reports.action.generate": 1
+        ,
+        "stats.pscan.10031.time": 0
+        ,
+        "stats.api.call.json.spider.action.scan": 1
+        ,
+        "stats.ascan.40026.urls": 8
+        ,
+        "stats.pscan.10028.time": 0
+        ,
+        "stats.ascan.10045.started": 1
+        ,
+        "stats.pscan.10003.time": 0
+        ,
+        "stats.ascan.40028.started": 1
+        ,
+        "stats.pscan.10009.time": 0
+        ,
+        "stats.ascan.40045.urls": 9
+        ,
+        "stats.ascan.90024.started": 1
+        ,
+        "stats.pscan.10041.time": 0
+        ,
+        "stats.ascan.40020.time": 9
+        ,
+        "stats.ascan.40045.time": 24
+        ,
+        "stats.pscan.10116.time": 9
+        ,
+        "stats.ascan.50000.started": 1
+        ,
+        "stats.ascan.40026.time": 9390
+        ,
+        "stats.ascan.90029.time": 2
+        ,
+        "stats.ascan.20019.time": 4
+        ,
+        "stats.ascan.40016.started": 1
+        
+    },
+    "afPlanErrors": [
+    ],
+    "afPlanWarns": [
+    ]
+}
+
