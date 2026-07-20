@@ -13,6 +13,17 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 DEFAULT_OUTPUT_DIR = SCRIPT_DIR / "output"
 
 
+def configure_console_encoding(stdout=None, stderr=None):
+    """Prefer UTF-8 output on Windows consoles that support reconfigure()."""
+    for stream in (stdout or sys.stdout, stderr or sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if callable(reconfigure):
+            try:
+                reconfigure(encoding="utf-8")
+            except Exception:
+                pass
+
+
 class AiSettings(NamedTuple):
     provider: str
     model: str
@@ -33,6 +44,24 @@ class FindingRecord(NamedTuple):
     likelihood: str
     impact: str
     confidence: str
+
+
+class RuntimeMapping(NamedTuple):
+    title: str
+    affected_feature: str
+    method: str
+    url: str
+    headers: str
+    payload: str
+    pre_test_setup: str
+    test_objective: str
+    vulnerable_behavior: str
+    secure_behavior: str
+    zap_related_alert: str
+    difference: str
+    conclusion: str
+    confidence: str
+    note: str
 
 
 def load_env_file(env_file):
@@ -300,6 +329,190 @@ def slugify(value):
     return slug or "finding"
 
 
+def extract_first_http_url(text):
+    match = re.search(r"http://[^\s'\"),;]+", text or "")
+    return match.group(0) if match else ""
+
+
+def infer_method_from_code(code):
+    lowered = (code or "").lower()
+    for method in ("post", "put", "patch", "delete", "get"):
+        if re.search(rf"\b{method}\s*\(", lowered) or f".{method}(" in lowered:
+            return method.upper()
+    return "GET"
+
+
+def runtime_mapping_for_record(record):
+    rule = record.rule_id.lower()
+    if "jwt-hardcode" in rule or "hardcoded-jwt-secret" in rule:
+        return RuntimeMapping(
+            title="Hardcoded JWT Secret",
+            affected_feature="JWT authentication / admin authorization",
+            method="GET",
+            url="http://localhost:3000/api/users/me",
+            headers="Authorization: Bearer <forged_admin_jwt>\nContent-Type: application/json",
+            payload="{}",
+            pre_test_setup=(
+                "1. Dùng `src/semgrep/exploit.js` để tạo JWT giả.\n"
+                "2. Copy token sinh ra vào header Authorization.\n"
+                "3. Đảm bảo backend EShop đang chạy tại port 3000."
+            ),
+            test_objective="Kiểm tra backend có chấp nhận JWT giả được ký bằng hardcoded secret hay không.",
+            vulnerable_behavior="Server trả `200 OK` và chấp nhận token giả.",
+            secure_behavior="Server trả `401 Unauthorized` hoặc `403 Forbidden`.",
+            zap_related_alert="Not directly detected / Authentication weakness may require authenticated active scan.",
+            difference=(
+                "- Semgrep phát hiện root cause trong source code.\n"
+                "- ZAP cần runtime request hợp lệ hoặc attack path để quan sát hành vi."
+            ),
+            conclusion="Semgrep phù hợp phát hiện secret hardcode; Postman dùng để xác nhận runtime exploitability.",
+            confidence="Medium",
+            note="Endpoint được suy luận từ cách backend verify JWT, cần xác nhận khi test.",
+        )
+
+    if "insecure-request" in rule or "cleartext" in record.message.lower():
+        url = extract_first_http_url(record.code) or "http://localhost:3000/<api-path>"
+        method = infer_method_from_code(record.code)
+        return RuntimeMapping(
+            title="Insecure HTTP Request",
+            affected_feature="Frontend/API transport security",
+            method=method,
+            url=url,
+            headers="Content-Type: application/json",
+            payload="{}",
+            pre_test_setup=(
+                "1. Mở source line được Semgrep báo để xác nhận API path.\n"
+                "2. Đảm bảo backend/frontend local đang chạy.\n"
+                "3. Gửi request bằng Postman và ghi nhận URL đang dùng HTTP."
+            ),
+            test_objective="Kiểm tra request đang dùng HTTP cleartext thay vì HTTPS.",
+            vulnerable_behavior="Request gọi thành công qua `http://` hoặc dữ liệu nhạy cảm đi qua kênh không mã hóa.",
+            secure_behavior="Ứng dụng dùng `https://` hoặc cấu hình base URL an toàn theo môi trường.",
+            zap_related_alert="May appear as passive/runtime transport or mixed-content evidence if ZAP observes the same request.",
+            difference=(
+                "- Semgrep phát hiện hardcoded `http://` trong source code.\n"
+                "- ZAP chỉ thấy lỗi nếu request đó thực sự được crawl/spider hoặc gửi qua proxy."
+            ),
+            conclusion="Semgrep giúp tìm đường dẫn HTTP trong code; Postman/ZAP xác nhận hành vi runtime.",
+            confidence="High" if url != "http://localhost:3000/<api-path>" else "Low",
+            note="Endpoint được trích từ source snippet nếu có; nếu thiếu path cần reviewer map thủ công.",
+        )
+
+    return RuntimeMapping(
+        title=record.message.strip(".") or "Semgrep Finding",
+        affected_feature="Needs manual source-to-runtime mapping",
+        method="GET",
+        url="http://localhost:3000/<map-endpoint>",
+        headers="Content-Type: application/json",
+        payload="{}",
+        pre_test_setup=(
+            "1. Đọc source evidence để xác định endpoint hoặc feature liên quan.\n"
+            "2. Điền method, URL, header và payload thật trước khi test Postman."
+        ),
+        test_objective="Xác thực finding Semgrep bằng hành vi runtime nếu có thể.",
+        vulnerable_behavior="Hành vi lỗi tái hiện được trong Postman.",
+        secure_behavior="Hành vi lỗi không còn tái hiện hoặc được chặn an toàn.",
+        zap_related_alert="Unknown until mapped against ZAP report.",
+        difference=(
+            "- Semgrep cung cấp source evidence.\n"
+            "- ZAP cung cấp runtime HTTP evidence nếu scan đi qua endpoint tương ứng."
+        ),
+        conclusion="Cần human validation để kết luận khả năng khai thác runtime.",
+        confidence="Low",
+        note="Semgrep finding này chưa có mapping rule tự động.",
+    )
+
+
+def write_postman_validation_report(records: List[FindingRecord], output_dir):
+    output_path = Path(output_dir)
+    lines = [
+        "# Semgrep Postman Validation Report",
+        "",
+        "Report này format finding Semgrep theo kiểu gần với ZAP Alert và thêm test case để reviewer copy sang Postman.",
+        "",
+        "## Comparison Matrix",
+        "",
+        "| Semgrep Finding | Source Evidence | Postman Result | ZAP Related Alert | Conclusion |",
+        "|---|---|---|---|---|",
+    ]
+
+    mappings = []
+    for record in records:
+        mapping = runtime_mapping_for_record(record)
+        mappings.append((record, mapping))
+        lines.append(
+            f"| SEMGREP-{record.index:03d}: {mapping.title} | `{record.file_path}:{record.line}` | Needs Manual Verification | {mapping.zap_related_alert} | {mapping.conclusion} |"
+        )
+
+    for record, mapping in mappings:
+        lines.extend(
+            [
+                "",
+                f"## SEMGREP-{record.index:03d}: {mapping.title}",
+                "",
+                "### 1. Alert Summary",
+                f"- Tool: Semgrep",
+                f"- Type: SAST",
+                f"- Rule ID: `{record.rule_id}`",
+                f"- Severity: {record.severity}",
+                f"- CWE: {record.cwe}",
+                f"- OWASP: {record.owasp}",
+                "- Status: Needs Manual Verification",
+                "",
+                "### 2. Source Evidence",
+                f"- File: `{record.file_path}`",
+                f"- Line: {record.line}",
+                "- Vulnerable code:",
+                "```text",
+                record.code,
+                "```",
+                "",
+                "### 3. Runtime Mapping",
+                f"- Affected feature: {mapping.affected_feature}",
+                f"- Related endpoint: `{mapping.method} {mapping.url}`",
+                f"- Method: `{mapping.method}`",
+                "- Base URL: `http://localhost:3000`",
+                "- Auth required: Yes" if "Authorization:" in mapping.headers else "- Auth required: No / depends on endpoint",
+                f"- Mapping confidence: {mapping.confidence}",
+                f"- Mapping note: {mapping.note}",
+                "",
+                "### 4. Postman Test Case",
+                f"- Test objective: {mapping.test_objective}",
+                "- URL:",
+                "```http",
+                f"{mapping.method} {mapping.url}",
+                "```",
+                "- Headers:",
+                "```http",
+                mapping.headers,
+                "```",
+                "- Payload:",
+                "```json",
+                mapping.payload,
+                "```",
+                "- Pre-test setup:",
+                "```text",
+                mapping.pre_test_setup,
+                "```",
+                "",
+                "### 5. Expected Result",
+                f"- Vulnerable behavior: {mapping.vulnerable_behavior}",
+                f"- Secure behavior: {mapping.secure_behavior}",
+                "- Evidence to capture: status code, response body, screenshot Postman, request URL/header/body.",
+                "",
+                "### 6. ZAP Comparison",
+                f"- ZAP related alert: {mapping.zap_related_alert}",
+                "- Difference:",
+                mapping.difference,
+                f"- Conclusion: {mapping.conclusion}",
+            ]
+        )
+
+    report_path = output_path / "semgrep_postman_validation_report.md"
+    report_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return report_path
+
+
 def write_triage_outputs(records: List[FindingRecord], ai_outputs: Dict[int, str], output_dir):
     output_path = Path(output_dir)
     findings_dir = output_path / "findings"
@@ -357,6 +570,7 @@ def write_triage_outputs(records: List[FindingRecord], ai_outputs: Dict[int, str
     )
     report_path = output_path / "semgrep_triage_report.md"
     report_path.write_text(report, encoding="utf-8")
+    write_postman_validation_report(records, output_path)
     return report_path
 
 
@@ -444,4 +658,5 @@ def main(argv=None):
 
 
 if __name__ == "__main__":
+    configure_console_encoding()
     sys.exit(main())

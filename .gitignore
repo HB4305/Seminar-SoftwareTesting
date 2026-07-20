@@ -14,3 +14,6 @@ src/semgrep/output/
 AGENTS.md
 .worktrees/
 eshop-sut
+
+.venv
+**/.venv
