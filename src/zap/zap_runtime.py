@@ -11,19 +11,11 @@ import dataclasses
 import json
 import os
 import re
-import subprocess
 import urllib.error
 import urllib.request
 from urllib.parse import urlparse
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-
-
-def _format_command(command: object) -> str:
-    """Chuyển command sang chuỗi dễ đọc để in trong thông báo lỗi."""
-    if isinstance(command, (list, tuple)):
-        return " ".join(str(part) for part in command)
-    return str(command)
 
 
 def load_dotenv(env_path: str | os.PathLike[str] | None = None) -> None:
@@ -66,23 +58,6 @@ LOGIN_URL = os.getenv("ESHOP_LOGIN_URL", "http://localhost:3000/api/login")
 REPLACER_RULE = os.getenv("ZAP_REPLACER_RULE", "EShop JWT Authorization")
 VERIFY_URL = os.getenv("ESHOP_VERIFY_URL", "http://localhost:3000/api/users/me")
 ZAP_IMAGE = os.getenv("ZAP_IMAGE", "ghcr.io/zaproxy/zaproxy:stable")
-
-
-def _docker_start_error(command: object, exc: Exception) -> str:
-    """Tạo thông báo lỗi đầy đủ khi Docker/ZAP container không khởi động được."""
-    parts = [
-        "Docker must be installed/running to start ZAP",
-        f"command failed: {_format_command(command)}",
-    ]
-    stderr = getattr(exc, "stderr", None)
-    stdout = getattr(exc, "stdout", None)
-    if stderr:
-        parts.append(f"stderr: {stderr}")
-    if stdout:
-        parts.append(f"stdout: {stdout}")
-    if not stderr and not stdout and str(exc):
-        parts.append(str(exc))
-    return "; ".join(parts)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -255,74 +230,3 @@ def verify_authenticated_session(zap_url: str, timeout: int = 15) -> None:
     except (OSError, urllib.error.URLError) as exc:
         raise RuntimeError(f"Authentication verification failed: {exc}") from exc
 
-
-class ZapDockerManager:
-    """Quản lý ZAP Docker container dùng một lần cho scan local."""
-
-    def __init__(
-        self,
-        port: int = 8090,
-        container_name: str | None = None,
-        image: str | None = None,
-        writable_dir: str | None = None,
-    ) -> None:
-        """Lưu cấu hình container nhưng chưa khởi động Docker."""
-        self.port = port
-        self.container_name = container_name or f"eshop-zap-{os.getpid()}"
-        self.image = image or os.getenv("ZAP_IMAGE", ZAP_IMAGE)
-        self.writable_dir = writable_dir
-        self.started = False
-
-    def start(self) -> None:
-        """Kiểm tra Docker rồi chạy ZAP daemon ở chế độ API không cần key."""
-        command = ["docker", "version"]
-        try:
-            subprocess.run(command, check=True, capture_output=True, text=True)
-            command = [
-                "docker", "run", "--rm", "-d", "--name", self.container_name,
-                "--network", "host",
-            ]
-            if self.writable_dir:
-                # Mount cùng path host/container để official Report Generation API ghi đúng file output.
-                command.extend(["-v", f"{self.writable_dir}:{self.writable_dir}"])
-            command.extend([
-                self.image, "zap.sh", "-daemon",
-                "-port", str(self.port), "-host", "0.0.0.0",
-                "-config", "api.disablekey=true",
-            ])
-            subprocess.run(command, check=True, capture_output=True, text=True)
-        except (FileNotFoundError, subprocess.CalledProcessError) as exc:
-            failed_command = getattr(exc, "cmd", None) or command
-            raise RuntimeError(_docker_start_error(failed_command, exc)) from exc
-        self.started = True
-
-    def stop(self) -> None:
-        """Dừng container nếu manager đã khởi động nó trong phiên scan này."""
-        if not self.started:
-            return
-        try:
-            result = subprocess.run(
-                ["docker", "stop", self.container_name],
-                check=False,
-                capture_output=True,
-                text=True,
-            )
-            returncode = getattr(result, "returncode", 0)
-            if (
-                isinstance(returncode, int)
-                and not isinstance(returncode, bool)
-                and returncode != 0
-            ):
-                parts = [
-                    f"docker stop failed for ZAP container {self.container_name}",
-                    f"exit code: {returncode}",
-                ]
-                stderr = getattr(result, "stderr", None)
-                stdout = getattr(result, "stdout", None)
-                if stderr:
-                    parts.append(f"stderr: {stderr}")
-                if stdout:
-                    parts.append(f"stdout: {stdout}")
-                raise RuntimeError("; ".join(parts))
-        finally:
-            self.started = False

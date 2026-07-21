@@ -25,8 +25,10 @@ from typing import Any
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 DEFAULT_ENV_PATH = SCRIPT_DIR / ".env"
-DEFAULT_MODEL = "google/gemini-2.5-flash"
-DEFAULT_BASE_URL = "https://openrouter.ai/api/v1/chat/completions"
+DEFAULT_OPENROUTER_MODEL = "google/gemini-2.5-flash"
+DEFAULT_OPENAI_MODEL = "gpt-4o-mini"
+DEFAULT_OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1/chat/completions"
+DEFAULT_OPENAI_BASE_URL = "https://api.openai.com/v1/chat/completions"
 DEFAULT_TIMEOUT = 60
 DEFAULT_MAX_TOKENS = 1800
 
@@ -55,6 +57,7 @@ class ExtractedAlert:
 
 @dataclasses.dataclass(frozen=True)
 class OpenRouterConfig:
+    provider: str
     api_key: str
     model: str
     base_url: str
@@ -84,9 +87,9 @@ def load_dotenv(env_path: Path = DEFAULT_ENV_PATH) -> None:
 
 def config_from_env(env_path: Path = DEFAULT_ENV_PATH) -> OpenRouterConfig:
     load_dotenv(env_path)
-    api_key = os.getenv("OPENROUTER_API_KEY", "").strip()
-    if not api_key:
-        raise RuntimeError("OPENROUTER_API_KEY is required in environment or src/zap/.env")
+    openai_key = os.getenv("OPENAI_API_KEY", "").strip()
+    openrouter_key = os.getenv("OPENROUTER_API_KEY", "").strip()
+
     timeout_raw = os.getenv("OPENROUTER_TIMEOUT", str(DEFAULT_TIMEOUT)).strip()
     max_tokens_raw = os.getenv("OPENROUTER_MAX_TOKENS", str(DEFAULT_MAX_TOKENS)).strip()
     try:
@@ -99,13 +102,28 @@ def config_from_env(env_path: Path = DEFAULT_ENV_PATH) -> OpenRouterConfig:
         raise RuntimeError("OPENROUTER_MAX_TOKENS must be an integer") from exc
     if max_tokens <= 0:
         raise RuntimeError("OPENROUTER_MAX_TOKENS must be greater than zero")
-    return OpenRouterConfig(
-        api_key=api_key,
-        model=os.getenv("OPENROUTER_MODEL", DEFAULT_MODEL).strip() or DEFAULT_MODEL,
-        base_url=os.getenv("OPENROUTER_BASE_URL", DEFAULT_BASE_URL).strip() or DEFAULT_BASE_URL,
-        timeout=timeout,
-        max_tokens=max_tokens,
-    )
+
+    if openai_key:
+        return OpenRouterConfig(
+            provider="openai",
+            api_key=openai_key,
+            model=os.getenv("OPENAI_MODEL", DEFAULT_OPENAI_MODEL).strip() or DEFAULT_OPENAI_MODEL,
+            base_url=os.getenv("OPENAI_BASE_URL", DEFAULT_OPENAI_BASE_URL).strip() or DEFAULT_OPENAI_BASE_URL,
+            timeout=timeout,
+            max_tokens=max_tokens,
+        )
+
+    if openrouter_key:
+        return OpenRouterConfig(
+            provider="openrouter",
+            api_key=openrouter_key,
+            model=os.getenv("OPENROUTER_MODEL", DEFAULT_OPENROUTER_MODEL).strip() or DEFAULT_OPENROUTER_MODEL,
+            base_url=os.getenv("OPENROUTER_BASE_URL", DEFAULT_OPENROUTER_BASE_URL).strip() or DEFAULT_OPENROUTER_BASE_URL,
+            timeout=timeout,
+            max_tokens=max_tokens,
+        )
+
+    raise RuntimeError("Set OPENAI_API_KEY or OPENROUTER_API_KEY in environment or src/zap/.env")
 
 
 def parse_zap_json_files(paths: list[Path]) -> list[ExtractedAlert]:
@@ -228,13 +246,16 @@ def build_poc_fields(
 ) -> dict[str, str]:
     method = method.upper()
     payload = attack or request_body
-    notes = "Replay the request and compare the response with ZAP evidence."
+    notes = "Replay the request and compare the real EShop response with ZAP evidence."
     if parameter and attack:
-        notes = f"Use parameter `{parameter}` with the ZAP attack payload, then inspect the response."
+        notes = (
+            f"Use parameter `{parameter}` with the ZAP attack payload, then inspect the real EShop "
+            "response headers/body before concluding the vulnerability."
+        )
     elif method == "GET" and "cors" not in endpoint.lower():
-        notes = "Replay the GET request and inspect response headers/body."
+        notes = "Replay the GET request and inspect the real EShop response headers/body."
     elif request_body:
-        notes = "Replay the request body captured by ZAP and inspect response behavior."
+        notes = "Replay the request body captured by ZAP and inspect the real EShop response behavior."
     return {
         "method": method,
         "endpoint": endpoint,
@@ -283,11 +304,11 @@ def build_prompt(alerts: list[ExtractedAlert], source_names: list[str]) -> str:
         "- Mỗi mục phải ghi rõ các thông tin tham chiếu (reference) chi tiết từ ZAP alert:\n"
         "  * **Nguồn phát hiện (Source)**: Tên file JSON nguồn chứa alert.\n"
         "  * **Độ nguy hiểm (Risk) & Độ tin cậy (Confidence)**.\n"
+        "  * **Mô tả lỗ hổng (Vulnerability description)**: 1-2 câu ngắn, nêu bản chất lỗi.\n"
         "  * **Các URL bị ảnh hưởng (Affected URLs)**: Liệt kê các endpoint/URL bị lỗi (lấy từ thông tin 'bị ảnh hưởng bởi lỗi này' trong description).\n"
-        "  * **Bản chất lỗi**: Tối đa 2 câu ngắn gọn.\n"
-        "  * **Tag OWASP**: Danh sách tag ngắn.\n"
-        "  * **PoC**: Method + endpoint + payload/query test.\n"
+        "  * **PoC**: Method + endpoint + payload/query test; nếu chưa đủ thông tin, hãy yêu cầu PoC cụ thể.\n"
         "  * **Cách verify PoC**: Tối đa 2-3 câu ngắn ghi Expected/Actual và Header/Body cần check.\n"
+        "  * **Xác nhận bằng phản hồi thật từ EShop**: Luôn đối chiếu với response_header/response_body thật từ EShop trước khi kết luận vulnerability. Nếu chưa có xác nhận từ phản hồi thật từ EShop, ghi chú rõ là chưa được xác nhận.\n"
         "- Nếu finding có vẻ là noise/dev-server, ghi chú ngắn 'Có thể là noise do dev server'.\n"
         "- Giới hạn tổng dung lượng phản hồi cực ngắn để tránh bị cắt cụt (truncation).\n\n"
         f"Source files: {', '.join(source_names)}\n\n"
@@ -304,15 +325,24 @@ def call_openrouter(prompt: str, config: OpenRouterConfig) -> str:
         "top_p": 0.8,
         "max_tokens": config.max_tokens,
     }
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {config.api_key}",
+    }
+    if config.provider == "openrouter":
+        headers.update(
+            {
+                "HTTP-Referer": "https://github.com",
+                "X-Title": "ZAP OpenRouter JSON Extract",
+            }
+        )
+    elif config.provider == "openai":
+        headers["Accept"] = "application/json"
+
     request = urllib.request.Request(
         config.base_url,
         data=json.dumps(body).encode("utf-8"),
-        headers={
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {config.api_key}",
-            "HTTP-Referer": "https://github.com",
-            "X-Title": "ZAP OpenRouter JSON Extract",
-        },
+        headers=headers,
         method="POST",
     )
     try:
@@ -329,7 +359,10 @@ def call_openrouter(prompt: str, config: OpenRouterConfig) -> str:
         raise RuntimeError("OpenRouter returned a non-JSON response") from exc
 
     try:
-        return str(data["choices"][0]["message"]["content"]).strip()
+        content = data["choices"][0]["message"]["content"]
+        if isinstance(content, list):
+            content = "".join(part.get("text", "") for part in content if isinstance(part, dict))
+        return str(content).strip()
     except (KeyError, IndexError, TypeError) as exc:
         raise RuntimeError(f"Unexpected OpenRouter response: {data}") from exc
 
