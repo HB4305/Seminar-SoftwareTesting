@@ -312,11 +312,18 @@ Trong output hiện có, Semgrep ghi nhận 12 findings, gồm hardcoded JWT sec
 
 DAST (Dynamic Application Security Testing) là kiểm thử bảo mật trên ứng dụng đang chạy thật. DAST không cần đọc source code; thay vào đó, tool gửi request HTTP, quan sát response, crawl trang, chạy passive scan và có thể active scan bằng payload kiểm thử.
 
-OWASP ZAP là công cụ DAST mã nguồn mở. ZAP có giao diện UI để chạy scan thủ công, proxy browser để bắt traffic, spider/AJAX Spider để khám phá URL và API để tự động hóa scan trong pipeline.
+OWASP ZAP là công cụ DAST mã nguồn mở. Trong project này, ZAP được dùng theo hai cách:
+
+- Chạy bằng GUI để proxy trình duyệt, quan sát request/response, tạo context và cấu hình authentication thủ công.
+- Chạy bằng CLI qua `src/zap/scan_zap.py` để tự động hóa scan, xuất report JSON/HTML và đưa JSON vào bước AI triage.
 
 ## 7. Cài đặt OWASP ZAP
 
-ZAP GUI cần Java 17 trở lên, trừ khi chạy bằng Docker.
+Chạy từ root repo `Seminar-SoftwareTesting`.
+
+### 7.1. Cài ZAP GUI
+
+ZAP GUI cần Java 17 trở lên, trừ khi bản cài đặt đã bundle Java hoặc chạy bằng Docker.
 
 Windows:
 
@@ -344,58 +351,129 @@ sudo snap install zaproxy --classic
 zaproxy
 ```
 
-Nếu chỉ chạy flow tự động trong `src/zap`, cần Docker đang chạy vì script tự tạo ZAP container:
+Nếu ZAP GUI trên Linux báo môi trường headless hoặc cửa sổ trắng, kiểm tra lại Java bản đầy đủ và dùng hướng dẫn chi tiết trong `src/zap/installation.md`.
+
+### 7.2. Cài dependency cho CLI flow
+
+Tạo hoặc kích hoạt virtual environment:
 
 ```bash
-docker --version
-docker pull ghcr.io/zaproxy/zaproxy:stable
-```
-
-Cài Python package cho script ZAP:
-
-```bash
+python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install python-owasp-zap-v2.4
 ```
 
-## 8. Chạy ZAP cơ bản bằng UI
+Nếu dùng Windows PowerShell:
 
-Chỉ scan hệ thống local/lab mà nhóm có quyền kiểm thử.
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install python-owasp-zap-v2.4
+```
 
-1. Khởi động EShop:
-   - Backend: `http://localhost:3000`
-   - Frontend Web/User: `http://localhost:5173`
-   - Frontend Admin: `http://localhost:5174`
-2. Mở OWASP ZAP.
-3. Ở màn hình session, chọn không lưu session nếu chỉ demo nhanh, hoặc lưu session nếu cần evidence.
-4. Vào tab `Quick Start`.
-5. Chọn `Automated Scan`.
-6. Nhập target, ví dụ `http://localhost:3000`.
-7. Nhấn `Attack`.
-8. Sau khi scan xong, xem:
+CLI flow cần ZAP daemon tại `http://localhost:8090`. Có thể chạy bằng Docker:
+
+```bash
+docker run --rm -d --name eshop-zap --network host \
+  -v $(pwd):$(pwd) \
+  ghcr.io/zaproxy/zaproxy:stable zap.sh -daemon \
+  -port 8090 -host 0.0.0.0 -config api.disablekey=true
+```
+
+### 7.3. Chuẩn bị cấu hình ZAP
+
+```bash
+cp src/zap/.env.example src/zap/.env
+```
+
+Các biến quan trọng trong `src/zap/.env`:
+
+```env
+ZAP_TARGET=http://localhost:3000
+ZAP_URL=http://localhost:8090
+ZAP_AUTH_ROLE=none
+ZAP_REPORT_FORMAT=json
+ZAP_REPORT_FILE=src/zap/output/backend_basic.json
+```
+
+Nếu scan có authentication, điền credential test tương ứng:
+
+```env
+ZAP_USER_EMAIL=test@eshop.com
+ZAP_USER_PASSWORD=Test1234!
+ZAP_ADMIN_EMAIL=admin@eshop.com
+ZAP_ADMIN_PASSWORD=Admin123!
+```
+
+Không commit file `.env` thật vì có thể chứa credential hoặc API key.
+
+## 8. Chạy ZAP bằng GUI
+
+Chỉ scan hệ thống local/lab mà nhóm có quyền kiểm thử. Trước khi chạy GUI, khởi động EShop:
+
+- Backend: `http://localhost:3000`
+- Frontend Web/User: `http://localhost:5173`
+- Frontend Admin: `http://localhost:5174`
+
+### 8.1. GUI scan không login
+
+Flow này dùng để scan phần public như trang sản phẩm, endpoint public hoặc backend API không cần token.
+
+1. Mở OWASP ZAP GUI.
+2. Ở màn hình session, chọn không lưu session nếu demo nhanh, hoặc lưu session nếu cần evidence.
+3. Vào `Quick Start` -> `Automated Scan`.
+4. Nhập target public, ví dụ `http://localhost:3000` hoặc `http://localhost:5173` hoặc `http://localhost:5174`.
+5. Nhấn `Attack`.
+6. Sau khi scan xong, xem:
    - `Sites`: URL đã crawl được.
    - `History`: request/response runtime.
    - `Alerts`: danh sách cảnh báo.
-   - `Response`: header/body liên quan đến alert.
+   - `Request`/`Response`: evidence của từng alert.
 
-Với frontend SPA, nên dùng `Manual Explore` hoặc AJAX Spider để ZAP thấy các route và API được gọi sau đăng nhập. Với endpoint yêu cầu đăng nhập, cần đảm bảo request trong ZAP có token/cookie hợp lệ.
+Với frontend SPA, nên dùng thêm `Manual Explore` hoặc `AJAX Spider` vì nhiều route/API chỉ xuất hiện sau khi JavaScript chạy.
 
-## 9. Flow ZAP trong `src/zap`
+### 8.2. Cấu hình browser proxy cho GUI
 
-Script `src/zap/scan_zap.py` tự điều phối Docker ZAP daemon, context, auth, spider, AJAX Spider, passive scan, active scan và export report. Script chỉ allow target local trên các cổng `3000`, `5173`, `5174`.
+Để ZAP bắt được traffic thực từ người dùng, cấu hình Firefox đi qua ZAP proxy:
 
-### 9.1. Backend API
+1. Trong ZAP, vào `Tools` -> `Options...` -> `Network` -> `Local Servers/Proxies`.
+2. Xác nhận main proxy là `localhost:8080`.
+3. Trong Firefox, vào `Settings` -> `Network Settings`.
+4. Chọn manual proxy và nhập HTTP proxy `localhost`, port `8080`.
+5. Nếu traffic `localhost` không xuất hiện trong ZAP, mở `about:config` và đặt `network.proxy.allow_hijacking_localhost=true`.
 
-Basic scan HTML:
+Hình minh họa chi tiết nằm trong `src/zap/gui_scan.md`.
 
-```bash
-python src/zap/scan_zap.py \
-  --target http://localhost:3000 \
-  --report-format html \
-  --output-file src/zap/output/backend_basic.html
-```
+### 8.3. GUI scan có authentication
 
-Basic scan JSON:
+Flow này dùng để scan các chức năng cần đăng nhập như giỏ hàng, profile hoặc API user/admin.
+
+1. Mở EShop trong Firefox đã cấu hình proxy.
+2. Đăng nhập hoặc đăng ký bằng tài khoản test để ZAP ghi nhận request login.
+3. Trong cây `Sites`, đưa cả frontend `http://localhost:5173` và backend `http://localhost:3000` vào cùng context.
+4. Chọn request `POST /api/login`, click chuột phải và chọn `Flag as Context` -> context tương ứng -> `JSON-based Auth Login Request`.
+5. Trong context, mở phần `Authentication` và kiểm tra login URL, method, payload JSON và dấu hiệu đăng nhập thành công.
+6. Mở tab `Users`, tạo user test và nhập username/password.
+7. Bật `Forced User Mode` để ZAP gắn user đã cấu hình vào request trong context.
+8. Chạy `Spider...` hoặc `AJAX Spider...` trên context. Với frontend React/SPA, ưu tiên bật AJAX Spider.
+9. Chỉ chạy `Active Scan...` sau khi scope đúng và tài khoản test có thể bị thay đổi dữ liệu mà không ảnh hưởng môi trường thật.
+
+Kết quả cần lưu lại:
+
+- Host frontend/backend trong `Sites`.
+- Request login và request xác minh user như `/api/users/me`.
+- Alert trong tab `Alerts`.
+- Request/response evidence cho từng alert quan trọng.
+
+## 9. Chạy ZAP bằng CLI trong `src/zap`
+
+Script `src/zap/scan_zap.py` tự động kết nối ZAP daemon, chuẩn bị context/auth nếu cần, chạy spider, tùy chọn AJAX Spider, passive scan, active scan và export report. Script hiện hỗ trợ target local trên các cổng `3000`, `5173`, `5174`.
+
+### 9.1. Chạy CLI không login
+
+Dùng khi scan backend public hoặc frontend public, không cần token/cookie.
+
+Backend API, xuất JSON để đưa vào AI:
 
 ```bash
 python src/zap/scan_zap.py \
@@ -404,90 +482,146 @@ python src/zap/scan_zap.py \
   --output-file src/zap/output/backend_basic.json
 ```
 
-OWASP Top 10 2025 scan:
+Frontend user public, có AJAX Spider để khám phá route SPA:
+
+```bash
+python src/zap/scan_zap.py \
+  --target http://localhost:5173 \
+  --ajax-spider \
+  --report-format json \
+  --output-file src/zap/output/frontend_public_basic.json
+```
+
+Nếu chỉ cần đọc thủ công, đổi `--report-format html` và đặt output `.html`.
+
+### 9.2. Chạy CLI có authentication
+
+Dùng khi cần scan dưới quyền user hoặc admin. Trước khi chạy, đảm bảo `src/zap/.env` có credential đúng và backend đang chạy.
+
+Frontend user:
+
+```bash
+python src/zap/scan_zap.py \
+  --target http://localhost:5173 \
+  --auth-role user \
+  --forced-user \
+  --ajax-spider \
+  --report-format json \
+  --output-file src/zap/output/frontend_user_basic.json
+```
+
+Frontend admin:
+
+```bash
+python src/zap/scan_zap.py \
+  --target http://localhost:5174 \
+  --auth-role admin \
+  --forced-user \
+  --ajax-spider \
+  --report-format json \
+  --output-file src/zap/output/frontend_admin_basic.json
+```
+
+Backend authenticated API scan dưới quyền user:
 
 ```bash
 python src/zap/scan_zap.py \
   --target http://localhost:3000 \
-  --scan-mode owasp-top10-2025 \
-  --report-format html \
-  --output-file src/zap/output/backend_owasp2025.html
-```
-
-### 9.2. Frontend Web/User
-
-Basic scan:
-
-```bash
-python src/zap/scan_zap.py \
-  --target http://localhost:5173 \
   --auth-role user \
   --forced-user \
-  --ajax-spider \
-  --report-format html \
-  --output-file src/zap/output/frontend_user_basic.html
+  --report-format json \
+  --output-file src/zap/output/backend_user_basic.json
 ```
 
-OWASP Top 10 2025 scan:
+Nếu scan authenticated báo `401/403`, kiểm tra credential trong `.env`, endpoint login `http://localhost:3000/api/login`, và endpoint verify `http://localhost:3000/api/users/me`.
 
-```bash
-python src/zap/scan_zap.py \
-  --target http://localhost:5173 \
-  --auth-role user \
-  --forced-user \
-  --ajax-spider \
-  --scan-mode owasp-top10-2025 \
-  --report-format html \
-  --output-file src/zap/output/frontend_user_owasp2025.html
-```
-
-### 9.3. Frontend Admin
-
-Basic scan:
-
-```bash
-python src/zap/scan_zap.py \
-  --target http://localhost:5174 \
-  --auth-role admin \
-  --forced-user \
-  --ajax-spider \
-  --report-format html \
-  --output-file src/zap/output/frontend_admin_basic.html
-```
-
-OWASP Top 10 2025 scan:
-
-```bash
-python src/zap/scan_zap.py \
-  --target http://localhost:5174 \
-  --auth-role admin \
-  --forced-user \
-  --ajax-spider \
-  --scan-mode owasp-top10-2025 \
-  --report-format html \
-  --output-file src/zap/output/frontend_admin_owasp2025.html
-```
-
-### 9.4. Ý nghĩa flag chính
+### 9.3. Ý nghĩa flag chính
 
 | Flag | Ý nghĩa |
 | --- | --- |
 | `--target` | URL cần scan: backend `3000`, frontend user `5173`, frontend admin `5174`. |
+| `--zap-url` | URL ZAP daemon, mặc định `http://localhost:8090`. |
+| `--api-key` | API key nếu ZAP daemon bật key. Lab mặc định dùng `api.disablekey=true`. |
 | `--auth-role` | Chọn tài khoản seed để đăng nhập: `none`, `user`, `admin`. |
-| `--forced-user` | Bật Forced User Mode để ZAP scan dưới user đã cấu hình. |
+| `--forced-user` | Bật Forced User Mode để scan dưới user đã cấu hình. |
 | `--ajax-spider` | Dùng AJAX Spider, cần thiết cho frontend React/SPA. |
-| `--scan-mode basic` | Dùng các scanner/rule mặc định đang enable trong ZAP daemon. |
-| `--scan-mode owasp-top10-2025` | Tạo active scan policy từ các scanner có tag `OWASP_2025_A*`, có fallback rule ID khi ZAP không trả tag. |
 | `--report-format` | `html` để đọc thủ công, `json` để pipeline/AI xử lý. |
 | `--output-file` | Đường dẫn file report đầu ra. |
 
-Khi dùng `--external-zap`, cần clear/new session trước khi scan nếu muốn report không lẫn URL của lần scan trước.
+### 9.4. Kiểm tra output scan
 
-## 10. Test endpoint để đối chiếu ZAP với Semgrep
+Sau khi chạy CLI, kiểm tra file report:
+
+```bash
+ls src/zap/output
+```
+
+Output chính thường dùng:
+
+- `src/zap/output/backend_basic.json`: report backend public.
+- `src/zap/output/frontend_user_basic.json`: report frontend dưới quyền user.
+- `src/zap/output/frontend_admin_basic.json`: report frontend dưới quyền admin.
+
+Khi đọc report, nhóm cần kiểm chứng:
+
+- Alert thuộc đúng target và scope EShop.
+- Endpoint có public hay cần authentication.
+- Evidence trong request/response có đủ để kết luận lỗi thật.
+- Alert là lỗi runtime thật hay noise do môi trường local HTTP/dev server.
+
+## 10. Sử dụng AI để phân tích ZAP report
+
+Script `src/zap/openrouter_zap_json_extract.py` đọc report JSON của ZAP, lọc alert có risk đáng chú ý, chuẩn hóa endpoint/evidence và sinh báo cáo Markdown. Script ưu tiên OpenAI nếu có `OPENAI_API_KEY`, nếu không thì dùng OpenRouter khi có `OPENROUTER_API_KEY`. Nếu API lỗi, script fallback sang local deterministic triager.
+
+### 10.1. Cấu hình AI provider
+
+Mở `src/zap/.env` và điền một trong hai nhóm cấu hình.
+
+OpenAI:
+
+```env
+OPENAI_API_KEY=your_openai_key
+OPENAI_MODEL=gpt-4o-mini
+```
+
+OpenRouter:
+
+```env
+OPENROUTER_API_KEY=your_openrouter_key
+OPENROUTER_MODEL=google/gemini-2.5-flash
+OPENROUTER_BASE_URL=https://openrouter.ai/api/v1/chat/completions
+OPENROUTER_TIMEOUT=60
+OPENROUTER_MAX_TOKENS=4096
+```
+
+Không commit API key thật vào repository.
+
+### 10.2. Chạy AI triage cho một hoặc nhiều report
+
+```bash
+python src/zap/openrouter_zap_json_extract.py \
+  --input \
+    src/zap/output/backend_basic.json \
+    src/zap/output/frontend_user_basic.json \
+    src/zap/output/frontend_admin_basic.json \
+  --format markdown \
+  --output src/zap/output/zap_openrouter_result.md
+```
+
+Nếu chỉ có một report:
+
+```bash
+python src/zap/openrouter_zap_json_extract.py \
+  --input src/zap/output/backend_basic.json \
+  --format markdown \
+  --output src/zap/output/zap_backend_ai_triage.md
+```
+
+## 11. Test endpoint để đối chiếu ZAP với Semgrep
 
 Mục tiêu phần này là dùng runtime evidence từ ZAP hoặc `curl` để kiểm tra finding từ Semgrep có biểu hiện trên ứng dụng đang chạy hay không.
 
-### 10.1. Chuẩn bị token đăng nhập
+### 11.1. Chuẩn bị token đăng nhập
 
 Đăng nhập admin:
 
@@ -511,7 +645,7 @@ Copy giá trị `token` trong response để dùng ở các bước sau:
 TOKEN="paste_token_here"
 ```
 
-### 10.2. Đối chiếu hardcoded JWT secret
+### 11.2. Đối chiếu hardcoded JWT secret
 
 Semgrep finding:
 
@@ -532,7 +666,7 @@ Kết quả cần ghi nhận:
 - Nếu tạo được token giả bằng secret hardcode trong PoC và backend vẫn trả `200`, finding được xác nhận là lỗi nghiêm trọng.
 - Nếu backend đã đổi secret qua biến môi trường hoặc verify thất bại, cập nhật trạng thái finding thành đã khắc phục hoặc không tái lập được.
 
-### 10.3. Đối chiếu cleartext HTTP request
+### 11.3. Đối chiếu cleartext HTTP request
 
 Semgrep finding:
 
@@ -553,7 +687,7 @@ Kết quả cần ghi nhận:
 - Nếu chỉ là lab local, đánh dấu là finding hợp lệ về pattern nhưng cần phân loại theo môi trường.
 - Trong ZAP report, đối chiếu alert `HTTP Only Site` hoặc các request đi qua `http://localhost:3000`.
 
-### 10.4. Đối chiếu CORS/Cross-Domain Misconfiguration
+### 11.4. Đối chiếu CORS/Cross-Domain Misconfiguration
 
 ZAP thường phát hiện `Access-Control-Allow-Origin: *` trên backend.
 
@@ -568,7 +702,7 @@ Kết quả cần ghi nhận:
 - Nếu endpoint trả dữ liệu công khai, impact thấp hơn endpoint trả dữ liệu cá nhân.
 - Nếu endpoint cần đăng nhập, chạy lại với `Authorization: Bearer $TOKEN` để đánh giá rủi ro đọc dữ liệu từ origin lạ.
 
-### 10.5. Đối chiếu SQL Injection trên search sản phẩm
+### 11.5. Đối chiếu SQL Injection trên search sản phẩm
 
 Trong tài liệu Semgrep, nhóm từng ghi nhận trường hợp SQL Injection ở `backend/server.js` có thể bị ruleset mặc định bỏ sót. Vì vậy cần test thủ công:
 
@@ -582,7 +716,7 @@ Kết quả cần ghi nhận:
 - Nếu response được parameterize và không thay đổi bất thường, ghi nhận là không tái lập được.
 - So sánh với ZAP: active scan có thể tạo alert Injection hoặc không; nếu ZAP không báo nhưng test tay tái lập được, đó là false negative của DAST.
 
-### 10.6. Mẫu bảng đối chiếu
+### 11.6. Mẫu bảng đối chiếu
 
 | Finding/Alert | Nguồn | Endpoint/File | Evidence runtime | Kết luận |
 | --- | --- | --- | --- | --- |
@@ -591,18 +725,18 @@ Kết quả cần ghi nhận:
 | CORS `*` | ZAP | `/api/products?search=` | Header `Access-Control-Allow-Origin` | Confirmed / Low impact / Needs Auth Check |
 | SQL Injection search | Manual + ZAP | `/api/products?search=` | Response bất thường hoặc lỗi SQL | Confirmed / False Negative / Not Reproducible |
 
-## 11. Xử lý sự cố
+## 12. Xử lý sự cố
 
 | Vấn đề | Dấu hiệu | Nguyên nhân thường gặp | Cách xử lý |
 | --- | --- | --- | --- |
 | Không cài được package Python global | `externally-managed-environment` | Distro chặn cài pip vào system Python | Dùng `.venv` rồi cài dependency trong virtual environment. |
 | Semgrep không tìm thấy source | Lệnh scan báo không có `./eshop-sut` hoặc `$SOURCE_ROOT` | Source EShop nằm khác vị trí mặc định hoặc biến `SOURCE_ROOT` sai | Kiểm tra `ls ./eshop-sut`; nếu source nằm nơi khác, đặt lại `SOURCE_ROOT` bằng đường dẫn source thật. |
 | OpenRouter trả `402` | AI triage lỗi billing/credit | Hết credit hoặc model quá tốn token | Dùng model nhẹ hơn, nạp credit hoặc chạy/đọc output offline. |
-| ZAP không khởi động | Docker unavailable hoặc image pull lỗi | Docker chưa chạy, thiếu quyền, mạng chậm | Kiểm tra Docker daemon, pull trước image ZAP hoặc dùng ZAP GUI/external daemon. |
+| ZAP không khởi động | Docker unavailable hoặc image pull lỗi | Docker chưa chạy, thiếu quyền, mạng chậm | Kiểm tra Docker daemon, pull trước image ZAP hoặc dùng ZAP GUI/daemon tự chạy tại `localhost:8090`. |
 | Authenticated ZAP scan lỗi `401/403` | Login hoặc `/api/users/me` fail | Sai credential, account bị khóa, backend chưa chạy | Reset dữ liệu test, đổi credential trong `.env`, kiểm tra backend `3000`. |
-| Report backend lẫn frontend | JSON/HTML có nhiều `site` khác target | Dùng external ZAP session cũ hoặc output file đặt nhầm | Tạo session mới/clear history, không ghi frontend vào file backend. |
+| Report backend lẫn frontend | JSON/HTML có nhiều `site` khác target | ZAP daemon giữ session cũ hoặc output file đặt nhầm | Tạo session mới/clear history trong ZAP, hoặc dùng file output riêng cho từng target. |
 
-## 12. Tài liệu tham khảo
+## 13. Tài liệu tham khảo
 
 - OWASP Top 10 2025: https://owasp.org/www-project-top-ten/
 - Semgrep documentation: https://semgrep.dev/docs/
@@ -610,6 +744,6 @@ Kết quả cần ghi nhận:
 - OWASP ZAP Report Generation: https://www.zaproxy.org/docs/desktop/addons/report-generation/
 - Tài liệu trong repo: `docs/semgrep/`, `src/semgrep/`, `docs/zap/`, `src/zap/`, `weekly-reports/Group06_06/Group06.md`.
 
-## 13. Công bố sử dụng AI
+## 14. Công bố sử dụng AI
 
 Nhóm có sử dụng AI để hỗ trợ soạn thảo hướng dẫn, phân tích Semgrep findings và triage ZAP alerts. Các command, flag CLI, đường dẫn output và nhận định kỹ thuật cần được thành viên nhóm kiểm tra lại bằng source code, report JSON/HTML và request runtime trước khi đưa vào kết luận cuối cùng.

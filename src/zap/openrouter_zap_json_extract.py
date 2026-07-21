@@ -31,6 +31,7 @@ DEFAULT_OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1/chat/completions"
 DEFAULT_OPENAI_BASE_URL = "https://api.openai.com/v1/chat/completions"
 DEFAULT_TIMEOUT = 60
 DEFAULT_MAX_TOKENS = 1800
+OPENROUTER_MAX_TOKENS_RE = re.compile(r"can only afford\s+(\d+)", re.IGNORECASE)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -63,6 +64,25 @@ class OpenRouterConfig:
     base_url: str
     timeout: int
     max_tokens: int
+
+
+def provider_display_name(provider: str) -> str:
+    if provider == "openai":
+        return "OpenAI"
+    if provider == "openrouter":
+        return "OpenRouter"
+    return provider
+
+
+def extract_openrouter_affordable_max_tokens(detail: str) -> int | None:
+    match = OPENROUTER_MAX_TOKENS_RE.search(detail)
+    if not match:
+        return None
+    try:
+        value = int(match.group(1))
+    except ValueError:
+        return None
+    return value if value > 0 else None
 
 
 def strip_html(value: str) -> str:
@@ -318,6 +338,11 @@ def build_prompt(alerts: list[ExtractedAlert], source_names: list[str]) -> str:
 
 
 def call_openrouter(prompt: str, config: OpenRouterConfig) -> str:
+    return _call_provider(prompt, config)
+
+
+def _call_provider(prompt: str, config: OpenRouterConfig) -> str:
+    provider_name = provider_display_name(config.provider)
     body = {
         "model": config.model,
         "messages": [{"role": "user", "content": prompt}],
@@ -350,13 +375,18 @@ def call_openrouter(prompt: str, config: OpenRouterConfig) -> str:
             data = json.loads(response.read().decode("utf-8"))
     except urllib.error.HTTPError as exc:
         detail = exc.read().decode("utf-8", "ignore").strip()
-        raise RuntimeError(f"OpenRouter API error {exc.code}: {detail or exc.reason}") from exc
+        if config.provider == "openrouter" and exc.code == 402:
+            affordable_max_tokens = extract_openrouter_affordable_max_tokens(detail)
+            if affordable_max_tokens is not None and affordable_max_tokens < config.max_tokens:
+                retry_config = dataclasses.replace(config, max_tokens=affordable_max_tokens)
+                return _call_provider(prompt, retry_config)
+        raise RuntimeError(f"{provider_name} API error {exc.code}: {detail or exc.reason}") from exc
     except urllib.error.URLError as exc:
-        raise RuntimeError(f"Network error while calling OpenRouter: {exc.reason}") from exc
+        raise RuntimeError(f"Network error while calling {provider_name}: {exc.reason}") from exc
     except TimeoutError as exc:
-        raise RuntimeError(f"OpenRouter request timed out after {config.timeout}s") from exc
+        raise RuntimeError(f"{provider_name} request timed out after {config.timeout}s") from exc
     except json.JSONDecodeError as exc:
-        raise RuntimeError("OpenRouter returned a non-JSON response") from exc
+        raise RuntimeError(f"{provider_name} returned a non-JSON response") from exc
 
     try:
         content = data["choices"][0]["message"]["content"]
@@ -364,16 +394,17 @@ def call_openrouter(prompt: str, config: OpenRouterConfig) -> str:
             content = "".join(part.get("text", "") for part in content if isinstance(part, dict))
         return str(content).strip()
     except (KeyError, IndexError, TypeError) as exc:
-        raise RuntimeError(f"Unexpected OpenRouter response: {data}") from exc
+        raise RuntimeError(f"Unexpected {provider_name} response: {data}") from exc
 
 
-def render_markdown(ai_text: str, source_names: list[str], model: str) -> str:
+def render_markdown(ai_text: str, source_names: list[str], model: str, provider: str = "openrouter") -> str:
+    provider_name = provider_display_name(provider)
     return "\n".join(
         [
-            "# ZAP OpenRouter JSON Extract Result",
+            f"# ZAP {provider_name} JSON Extract Result",
             "",
             f"- Source files: `{', '.join(source_names)}`",
-            f"- OpenRouter model: `{model}`",
+            f"- {provider_name} model: `{model}`",
             "",
             ai_text.strip(),
             "",
@@ -381,17 +412,19 @@ def render_markdown(ai_text: str, source_names: list[str], model: str) -> str:
     )
 
 
-def render_html(ai_text: str, source_names: list[str], model: str) -> str:
+def render_html(ai_text: str, source_names: list[str], model: str, provider: str = "openrouter") -> str:
+    provider_name = provider_display_name(provider)
     escaped_text = html.escape(ai_text.strip())
     escaped_sources = html.escape(", ".join(source_names))
     escaped_model = html.escape(model)
+    escaped_provider = html.escape(provider_name)
     return "\n".join(
         [
             "<!doctype html>",
             '<html lang="vi">',
             "<head>",
             '  <meta charset="utf-8">',
-            "  <title>ZAP OpenRouter JSON Extract Result</title>",
+            f"  <title>ZAP {escaped_provider} JSON Extract Result</title>",
             "  <style>",
             "    body { font-family: system-ui, sans-serif; line-height: 1.55; margin: 32px; max-width: 1100px; }",
             "    pre { white-space: pre-wrap; background: #f6f8fa; padding: 16px; border-radius: 6px; }",
@@ -399,9 +432,9 @@ def render_html(ai_text: str, source_names: list[str], model: str) -> str:
             "  </style>",
             "</head>",
             "<body>",
-            "  <h1>ZAP OpenRouter JSON Extract Result</h1>",
+            f"  <h1>ZAP {escaped_provider} JSON Extract Result</h1>",
             f"  <p><strong>Source files:</strong> <code>{escaped_sources}</code></p>",
-            f"  <p><strong>OpenRouter model:</strong> <code>{escaped_model}</code></p>",
+            f"  <p><strong>{escaped_provider} model:</strong> <code>{escaped_model}</code></p>",
             f"  <pre>{escaped_text}</pre>",
             "</body>",
             "</html>",
@@ -581,11 +614,12 @@ def main(argv: list[str] | None = None) -> int:
             prompt = build_prompt(alerts, source_names)
             ai_text = call_openrouter(prompt, config)
             if args.format == "markdown":
-                output_text = render_markdown(ai_text, source_names, config.model)
+                output_text = render_markdown(ai_text, source_names, config.model, config.provider)
             else:
-                output_text = render_html(ai_text, source_names, config.model)
+                output_text = render_html(ai_text, source_names, config.model, config.provider)
         except Exception as api_exc:
-            print(f"[*] OpenRouter API failed ({api_exc}). Falling back to local deterministic triager...", file=sys.stderr)
+            provider_name = provider_display_name(config.provider)
+            print(f"[*] {provider_name} API failed ({api_exc}). Falling back to local deterministic triager...", file=sys.stderr)
             output_text = generate_local_report(alerts, source_names)
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -594,7 +628,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"[!] {exc}", file=sys.stderr)
         return 1
 
-    print(f"[+] Wrote OpenRouter ZAP extraction report: {output_path}")
+    print(f"[+] Wrote {provider_display_name(config.provider)} ZAP extraction report: {output_path}")
     return 0
 
 
