@@ -404,8 +404,23 @@ def extract_first_http_url(text):
     return match.group(0) if match else ""
 
 
+def extract_runtime_url_from_code(text):
+    explicit_url = extract_first_http_url(text)
+    if explicit_url:
+        return explicit_url
+
+    api_url_match = re.search(r"\$\{API_URL\}([^`'\"),;]+)", text or "")
+    if api_url_match:
+        return f"http://localhost:3000/api{api_url_match.group(1)}"
+
+    return ""
+
+
 def infer_method_from_code(code):
     lowered = (code or "").lower()
+    method_match = re.search(r"\bmethod\s*:\s*['\"]([A-Za-z]+)['\"]", code or "")
+    if method_match:
+        return method_match.group(1).upper()
     for method in ("post", "put", "patch", "delete", "get"):
         if re.search(rf"\b{method}\s*\(", lowered) or f".{method}(" in lowered:
             return method.upper()
@@ -441,7 +456,7 @@ def runtime_mapping_for_record(record):
         )
 
     if "insecure-request" in rule or "cleartext" in record.message.lower():
-        url = extract_first_http_url(record.code) or "http://localhost:3000/<api-path>"
+        url = extract_runtime_url_from_code(record.code) or "http://localhost:3000/<api-path>"
         method = infer_method_from_code(record.code)
         return RuntimeMapping(
             title="HTTP request không mã hóa",
@@ -565,13 +580,15 @@ def write_test_case_entries_report(records: List[FindingRecord], output_dir):
 
 def build_security_tag_lines(record: FindingRecord) -> List[str]:
     return [
-        f"`Rule: {record.rule_id}`",
-        f"`Severity: {record.severity}`",
-        f"`{record.cwe}`",
-        f"`{record.owasp}`",
-        f"`Likelihood: {record.likelihood}`",
-        f"`Impact: {record.impact}`",
-        f"`Confidence: {record.confidence}`",
+        "| Thuộc tính | Giá trị |",
+        "|---|---|",
+        f"| Rule ID | `{record.rule_id}` |",
+        f"| Severity | `{record.severity}` |",
+        f"| CWE | {record.cwe} |",
+        f"| OWASP | {record.owasp} |",
+        f"| Likelihood | `{record.likelihood}` |",
+        f"| Impact | `{record.impact}` |",
+        f"| Confidence | `{record.confidence}` |",
     ]
 
 
@@ -628,15 +645,11 @@ def write_triage_outputs(records: List[FindingRecord], ai_outputs: Dict[int, str
                 f"### SEMGREP-{record.index:03d}: {record.rule_id}",
                 "",
                 "#### Tags lỗi",
-                " ".join(build_security_tag_lines(record)),
+                *build_security_tag_lines(record),
                 "",
                 "#### Thông tin finding",
                 f"- File: `{record.file_path}`",
                 f"- Dòng: {record.line}",
-                f"- Severity: {record.severity}",
-                f"- CWE: {record.cwe}",
-                f"- OWASP: {record.owasp}",
-                f"- Likelihood / Impact / Confidence: {record.likelihood} / {record.impact} / {record.confidence}",
                 f"- Trạng thái kiểm chứng: Needs Human Review",
                 "",
                 "#### Bằng chứng mã nguồn",
@@ -711,6 +724,7 @@ def parse_args(argv):
 
 
 def main(argv=None):
+    configure_console_encoding()
     args = parse_args(sys.argv[1:] if argv is None else argv)
 
     try:

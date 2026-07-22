@@ -355,13 +355,32 @@ class SemgrepAiTriageWorkflowTest(unittest.TestCase):
 
         self.assertIn("### SEMGREP-001:", report)
         self.assertIn("#### Tags lỗi", report)
-        self.assertIn("`Rule: javascript.jsonwebtoken.security.jwt-hardcode.hardcoded-jwt-secret`", report)
-        self.assertIn("`Severity: WARNING`", report)
-        self.assertIn("`CWE-798: Use of Hard-coded Credentials`", report)
-        self.assertIn("`A07:2021 - Identification and Authentication Failures`", report)
-        self.assertIn("`Likelihood: HIGH`", report)
-        self.assertIn("`Impact: MEDIUM`", report)
-        self.assertIn("`Confidence: HIGH`", report)
+        self.assertIn("| Thuộc tính | Giá trị |", report)
+        self.assertIn("|---|---|", report)
+        self.assertIn(
+            "| Rule ID | `javascript.jsonwebtoken.security.jwt-hardcode.hardcoded-jwt-secret` |",
+            report,
+        )
+        self.assertIn("| Severity | `WARNING` |", report)
+        self.assertIn("| CWE | CWE-798: Use of Hard-coded Credentials |", report)
+        self.assertIn(
+            "| OWASP | A07:2021 - Identification and Authentication Failures |",
+            report,
+        )
+        self.assertIn("| Likelihood | `HIGH` |", report)
+        self.assertIn("| Impact | `MEDIUM` |", report)
+        self.assertIn("| Confidence | `HIGH` |", report)
+
+        finding_info = report.split("#### Thông tin finding", 1)[1].split(
+            "#### Bằng chứng mã nguồn", 1
+        )[0]
+        self.assertIn("- File: `backend/server.js`", finding_info)
+        self.assertIn("- Dòng: 51", finding_info)
+        self.assertIn("- Trạng thái kiểm chứng: Needs Human Review", finding_info)
+        self.assertNotIn("- Severity:", finding_info)
+        self.assertNotIn("- CWE:", finding_info)
+        self.assertNotIn("- OWASP:", finding_info)
+        self.assertNotIn("Likelihood / Impact / Confidence", finding_info)
 
     def test_triage_report_demotes_ai_headings_inside_finding_details(self):
         triage = load_triage_module()
@@ -399,6 +418,48 @@ class SemgrepAiTriageWorkflowTest(unittest.TestCase):
         self.assertIn("\n##### Triage Finding Bảo Mật SEMGREP-001", report)
         self.assertIn("\n##### 1. Phân loại", report)
         self.assertIn("## Triage Finding Bảo Mật SEMGREP-001", raw_ai_output)
+
+    def test_postman_mapping_extracts_api_url_template_literal_and_method(self):
+        triage = load_triage_module()
+        login_record = triage.FindingRecord(
+            index=5,
+            rule_id="typescript.react.security.react-insecure-request.react-insecure-request",
+            file_path="frontend-mobile/App.js",
+            line=189,
+            severity="ERROR",
+            message="Unencrypted request over HTTP detected.",
+            code='const response = await fetch(`${API_URL}/login`, {\n  method: "POST",\n  headers: { "Content-Type": "application/json" },\n});',
+            cwe="CWE-319",
+            owasp="A02:2021",
+            likelihood="LOW",
+            impact="MEDIUM",
+            confidence="MEDIUM",
+        )
+        orders_record = triage.FindingRecord(
+            index=4,
+            rule_id="typescript.react.security.react-insecure-request.react-insecure-request",
+            file_path="frontend-mobile/App.js",
+            line=174,
+            severity="ERROR",
+            message="Unencrypted request over HTTP detected.",
+            code="const response = await fetch(`${API_URL}/orders/my-orders`, { headers: authHeaders });",
+            cwe="CWE-319",
+            owasp="A02:2021",
+            likelihood="LOW",
+            impact="MEDIUM",
+            confidence="MEDIUM",
+        )
+
+        login_mapping = triage.runtime_mapping_for_record(login_record)
+        orders_mapping = triage.runtime_mapping_for_record(orders_record)
+
+        self.assertEqual(login_mapping.method, "POST")
+        self.assertEqual(login_mapping.url, "http://localhost:3000/api/login")
+        self.assertEqual(orders_mapping.method, "GET")
+        self.assertEqual(
+            orders_mapping.url,
+            "http://localhost:3000/api/orders/my-orders",
+        )
 
     def test_test_case_entries_mark_unknown_mapping_for_manual_review(self):
         triage = load_triage_module()
