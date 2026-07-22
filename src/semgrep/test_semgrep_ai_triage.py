@@ -194,7 +194,11 @@ class SemgrepAiTriageWorkflowTest(unittest.TestCase):
 
         self.assertIn("semgrep_triage_report", report_path.name)
         self.assertIn("rule.one", report)
-        self.assertIn("Human Validation", report)
+        self.assertIn("## Chi tiết từng finding", report)
+        self.assertIn("### SEMGREP-001: rule.one", report)
+        self.assertIn("### Phân tích AI", report)
+        self.assertIn("AI output body", report)
+        self.assertIn("Trạng thái kiểm chứng", report)
         self.assertIn("const SECRET_KEY", prompt)
         self.assertIn("AI output body", ai_output)
 

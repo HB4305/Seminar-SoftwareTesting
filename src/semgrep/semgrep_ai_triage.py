@@ -589,18 +589,20 @@ def write_triage_outputs(records: List[FindingRecord], ai_outputs: Dict[int, str
     findings_dir.mkdir(parents=True, exist_ok=True)
 
     table_lines = [
-        "| # | Rule | File | Line | Severity | CWE | OWASP | Likelihood | Impact | Confidence | AI Output | Human Validation |",
-        "|---|---|---|---:|---|---|---|---|---|---|---|---|",
+        "| # | Rule | File | Line | Severity | CWE | OWASP | AI Output | Trạng thái kiểm chứng |",
+        "|---|---|---|---:|---|---|---|---|---|",
     ]
+    detail_sections = []
 
     for record in records:
         slug = f"{record.index:03d}_{slugify(record.rule_id)}"
         prompt_path = findings_dir / f"{slug}_prompt.md"
         ai_output_path = findings_dir / f"{slug}_ai_output.md"
         prompt_path.write_text(build_prompt(record), encoding="utf-8")
-        ai_output_path.write_text(ai_outputs.get(record.index, ""), encoding="utf-8")
+        ai_output = ai_outputs.get(record.index, "").strip()
+        ai_output_path.write_text(ai_output, encoding="utf-8")
         table_lines.append(
-            "| {index} | `{rule}` | `{file}` | {line} | {severity} | {cwe} | {owasp} | {likelihood} | {impact} | {confidence} | `{ai}` | Needs Manual Verification |".format(
+            "| {index} | `{rule}` | `{file}` | {line} | {severity} | {cwe} | {owasp} | `{ai}` | Needs Human Review |".format(
                 index=record.index,
                 rule=record.rule_id,
                 file=record.file_path,
@@ -608,33 +610,57 @@ def write_triage_outputs(records: List[FindingRecord], ai_outputs: Dict[int, str
                 severity=record.severity,
                 cwe=record.cwe,
                 owasp=record.owasp,
-                likelihood=record.likelihood,
-                impact=record.impact,
-                confidence=record.confidence,
                 ai=ai_output_path.relative_to(output_path),
             )
+        )
+        detail_sections.extend(
+            [
+                f"### SEMGREP-{record.index:03d}: {record.rule_id}",
+                "",
+                "#### Thông tin finding",
+                f"- File: `{record.file_path}`",
+                f"- Dòng: {record.line}",
+                f"- Severity: {record.severity}",
+                f"- CWE: {record.cwe}",
+                f"- OWASP: {record.owasp}",
+                f"- Likelihood / Impact / Confidence: {record.likelihood} / {record.impact} / {record.confidence}",
+                f"- Trạng thái kiểm chứng: Needs Human Review",
+                "",
+                "#### Source evidence",
+                "```text",
+                record.code,
+                "```",
+                "",
+                "#### Phân tích AI",
+                ai_output or "Chưa có output AI cho finding này.",
+                "",
+            ]
         )
 
     report = "\n".join(
         [
-            "# Semgrep AI Triage Report",
+            "# Báo cáo Semgrep AI Triage",
             "",
-            "## Summary",
+            "## Tổng quan",
             "",
-            f"- Total findings in input: {len(records)}",
-            "- The script iterates over every item in `results`; this number is not hardcoded.",
-            "- Status values are draft outputs. Final conclusion requires human validation.",
+            f"- Tổng số finding trong input: {len(records)}",
+            "- Script đọc toàn bộ mảng `results` từ JSON Semgrep, không hardcode số lượng finding.",
+            "- Phân loại của AI là hỗ trợ triage; kết luận cuối cùng vẫn cần tester kiểm chứng.",
             "",
-            "## Findings",
+            "## Bảng tổng hợp findings",
             "",
             *table_lines,
             "",
-            "## Human Validation Checklist",
+            "## Chi tiết từng finding",
             "",
-            "- Confirm whether duplicate findings share one root cause.",
-            "- Reproduce exploitable behavior with a PoC or runtime request when possible.",
-            "- Mark each finding as `Confirmed`, `False Positive`, `Needs Manual Verification`, or `Environment Noise` before submission.",
-            "- Link screenshots, logs, Semgrep JSON, and ZAP evidence in the combined report.",
+            *detail_sections,
+            "## Checklist kiểm chứng thủ công",
+            "",
+            "- Xác nhận finding có nằm trong code được chạy/deploy thật hay không.",
+            "- Kiểm tra các finding trùng root cause để gom lại khi viết báo cáo cuối.",
+            "- Reproduce bằng PoC hoặc runtime request nếu finding phụ thuộc hành vi chạy thật.",
+            "- Chỉ chốt `True Positive`, `False Positive`, hoặc `Needs Human Review` sau khi có đủ context.",
+            "- Gắn source evidence, log, screenshot hoặc ZAP/Postman evidence nếu có.",
             "",
         ]
     )
