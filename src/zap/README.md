@@ -113,28 +113,60 @@ python3 scan_zap.py \
 
 Nếu số URL đã crawl vượt giới hạn, script vẫn giữ kết quả spider/passive scan và ghi report, nhưng bỏ qua active scan để tránh quá tải RAM. Khi cần active scan sâu, ưu tiên scan backend/API `http://localhost:3000` hoặc giảm scope frontend trước.
 
-## 4. Chạy AI triage
+## 4. Chạy AI triage và tạo Markdown report
 
-Nếu có OpenAI hoặc OpenRouter key, chạy:
+Sau khi có các report JSON từ ZAP, chạy script triage để sinh Markdown theo flow riêng của ZAP. Script nhận một hoặc nhiều input JSON, gom triage theo alert group, liệt kê endpoint trong từng alert, và vẫn tạo test case cho từng endpoint/request instance.
 
 ```bash
 python3 zap_ai_triage.py \
-  --input output/backend_basic.json output/frontend_user_basic.json output/frontend_admin_basic.json \
-  --format markdown \
-  --output output/zap_ai_triage_report.md
+  output/backend_basic.json \
+  output/frontend_user_basic.json \
+  output/frontend_admin_basic.json \
+  --output-dir output/markdown \
+  --target-prefix http://localhost:3000 \
+  --target-prefix http://localhost:5173 \
+  --target-prefix http://localhost:5174
 ```
 
-Nếu API lỗi, script sẽ tự fallback sang local triager.
+Nếu chỉ muốn sinh prompt/report skeleton để kiểm tra format mà chưa gọi AI provider:
+
+```bash
+python3 zap_ai_triage.py \
+  output/backend_basic.json \
+  output/frontend_user_basic.json \
+  output/frontend_admin_basic.json \
+  --output-dir output/markdown \
+  --target-prefix http://localhost:3000 \
+  --target-prefix http://localhost:5173 \
+  --target-prefix http://localhost:5174 \
+  --offline
+```
+
+Ý nghĩa các argument/flag:
+
+| Argument/flag | Ý nghĩa |
+|---|---|
+| `output/backend_basic.json output/frontend_user_basic.json output/frontend_admin_basic.json` | Danh sách một hoặc nhiều file JSON report của ZAP. Đây là positional arguments, không dùng `--input`. |
+| `--output-dir output/markdown` | Thư mục output cho toàn bộ Markdown ZAP triage. Script sẽ tạo `zap_triage_report.md`, `zap_test_cases.md` và thư mục `alerts/` bên trong thư mục này. |
+| `--target-prefix http://localhost:3000` | Chỉ giữ các instance có URL bắt đầu bằng prefix này. Dùng để lọc đúng backend target. |
+| `--target-prefix http://localhost:5173` | Chỉ giữ các instance thuộc frontend user target. Flag này có thể truyền nhiều lần. |
+| `--target-prefix http://localhost:5174` | Chỉ giữ các instance thuộc frontend admin target. Nếu không truyền `--target-prefix`, script sẽ lấy tất cả URL có trong JSON ZAP. |
+| `--offline` | Không gọi OpenAI/OpenRouter. Script chỉ sinh prompt, skeleton AI output và Markdown testcase để reviewer đọc hoặc chạy lại sau. |
+| `--limit N` | Tùy chọn debug. Giới hạn số alert instance được đọc từ input JSON trước khi gom nhóm. Không dùng flag này khi tạo report nộp chính thức. |
 
 ## 5. File đầu ra
 
-- output/backend_basic.json
-- output/frontend_user_basic.json
-- output/frontend_admin_basic.json
-- output/zap_ai_triage_report.md
+- `output/backend_basic.json`
+- `output/frontend_user_basic.json`
+- `output/frontend_admin_basic.json`
+- `output/markdown/zap_triage_report.md`: báo cáo AI triage theo alert group.
+- `output/markdown/zap_test_cases.md`: danh sách test case theo từng endpoint/request instance.
+- `output/markdown/alerts/*_prompt.md`: prompt gửi AI cho từng alert group.
+- `output/markdown/alerts/*_ai_output.md`: output AI cho từng alert group.
 
 ## 6. Ghi chú
 
-- Nếu có OPENAI_API_KEY, script sẽ ưu tiên dùng OpenAI.
-- Nếu không có OpenAI key mà có OPENROUTER_API_KEY, script sẽ dùng OpenRouter.
-- Nếu không có key nào, script vẫn có thể tạo report local triage.
+- Nếu có `OPENAI_API_KEY`, script ưu tiên dùng OpenAI.
+- Nếu không có OpenAI key mà có `OPENROUTER_API_KEY`, script dùng OpenRouter.
+- Nếu thiếu cả hai key, script báo lỗi cấu hình AI. Dùng `--offline` nếu chỉ cần tạo prompt/report skeleton mà chưa gọi AI.
+- ZAP là DAST nên report dùng runtime evidence từ request/response, không dùng source evidence như Semgrep.
