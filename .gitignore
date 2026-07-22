@@ -16,3 +16,7 @@ eshop-sut
 
 .venv
 **/.venv
+
+skills-lock.json
+.agents
+.claude

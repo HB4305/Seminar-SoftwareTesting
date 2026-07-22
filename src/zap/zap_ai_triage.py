@@ -1,17 +1,4 @@
-#!/usr/bin/env python3
-"""Extract OWASP ZAP JSON alerts with OpenRouter/Gemini.
-
-Usage:
-    python src/zap/zap_ai_triage.py \
-      --input src/zap/output/backend_basic.json \
-      --format markdown \
-      --output src/zap/output/zap_openrouter_result.md
-"""
-
-from __future__ import annotations
-
 import argparse
-import dataclasses
 import html
 import json
 import os
@@ -20,617 +7,945 @@ import sys
 import urllib.error
 import urllib.request
 from pathlib import Path
-from typing import Any
+from typing import Dict, Iterable, List, Mapping, NamedTuple, Optional
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-DEFAULT_ENV_PATH = SCRIPT_DIR / ".env"
-DEFAULT_OPENROUTER_MODEL = "google/gemini-2.5-flash"
-DEFAULT_OPENAI_MODEL = "gpt-4o-mini"
-DEFAULT_OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1/chat/completions"
-DEFAULT_OPENAI_BASE_URL = "https://api.openai.com/v1/chat/completions"
-DEFAULT_TIMEOUT = 60
-DEFAULT_MAX_TOKENS = 1800
-OPENROUTER_MAX_TOKENS_RE = re.compile(r"can only afford\s+(\d+)", re.IGNORECASE)
+DEFAULT_OUTPUT_DIR = SCRIPT_DIR / "output"
+DEFAULT_AI_MAX_TOKENS = 1800
+MAX_EVIDENCE_CHARS = 4000
 
 
-@dataclasses.dataclass(frozen=True)
-class ExtractedAlert:
-    source_file: str
+class AiSettings(NamedTuple):
+    provider: str
+    model: str
+    api_key: str
+    base_url: Optional[str] = None
+    max_tokens: int = DEFAULT_AI_MAX_TOKENS
+
+
+class ZapAlertRecord(NamedTuple):
+    index: int
+    alert_id: str
+    source_json: str
     site: str
+    plugin_id: str
+    alert_ref: str
     alert_name: str
     risk: str
     confidence: str
+    cwe: str
+    wasc: str
+    tags: str
+    url: str
     method: str
-    endpoint: str
-    parameter: str
+    param: str
     attack: str
     evidence: str
-    description: str
-    solution: str
-    owasp_tags: list[str]
     request_header: str
     request_body: str
     response_header: str
     response_body: str
-    poc: dict[str, str]
+    description: str
+    solution: str
+    reference: str
 
 
-@dataclasses.dataclass(frozen=True)
-class OpenRouterConfig:
-    provider: str
-    api_key: str
-    model: str
-    base_url: str
-    timeout: int
-    max_tokens: int
+class ZapAlertGroup(NamedTuple):
+    index: int
+    alert_id: str
+    records: List[ZapAlertRecord]
 
 
-def provider_display_name(provider: str) -> str:
-    if provider == "openai":
-        return "OpenAI"
-    if provider == "openrouter":
-        return "OpenRouter"
-    return provider
+def configure_console_encoding(stdout=None, stderr=None):
+    """Prefer UTF-8 output on terminals that support reconfigure()."""
+    for stream in (stdout or sys.stdout, stderr or sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if callable(reconfigure):
+            try:
+                reconfigure(encoding="utf-8")
+            except Exception:
+                pass
 
 
-def extract_openrouter_affordable_max_tokens(detail: str) -> int | None:
-    match = OPENROUTER_MAX_TOKENS_RE.search(detail)
-    if not match:
-        return None
-    try:
-        value = int(match.group(1))
-    except ValueError:
-        return None
-    return value if value > 0 else None
-
-
-def strip_html(value: str) -> str:
-    text = re.sub(r"<br\s*/?>", "\n", str(value), flags=re.IGNORECASE)
-    text = re.sub(r"<[^>]+>", " ", text)
-    text = html.unescape(text)
-    text = re.sub(r"[ \t\r\f\v]+", " ", text)
-    text = re.sub(r"\n\s+", "\n", text)
-    return text.strip()
-
-
-def load_dotenv(env_path: Path = DEFAULT_ENV_PATH) -> None:
+def load_env_file(env_file):
+    if not env_file:
+        return {}
+    env_path = Path(env_file)
     if not env_path.exists():
-        return
+        return {}
+
+    values = {}
     for raw_line in env_path.read_text(encoding="utf-8").splitlines():
         line = raw_line.strip()
         if not line or line.startswith("#") or "=" not in line:
             continue
         key, value = line.split("=", 1)
-        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+        values[key.strip()] = value.strip().strip('"').strip("'")
+    return values
 
 
-def config_from_env(env_path: Path = DEFAULT_ENV_PATH) -> OpenRouterConfig:
-    load_dotenv(env_path)
-    openai_key = os.getenv("OPENAI_API_KEY", "").strip()
-    openrouter_key = os.getenv("OPENROUTER_API_KEY", "").strip()
+def find_default_env_file():
+    for candidate in (Path.cwd() / ".env", SCRIPT_DIR / ".env", SCRIPT_DIR / ".env.example"):
+        if candidate.exists():
+            return candidate
+    return None
 
-    timeout_raw = os.getenv("OPENROUTER_TIMEOUT", str(DEFAULT_TIMEOUT)).strip()
-    max_tokens_raw = os.getenv("OPENROUTER_MAX_TOKENS", str(DEFAULT_MAX_TOKENS)).strip()
+
+def get_ai_settings(env: Optional[Mapping[str, str]] = None, env_file=None):
+    merged_env = {}
+    default_env_file = find_default_env_file() if env_file is None else env_file
+    merged_env.update(load_env_file(default_env_file))
+    merged_env.update(dict(os.environ if env is None else env))
+
+    provider = "openai-compatible"
+    max_tokens_raw = (
+        merged_env.get("AI_MAX_TOKENS")
+        or merged_env.get("OPENROUTER_MAX_TOKENS")
+        or str(DEFAULT_AI_MAX_TOKENS)
+    )
     try:
-        timeout = int(timeout_raw)
+        max_tokens = int(str(max_tokens_raw).strip())
     except ValueError as exc:
-        raise RuntimeError("OPENROUTER_TIMEOUT must be an integer number of seconds") from exc
-    try:
-        max_tokens = int(max_tokens_raw)
-    except ValueError as exc:
-        raise RuntimeError("OPENROUTER_MAX_TOKENS must be an integer") from exc
+        raise ValueError("AI_MAX_TOKENS phải là số nguyên dương.") from exc
     if max_tokens <= 0:
-        raise RuntimeError("OPENROUTER_MAX_TOKENS must be greater than zero")
+        raise ValueError("AI_MAX_TOKENS phải là số nguyên dương.")
 
+    openai_key = merged_env.get("OPENAI_API_KEY") or merged_env.get("AI_API_KEY")
+    openrouter_key = merged_env.get("OPENROUTER_API_KEY")
     if openai_key:
-        return OpenRouterConfig(
-            provider="openai",
-            api_key=openai_key,
-            model=os.getenv("OPENAI_MODEL", DEFAULT_OPENAI_MODEL).strip() or DEFAULT_OPENAI_MODEL,
-            base_url=os.getenv("OPENAI_BASE_URL", DEFAULT_OPENAI_BASE_URL).strip() or DEFAULT_OPENAI_BASE_URL,
-            timeout=timeout,
-            max_tokens=max_tokens,
+        api_key = openai_key
+        model = (
+            merged_env.get("AI_MODEL")
+            or merged_env.get("OPENAI_MODEL")
+            or "gpt-4.1-mini"
+        ).strip()
+        base_url = normalize_openai_compatible_base_url(
+            merged_env.get("OPENAI_BASE_URL") or "https://api.openai.com/v1"
         )
-
-    if openrouter_key:
-        return OpenRouterConfig(
-            provider="openrouter",
-            api_key=openrouter_key,
-            model=os.getenv("OPENROUTER_MODEL", DEFAULT_OPENROUTER_MODEL).strip() or DEFAULT_OPENROUTER_MODEL,
-            base_url=os.getenv("OPENROUTER_BASE_URL", DEFAULT_OPENROUTER_BASE_URL).strip() or DEFAULT_OPENROUTER_BASE_URL,
-            timeout=timeout,
-            max_tokens=max_tokens,
+    elif openrouter_key:
+        api_key = openrouter_key
+        model = (
+            merged_env.get("AI_MODEL")
+            or merged_env.get("OPENROUTER_MODEL")
+            or "google/gemini-2.5-flash"
+        ).strip()
+        base_url = normalize_openai_compatible_base_url(
+            merged_env.get("OPENROUTER_BASE_URL") or "https://openrouter.ai/api/v1"
         )
+    else:
+        raise ValueError("Chưa thiết lập OPENAI_API_KEY hoặc OPENROUTER_API_KEY.")
 
-    raise RuntimeError("Set OPENAI_API_KEY or OPENROUTER_API_KEY in environment or src/zap/.env")
+    if not model:
+        raise ValueError("Chưa thiết lập AI_MODEL cho provider đã chọn.")
+    if not base_url:
+        raise ValueError("Chưa thiết lập OPENROUTER_BASE_URL hoặc OPENAI_BASE_URL cho provider openai-compatible.")
 
-
-def parse_zap_json_files(paths: list[Path]) -> list[ExtractedAlert]:
-    alerts: list[ExtractedAlert] = []
-    for path in paths:
-        if not path.exists():
-            raise FileNotFoundError(f"ZAP JSON input not found: {path}")
-        try:
-            report = json.loads(path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError as exc:
-            raise ValueError(f"Invalid ZAP JSON file {path}: {exc}") from exc
-        alerts.extend(parse_zap_report(report, source_file=path.name))
-    return alerts
+    return AiSettings(provider, model, api_key, base_url, max_tokens)
 
 
-def parse_zap_report(report: dict[str, Any], source_file: str) -> list[ExtractedAlert]:
-    extracted: list[ExtractedAlert] = []
-    sites = report.get("site", [])
-    if isinstance(sites, dict):
-        sites = [sites]
-    if not isinstance(sites, list):
-        return extracted
-
-    for site in sites:
-        if not isinstance(site, dict):
-            continue
-        site_name = str(site.get("@name", ""))
-        site_name_lower = site_name.lower()
-        if "localhost" not in site_name_lower and "127.0.0.1" not in site_name_lower:
-            continue
-        alerts = site.get("alerts", [])
-        if isinstance(alerts, dict):
-            alerts = [alerts]
-        if not isinstance(alerts, list):
-            continue
-        for alert in alerts:
-            if not isinstance(alert, dict):
-                continue
-            owasp_tags = extract_owasp_tags(alert.get("tags"))
-            risk, confidence = split_risk_confidence(alert)
-            if risk.lower() in {"informational", "info"}:
-                continue
-            instances = alert.get("instances", [])
-            if isinstance(instances, dict):
-                instances = [instances]
-            if not isinstance(instances, list):
-                instances = []
-            for instance in instances:
-                if not isinstance(instance, dict):
-                    continue
-                endpoint = str(instance.get("uri", ""))
-                if not endpoint:
-                    continue
-                method = str(instance.get("method", "GET")).upper()
-                parameter = str(instance.get("param", ""))
-                attack = str(instance.get("attack", ""))
-                request_body = str(instance.get("request-body", ""))
-                poc = build_poc_fields(method, endpoint, parameter, attack, request_body)
-                extracted.append(
-                    ExtractedAlert(
-                        source_file=source_file,
-                        site=site_name,
-                        alert_name=str(alert.get("alert") or alert.get("name") or "Unknown Alert"),
-                        risk=risk,
-                        confidence=str(alert.get("confidence") or confidence),
-                        method=method,
-                        endpoint=endpoint,
-                        parameter=parameter,
-                        attack=attack,
-                        evidence=str(instance.get("evidence", "")),
-                        description=strip_html(str(alert.get("desc", ""))),
-                        solution=strip_html(str(alert.get("solution", ""))),
-                        owasp_tags=owasp_tags,
-                        request_header=str(instance.get("request-header", "")),
-                        request_body=request_body,
-                        response_header=str(instance.get("response-header", "")),
-                        response_body=str(instance.get("response-body", "")),
-                        poc=poc,
-                    )
-                )
-    return extracted
+def normalize_openai_compatible_base_url(base_url):
+    normalized = str(base_url or "").strip().rstrip("/")
+    suffix = "/chat/completions"
+    if normalized.endswith(suffix):
+        normalized = normalized[: -len(suffix)]
+    return normalized.rstrip("/")
 
 
-def split_risk_confidence(alert: dict[str, Any]) -> tuple[str, str]:
-    riskdesc = str(alert.get("riskdesc", "")).strip()
-    if not riskdesc:
-        return str(alert.get("risk", "Unknown") or "Unknown"), str(alert.get("confidence", ""))
-    match = re.match(r"^([^(]+?)(?:\s*\(([^)]+)\))?$", riskdesc)
+def strip_html(value):
+    text = re.sub(r"<[^>]+>", "", value or "")
+    return html.unescape(text).strip()
+
+
+def normalize_text(value, fallback="N/A"):
+    if value is None:
+        return fallback
+    text = str(value).strip()
+    return text if text else fallback
+
+
+def normalize_multiline(value):
+    return str(value or "").replace("\r\n", "\n").strip()
+
+
+def truncate_text(value, max_chars=MAX_EVIDENCE_CHARS):
+    text = normalize_multiline(value)
+    if len(text) <= max_chars:
+        return text
+    return text[:max_chars].rstrip() + "\n...[đã rút gọn]"
+
+
+def parse_risk_and_confidence(alert):
+    riskdesc = normalize_text(alert.get("riskdesc"), "Unknown")
+    match = re.match(r"(?P<risk>[^()]+?)(?:\s*\((?P<confidence>[^()]+)\))?$", riskdesc)
     if not match:
-        return riskdesc, str(alert.get("confidence", ""))
-    risk = match.group(1).strip() or "Unknown"
-    confidence = match.group(2).strip() if match.group(2) else str(alert.get("confidence", ""))
+        return riskdesc, normalize_text(alert.get("confidence"), "Unknown")
+    risk = match.group("risk").strip() or "Unknown"
+    confidence = (match.group("confidence") or "").strip()
+    if not confidence:
+        confidence = normalize_text(alert.get("confidence"), "Unknown")
     return risk, confidence
 
 
-def extract_owasp_tags(raw_tags: Any) -> list[str]:
-    tags: list[str] = []
-    if isinstance(raw_tags, dict):
-        tags = [str(key) for key in raw_tags.keys()]
-    elif isinstance(raw_tags, list):
-        for item in raw_tags:
-            if isinstance(item, dict):
-                tag = item.get("tag") or item.get("name")
-                if tag:
-                    tags.append(str(tag))
-            elif item:
-                tags.append(str(item))
-    elif isinstance(raw_tags, str) and raw_tags.strip():
-        tags = [part.strip() for part in raw_tags.split(",") if part.strip()]
-    unique_tags = list(dict.fromkeys(tags))
-    return [tag for tag in unique_tags if "owasp" in tag.lower()]
+def normalize_cwe(value):
+    text = normalize_text(value)
+    if text in {"N/A", "-1", "0"}:
+        return "N/A"
+    return f"CWE-{text}" if not str(text).upper().startswith("CWE-") else str(text)
 
 
-def build_poc_fields(
-    method: str,
-    endpoint: str,
-    parameter: str,
-    attack: str,
-    request_body: str,
-) -> dict[str, str]:
-    method = method.upper()
-    payload = attack or request_body
-    notes = "Replay the request and compare the real EShop response with ZAP evidence."
-    if parameter and attack:
-        notes = (
-            f"Use parameter `{parameter}` with the ZAP attack payload, then inspect the real EShop "
-            "response headers/body before concluding the vulnerability."
-        )
-    elif method == "GET" and "cors" not in endpoint.lower():
-        notes = "Replay the GET request and inspect the real EShop response headers/body."
-    elif request_body:
-        notes = "Replay the request body captured by ZAP and inspect the real EShop response behavior."
-    return {
-        "method": method,
-        "endpoint": endpoint,
-        "payload": payload,
-        "notes": notes,
-    }
+def normalize_wasc(value):
+    text = normalize_text(value)
+    if text in {"N/A", "-1", "0"}:
+        return "N/A"
+    return f"WASC-{text}" if not str(text).upper().startswith("WASC-") else str(text)
 
 
-def alert_to_prompt_dict(alert: ExtractedAlert) -> dict[str, Any]:
-    return {
-        "source_file": alert.source_file,
-        "site": alert.site,
-        "alert": alert.alert_name,
-        "risk": alert.risk,
-        "confidence": alert.confidence,
-        "details": {
-            "description": alert.description,
-            "evidence": alert.evidence,
-            "solution_from_zap": alert.solution,
-        },
-        "tags": {
-            "owasp": alert.owasp_tags,
-        },
-        "poc": alert.poc,
-        "request": {
-            "request_line": f"{alert.method} {alert.endpoint}".strip(),
-            "method": alert.method,
-            "endpoint": alert.endpoint,
-            "parameter": alert.parameter,
-            "attack": alert.attack,
-            "request_header": alert.request_header[:1200],
-            "request_body": alert.request_body[:1200],
-            "response_header": alert.response_header[:1200],
-            "response_body": alert.response_body[:1200],
-        },
-    }
+def normalize_tags(tags):
+    if not tags:
+        return "N/A"
+    values = []
+    for tag in tags:
+        if isinstance(tag, dict):
+            value = tag.get("tag") or tag.get("name") or tag.get("key")
+        else:
+            value = tag
+        if value:
+            values.append(str(value))
+    return ", ".join(values) if values else "N/A"
 
 
-def build_prompt(alerts: list[ExtractedAlert], source_names: list[str]) -> str:
-    payload = [alert_to_prompt_dict(alert) for alert in alerts]
-    return (
-        "Bạn là security testing assistant cho seminar DAST OWASP ZAP.\n"
-        "Hãy trích xuất các alert instances trong JSON input và viết report tiếng Việt.\n\n"
-        "Yêu cầu QUAN TRỌNG: Viết cực kỳ ngắn gọn, súc tích, đi thẳng vào vấn đề. Tránh giải thích dài dòng.\n"
-        "- Mỗi loại alert là một mục riêng.\n"
-        "- Mỗi mục phải ghi rõ các thông tin tham chiếu (reference) chi tiết từ ZAP alert:\n"
-        "  * **Nguồn phát hiện (Source)**: Tên file JSON nguồn chứa alert.\n"
-        "  * **Độ nguy hiểm (Risk) & Độ tin cậy (Confidence)**.\n"
-        "  * **Mô tả lỗ hổng (Vulnerability description)**: 1-2 câu ngắn, nêu bản chất lỗi.\n"
-        "  * **Các URL bị ảnh hưởng (Affected URLs)**: Liệt kê các endpoint/URL bị lỗi (lấy từ thông tin 'bị ảnh hưởng bởi lỗi này' trong description).\n"
-        "  * **PoC**: Method + endpoint + payload/query test; nếu chưa đủ thông tin, hãy yêu cầu PoC cụ thể.\n"
-        "  * **Cách verify PoC**: Tối đa 2-3 câu ngắn ghi Expected/Actual và Header/Body cần check.\n"
-        "  * **Xác nhận bằng phản hồi thật từ EShop**: Luôn đối chiếu với response_header/response_body thật từ EShop trước khi kết luận vulnerability. Nếu chưa có xác nhận từ phản hồi thật từ EShop, ghi chú rõ là chưa được xác nhận.\n"
-        "- Nếu finding có vẻ là noise/dev-server, ghi chú ngắn 'Có thể là noise do dev server'.\n"
-        "- Giới hạn tổng dung lượng phản hồi cực ngắn để tránh bị cắt cụt (truncation).\n\n"
-        f"Source files: {', '.join(source_names)}\n\n"
-        "ZAP alert instances JSON:\n"
-        f"{json.dumps(payload, ensure_ascii=False, indent=2)}"
+def url_matches_prefixes(url, target_prefixes):
+    if not target_prefixes:
+        return True
+    return any(str(url or "").startswith(prefix) for prefix in target_prefixes)
+
+
+def collect_alert_records(
+    zap_data: Mapping,
+    source_json: str,
+    start_index: int = 1,
+    target_prefixes: Optional[Iterable[str]] = None,
+):
+    records = []
+    next_index = start_index
+    prefixes = [prefix for prefix in (target_prefixes or []) if prefix]
+
+    for site in zap_data.get("site", []) or []:
+        site_name = normalize_text(site.get("@name"), "N/A")
+        for alert in site.get("alerts", []) or []:
+            risk, confidence = parse_risk_and_confidence(alert)
+            instances = alert.get("instances") or [{}]
+            for instance in instances:
+                url = normalize_text(instance.get("uri") or instance.get("nodeName"), "N/A")
+                if not url_matches_prefixes(url, prefixes):
+                    continue
+                alert_id = f"ZAP-{next_index:03d}"
+                records.append(
+                    ZapAlertRecord(
+                        index=next_index,
+                        alert_id=alert_id,
+                        source_json=source_json,
+                        site=site_name,
+                        plugin_id=normalize_text(alert.get("pluginid"), "N/A"),
+                        alert_ref=normalize_text(alert.get("alertRef"), normalize_text(alert.get("pluginid"), "N/A")),
+                        alert_name=normalize_text(alert.get("alert") or alert.get("name"), "Unknown Alert"),
+                        risk=risk,
+                        confidence=confidence,
+                        cwe=normalize_cwe(alert.get("cweid")),
+                        wasc=normalize_wasc(alert.get("wascid")),
+                        tags=normalize_tags(alert.get("tags")),
+                        url=url,
+                        method=normalize_text(instance.get("method"), "GET").upper(),
+                        param=normalize_text(instance.get("param")),
+                        attack=normalize_text(instance.get("attack")),
+                        evidence=normalize_text(instance.get("evidence")),
+                        request_header=truncate_text(instance.get("request-header")),
+                        request_body=truncate_text(instance.get("request-body")),
+                        response_header=truncate_text(instance.get("response-header")),
+                        response_body=truncate_text(instance.get("response-body")),
+                        description=strip_html(alert.get("desc")),
+                        solution=strip_html(alert.get("solution")),
+                        reference=strip_html(alert.get("reference")),
+                    )
+                )
+                next_index += 1
+    return records
+
+
+def slugify(value):
+    slug = re.sub(r"[^A-Za-z0-9]+", "-", value or "").strip("-").lower()
+    return slug or "alert"
+
+
+def markdown_table_value(value):
+    return str(value).replace("|", "\\|").replace("\n", " ")
+
+
+def format_ai_output_for_triage_report(ai_output: str) -> str:
+    ai_output = (ai_output or "").strip()
+    fence_match = re.match(r"^```(?:markdown|md)\s*\n(?P<body>.*)\n```\s*$", ai_output, re.DOTALL | re.IGNORECASE)
+    if fence_match:
+        ai_output = fence_match.group("body").strip()
+
+    formatted_lines = []
+    in_code_block = False
+    in_markdown_fence = False
+    for line in ai_output.splitlines():
+        stripped_line = line.lstrip()
+        if re.match(r"^```(?:markdown|md)\s*$", stripped_line, re.IGNORECASE):
+            in_markdown_fence = True
+            continue
+        if in_markdown_fence and stripped_line == "```":
+            in_markdown_fence = False
+            continue
+        if stripped_line.startswith("```"):
+            in_code_block = not in_code_block
+            formatted_lines.append(line)
+            continue
+        if not in_code_block:
+            heading_match = re.match(r"^(#{1,4})\s+(.+)$", line)
+            if heading_match:
+                formatted_lines.append(f"##### {heading_match.group(2)}")
+                continue
+        formatted_lines.append(line)
+    return "\n".join(formatted_lines).strip()
+
+
+def extract_ai_classification(ai_output: str) -> str:
+    text = (ai_output or "").strip()
+    if not text:
+        return "Chưa có phân loại AI"
+
+    labels = ("True Positive", "False Positive", "Needs Human Review")
+    classification_pattern = "|".join(re.escape(label) for label in labels)
+    heading_match = re.search(
+        rf"phân loại(?:\s*\*\*)?\s*:?\s*(?:\n|\s)+(?:\*\*)?(?P<label>{classification_pattern})(?:\*\*)?",
+        text,
+        re.IGNORECASE,
     )
+    if heading_match:
+        matched_label = heading_match.group("label").lower()
+        for label in labels:
+            if label.lower() == matched_label:
+                return label
+
+    matches = []
+    for label in labels:
+        match = re.search(re.escape(label), text, re.IGNORECASE)
+        if match:
+            matches.append((match.start(), label))
+    if matches:
+        return sorted(matches, key=lambda item: item[0])[0][1]
+    return "Chưa có phân loại AI"
 
 
-def call_openrouter(prompt: str, config: OpenRouterConfig) -> str:
-    return _call_provider(prompt, config)
-
-
-def _call_provider(prompt: str, config: OpenRouterConfig) -> str:
-    provider_name = provider_display_name(config.provider)
-    body = {
-        "model": config.model,
-        "messages": [{"role": "user", "content": prompt}],
-        "temperature": 0.2,
-        "top_p": 0.8,
-        "max_tokens": config.max_tokens,
-    }
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {config.api_key}",
-    }
-    if config.provider == "openrouter":
-        headers.update(
-            {
-                "HTTP-Referer": "https://github.com",
-                "X-Title": "ZAP OpenRouter JSON Extract",
-            }
-        )
-    elif config.provider == "openai":
-        headers["Accept"] = "application/json"
-
-    request = urllib.request.Request(
-        config.base_url,
-        data=json.dumps(body).encode("utf-8"),
-        headers=headers,
-        method="POST",
-    )
-    try:
-        with urllib.request.urlopen(request, timeout=config.timeout) as response:
-            data = json.loads(response.read().decode("utf-8"))
-    except urllib.error.HTTPError as exc:
-        detail = exc.read().decode("utf-8", "ignore").strip()
-        if config.provider == "openrouter" and exc.code == 402:
-            affordable_max_tokens = extract_openrouter_affordable_max_tokens(detail)
-            if affordable_max_tokens is not None and affordable_max_tokens < config.max_tokens:
-                retry_config = dataclasses.replace(config, max_tokens=affordable_max_tokens)
-                return _call_provider(prompt, retry_config)
-        raise RuntimeError(f"{provider_name} API error {exc.code}: {detail or exc.reason}") from exc
-    except urllib.error.URLError as exc:
-        raise RuntimeError(f"Network error while calling {provider_name}: {exc.reason}") from exc
-    except TimeoutError as exc:
-        raise RuntimeError(f"{provider_name} request timed out after {config.timeout}s") from exc
-    except json.JSONDecodeError as exc:
-        raise RuntimeError(f"{provider_name} returned a non-JSON response") from exc
-
-    try:
-        content = data["choices"][0]["message"]["content"]
-        if isinstance(content, list):
-            content = "".join(part.get("text", "") for part in content if isinstance(part, dict))
-        return str(content).strip()
-    except (KeyError, IndexError, TypeError) as exc:
-        raise RuntimeError(f"Unexpected {provider_name} response: {data}") from exc
-
-
-def render_markdown(ai_text: str, source_names: list[str], model: str, provider: str = "openrouter") -> str:
-    provider_name = provider_display_name(provider)
-    return "\n".join(
-        [
-            f"# ZAP {provider_name} JSON Extract Result",
-            "",
-            f"- Source files: `{', '.join(source_names)}`",
-            f"- {provider_name} model: `{model}`",
-            "",
-            ai_text.strip(),
-            "",
-        ]
-    )
-
-
-def render_html(ai_text: str, source_names: list[str], model: str, provider: str = "openrouter") -> str:
-    provider_name = provider_display_name(provider)
-    escaped_text = html.escape(ai_text.strip())
-    escaped_sources = html.escape(", ".join(source_names))
-    escaped_model = html.escape(model)
-    escaped_provider = html.escape(provider_name)
-    return "\n".join(
-        [
-            "<!doctype html>",
-            '<html lang="vi">',
-            "<head>",
-            '  <meta charset="utf-8">',
-            f"  <title>ZAP {escaped_provider} JSON Extract Result</title>",
-            "  <style>",
-            "    body { font-family: system-ui, sans-serif; line-height: 1.55; margin: 32px; max-width: 1100px; }",
-            "    pre { white-space: pre-wrap; background: #f6f8fa; padding: 16px; border-radius: 6px; }",
-            "    code { background: #f6f8fa; padding: 2px 4px; border-radius: 4px; }",
-            "  </style>",
-            "</head>",
-            "<body>",
-            f"  <h1>ZAP {escaped_provider} JSON Extract Result</h1>",
-            f"  <p><strong>Source files:</strong> <code>{escaped_sources}</code></p>",
-            f"  <p><strong>{escaped_provider} model:</strong> <code>{escaped_model}</code></p>",
-            f"  <pre>{escaped_text}</pre>",
-            "</body>",
-            "</html>",
-        ]
-    )
-
-
-def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        description="Use OpenRouter/Gemini to extract PoC-ready findings from ZAP JSON reports."
-    )
-    parser.add_argument(
-        "--input",
-        nargs="+",
-        required=True,
-        help="One or more ZAP JSON report files.",
-    )
-    parser.add_argument(
-        "--format",
-        choices=["markdown", "html"],
-        required=True,
-        help="Output format.",
-    )
-    parser.add_argument(
-        "--output",
-        required=True,
-        help="Output file path.",
-    )
-    return parser
-
-
-def deduplicate_alerts(alerts: list[ExtractedAlert]) -> list[ExtractedAlert]:
-    """Nhóm các alert trùng tên để tối ưu hóa token và tránh bị AI cut-off."""
-    grouped: dict[str, list[ExtractedAlert]] = {}
-    for alert in alerts:
-        grouped.setdefault(alert.alert_name, []).append(alert)
-
-    deduped: list[ExtractedAlert] = []
-    for name, list_of_alerts in grouped.items():
-        rep = list_of_alerts[0]
-        endpoints = [f"`{a.method} {a.endpoint}`" for a in list_of_alerts]
-        
-        new_desc = (
-            f"{rep.description}\n\n"
-            f"**Các URL/endpoints bị ảnh hưởng bởi lỗi này:**\n"
-        )
-        new_desc += "\n".join(f"- {ep}" for ep in endpoints[:15])
-        if len(endpoints) > 15:
-            new_desc += f"\n- ... và {len(endpoints) - 15} endpoint khác."
-            
-        deduped.append(
-            dataclasses.replace(rep, description=new_desc)
-        )
-    return deduped
-
-
-LOCAL_TEMPLATES = {
-    "CSP: Failure to Define Directive with No Fallback": {
-        "desc": "Chính sách bảo mật nội dung (CSP) không định nghĩa các chỉ thị bắt buộc, có thể dẫn đến việc cho phép mọi thứ.",
-        "expected": "Header `Content-Security-Policy` có các chỉ thị đầy đủ.",
-        "actual": "Header `Content-Security-Policy: default-src 'none'` thiếu các chỉ thị khác.",
-    },
-    "Cross-Domain Misconfiguration": {
-        "desc": "Cấu hình CORS cho phép `Access-Control-Allow-Origin: *`, có thể dẫn đến việc tải dữ liệu trình duyệt từ các miền không mong muốn.",
-        "expected": "Header `Access-Control-Allow-Origin` chỉ cho phép các miền cụ thể.",
-        "actual": "Header `Access-Control-Allow-Origin: *` trong phản hồi.",
-    },
-    "Server Leaks Information via \"X-Powered-By\" HTTP Response Header Field(s)": {
-        "desc": "Header `X-Powered-By` tiết lộ thông tin về công nghệ máy chủ (`Express`), có thể giúp kẻ tấn công tìm kiếm lỗ hổng.",
-        "expected": "Không có header `X-Powered-By` trong phản hồi.",
-        "actual": "Header `X-Powered-By: Express` xuất hiện trong phản hồi.",
-    },
-    "Cross Site Scripting (DOM Based)": {
-        "desc": "Ứng dụng dễ bị tấn công XSS dựa trên DOM, cho phép kẻ tấn công thực thi mã độc trong trình duyệt người dùng.",
-        "expected": "Không có cửa sổ `alert` bật lên hoặc mã JavaScript không được thực thi.",
-        "actual": "Cửa sổ `alert` bật lên trong trình duyệt khi truy cập URL.",
-    },
-    "Path Traversal": {
-        "desc": "Ứng dụng có thể bị tấn công Path Traversal, cho phép truy cập các tệp và thư mục ngoài thư mục gốc của web.",
-        "expected": "Không thể truy cập các tệp ngoài phạm vi cho phép hoặc nhận mã lỗi.",
-        "actual": "Yêu cầu trả về nội dung của tệp tin nguồn.",
-    },
-    "Content Security Policy (CSP) Header Not Set": {
-        "desc": "Header CSP không được thiết lập, thiếu lớp bảo mật chống XSS và các cuộc tấn công injection.",
-        "expected": "Header `Content-Security-Policy` được thiết lập.",
-        "actual": "Không có header `Content-Security-Policy` trong phản hồi.",
-    },
-    "Missing Anti-clickjacking Header": {
-        "desc": "Phản hồi thiếu header chống Clickjacking (`X-Frame-Options` hoặc `Content-Security-Policy` với `frame-ancestors`).",
-        "expected": "Header `X-Frame-Options` hoặc `Content-Security-Policy` với `frame-ancestors` được thiết lập.",
-        "actual": "Không có các header chống Clickjacking trong phản hồi.",
-    },
-    "Timestamp Disclosure - Unix": {
-        "desc": "Ứng dụng/máy chủ web tiết lộ dấu thời gian Unix, có thể cung cấp thông tin nhạy cảm cho kẻ tấn công.",
-        "expected": "Không có dấu thời gian Unix hiển thị trong phản hồi.",
-        "actual": "Giá trị dấu thời gian xuất hiện trong phản hồi.",
-    },
-    "X-Content-Type-Options Header Missing": {
-        "desc": "Header `X-Content-Type-Options` không được đặt thành 'nosniff', cho phép MIME-sniffing.",
-        "expected": "Header `X-Content-Type-Options: nosniff` được thiết lập.",
-        "actual": "Không có header `X-Content-Type-Options` trong phản hồi.",
-    }
-}
-
-
-def generate_local_report(alerts: list[ExtractedAlert], source_names: list[str]) -> str:
+def build_dynamic_triage_context(record):
     lines = [
-        "# ZAP OpenRouter JSON Extract Result",
-        "",
-        f"- Source files: `{', '.join(source_names)}`",
-        "- Render Mode: `Local Security Triage Engine`",
-        "",
-        "Dưới đây là báo cáo các lỗ hổng bảo mật được trích xuất từ dữ liệu ZAP:",
-        "",
-        "---",
-        ""
+        "Ngữ cảnh runtime cho triage động:",
+        "- ZAP là DAST: phân loại dựa trên request/response runtime mà scanner quan sát được.",
+        "- ZAP không chỉ ra dòng code. Không suy đoán root cause trong code nếu evidence HTTP chưa đủ.",
+        "- True Positive: runtime evidence cho thấy cấu hình/hành vi lỗi tồn tại trên endpoint được quét.",
+        "- False Positive: request/response cho thấy alert không áp dụng trong ngữ cảnh này hoặc là endpoint ngoài phạm vi.",
+        "- Needs Human Review: evidence thiếu auth context, thiếu business impact, hoặc chỉ là informational signal.",
+        "- Với alert Informational, chỉ nâng mức nghiêm trọng nếu response cho thấy dữ liệu nhạy cảm hoặc hành vi có thể khai thác.",
+        "- Với endpoint localhost/lab, vẫn đánh giá theo hành vi quan sát được nhưng ghi rõ cần xác nhận môi trường deploy.",
     ]
-    
-    for idx, alert in enumerate(alerts, 1):
-        template = LOCAL_TEMPLATES.get(alert.alert_name, {})
-        desc_parts = alert.description.split("\n\n**Các URL/endpoints bị ảnh hưởng bởi lỗi này:**\n")
-        clean_desc = template.get("desc", desc_parts[0])
-        expected = template.get("expected", "Không phát hiện cấu hình sai hoặc lỗ hổng.")
-        actual = template.get("actual", f"Phát hiện dấu hiệu của: {alert.alert_name}")
-        
-        affected_section = desc_parts[1] if len(desc_parts) > 1 else f"- `{alert.method} {alert.endpoint}`"
-
-        # Check if it could be noise
-        noise_note = ""
-        endpoint_lower = alert.endpoint.lower()
-        if "localhost" not in endpoint_lower and "127.0.0.1" not in endpoint_lower:
-            noise_note = "Có thể là noise do dev server."
-        elif "node_modules" in endpoint_lower or "vite" in endpoint_lower:
-            noise_note = "Có thể là noise do dev server."
-
-        tags_str = ", ".join(alert.owasp_tags) if alert.owasp_tags else "N/A"
-        
-        lines.extend([
-            f"### {idx}. {alert.alert_name}",
-            f"- **Nguồn phát hiện (Source)**: `{alert.source_file}`",
-            f"- **Độ nguy hiểm (Risk) & Độ tin cậy (Confidence)**: `{alert.risk}` & `{alert.confidence}`",
-            f"- **Các URL bị ảnh hưởng (Affected URLs)**:",
-            affected_section,
-            f"- **Bản chất lỗi**: {clean_desc}",
-            f"- **Tag OWASP**: {tags_str}",
-            f"- **PoC**: `{alert.method} {alert.endpoint}`" + (f"?{alert.parameter}={alert.attack}" if alert.parameter and alert.attack else ""),
-            f"- **Cách verify PoC**:",
-            f"  * **Expected**: {expected}",
-            f"  * **Actual**: {actual}",
-        ])
-        if noise_note:
-            lines.append(f"- **Ghi chú**: {noise_note}")
-        lines.extend([
-            "",
-            "---",
-            ""
-        ])
-        
+    if record.attack != "N/A":
+        lines.append("- Alert có attack payload; cần kiểm tra payload có làm thay đổi status code, header hoặc body theo hướng rủi ro không.")
+    if record.evidence != "N/A":
+        lines.append("- Evidence của ZAP phải được đối chiếu trực tiếp với response header/body trong report.")
     return "\n".join(lines)
 
 
-def main(argv: list[str] | None = None) -> int:
-    parser = build_parser()
-    args = parser.parse_args(argv)
-    input_paths = [Path(value) for value in args.input]
-    output_path = Path(args.output)
+def format_group_endpoints(group: ZapAlertGroup):
+    lines = [
+        "| # | Method | URL | Param | Evidence | Source JSON |",
+        "|---|---|---|---|---|---|",
+    ]
+    for record in group.records:
+        lines.append(
+            "| {index} | {method} | `{url}` | `{param}` | `{evidence}` | `{source}` |".format(
+                index=record.index,
+                method=record.method,
+                url=markdown_table_value(record.url),
+                param=markdown_table_value(record.param),
+                evidence=markdown_table_value(record.evidence),
+                source=markdown_table_value(record.source_json),
+            )
+        )
+    return "\n".join(lines)
 
-    try:
-        config = config_from_env()
-        alerts = parse_zap_json_files(input_paths)
-        alerts = deduplicate_alerts(alerts)
-        if not alerts:
-            raise RuntimeError("No ZAP alert instances were found in the input JSON file(s)")
-        source_names = [path.name for path in input_paths]
-        
+
+def format_representative_runtime_evidence(group: ZapAlertGroup, limit=3):
+    sections = []
+    for record in group.records[:limit]:
+        sections.extend(
+            [
+                f"### Endpoint {record.index}: {record.method} {record.url}",
+                "",
+                "Request:",
+                "```http",
+                record.request_header or f"{record.method} {record.url} HTTP/1.1",
+                "```",
+                "",
+                "Request body:",
+                "```text",
+                record.request_body or "[Không có request body]",
+                "```",
+                "",
+                "Response:",
+                "```http",
+                record.response_header or "[Không có response header trong JSON]",
+                "```",
+                "",
+                "Response body excerpt:",
+                "```text",
+                record.response_body or "[Không có response body]",
+                "```",
+                "",
+            ]
+        )
+    remaining = len(group.records) - limit
+    if remaining > 0:
+        sections.append(f"...[{remaining} endpoint còn lại được liệt kê trong bảng endpoint]")
+    return "\n".join(sections).strip()
+
+
+def build_group_prompt(group: ZapAlertGroup):
+    record = group.records[0]
+    sources = sorted({item.source_json for item in group.records})
+    sites = sorted({item.site for item in group.records})
+    return f"""Tôi dùng OWASP ZAP (DAST) để quét runtime của ứng dụng EShop và phát hiện một nhóm alert bảo mật cùng loại.
+Bạn hãy đóng vai trò là chuyên gia bảo mật ứng dụng để triage alert này ở cấp nhóm, không lặp lại phân tích riêng cho từng endpoint nếu cùng root cause.
+Hãy trả lời hoàn toàn bằng tiếng Việt, trừ các thuật ngữ chuẩn như True Positive, False Positive, Needs Human Review, CWE, WASC, OWASP, HTTP, header, payload.
+
+Thông tin kỹ thuật:
+- Mã alert: {group.alert_id}
+- Alert name: {record.alert_name}
+- Plugin ID: {record.plugin_id}
+- Alert Ref: {record.alert_ref}
+- Source JSON: {", ".join(sources)}
+- Site: {", ".join(sites)}
+- Số endpoint/request instance bị ảnh hưởng: {len(group.records)}
+- Risk: {record.risk}
+- Confidence: {record.confidence}
+- CWE: {record.cwe}
+- WASC: {record.wasc}
+- Tags: {record.tags}
+
+Danh sách endpoint bị ảnh hưởng:
+{format_group_endpoints(group)}
+
+Bằng chứng request/response runtime đại diện:
+{format_representative_runtime_evidence(group)}
+
+Mô tả ZAP:
+{record.description or "N/A"}
+
+Khuyến nghị ZAP:
+{record.solution or "N/A"}
+
+Tham khảo:
+{record.reference or "N/A"}
+
+{build_dynamic_triage_context(record)}
+
+Hãy trả lời bằng Markdown với các mục:
+1. Phân loại: True Positive / False Positive / Needs Human Review.
+2. Lý do phân loại dựa trên runtime evidence của cả nhóm endpoint.
+3. Tác động thực tế trong bối cảnh EShop.
+4. Cách khắc phục cụ thể ở cấp cấu hình/root cause.
+5. Ghi chú tester cần kiểm tra thêm nếu chưa đủ context.
+"""
+
+
+def build_prompt(record: ZapAlertRecord):
+    return f"""Tôi dùng OWASP ZAP (DAST) để quét runtime của ứng dụng EShop và phát hiện một alert bảo mật.
+Bạn hãy đóng vai trò là chuyên gia bảo mật ứng dụng để triage alert này.
+Hãy trả lời hoàn toàn bằng tiếng Việt, trừ các thuật ngữ chuẩn như True Positive, False Positive, Needs Human Review, CWE, WASC, OWASP, HTTP, header, payload.
+
+Thông tin kỹ thuật:
+- Mã alert: {record.alert_id}
+- Alert name: {record.alert_name}
+- Plugin ID: {record.plugin_id}
+- Alert Ref: {record.alert_ref}
+- Source JSON: {record.source_json}
+- Site: {record.site}
+- URL: {record.url}
+- Method: {record.method}
+- Param: {record.param}
+- Attack payload: {record.attack}
+- Risk: {record.risk}
+- Confidence: {record.confidence}
+- CWE: {record.cwe}
+- WASC: {record.wasc}
+- Tags: {record.tags}
+- Evidence: {record.evidence}
+
+Request / bằng chứng request runtime:
+```http
+{record.request_header or "[Không có request header trong JSON]"}
+```
+
+Request body:
+```text
+{record.request_body or "[Không có request body]"}
+```
+
+Response / bằng chứng response runtime:
+```http
+{record.response_header or "[Không có response header trong JSON]"}
+```
+
+Response body excerpt:
+```text
+{record.response_body or "[Không có response body]"}
+```
+
+Mô tả ZAP:
+{record.description or "N/A"}
+
+Khuyến nghị ZAP:
+{record.solution or "N/A"}
+
+Tham khảo:
+{record.reference or "N/A"}
+
+{build_dynamic_triage_context(record)}
+
+Hãy trả lời bằng Markdown với các mục:
+1. Phân loại: True Positive / False Positive / Needs Human Review.
+2. Lý do phân loại dựa trên runtime evidence.
+3. Tác động thực tế trong bối cảnh EShop.
+4. Cách khắc phục cụ thể.
+5. Ghi chú tester cần kiểm tra thêm nếu chưa đủ context.
+"""
+
+
+def generate_ai_response(prompt, settings: AiSettings):
+    if settings.provider == "openai-compatible":
+        request_body = json.dumps(
+            {
+                "model": settings.model,
+                "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": settings.max_tokens,
+            }
+        ).encode("utf-8")
+        request = urllib.request.Request(
+            f"{settings.base_url}/chat/completions",
+            data=request_body,
+            headers={
+                "Authorization": f"Bearer {settings.api_key}",
+                "Content-Type": "application/json",
+            },
+            method="POST",
+        )
         try:
-            prompt = build_prompt(alerts, source_names)
-            ai_text = call_openrouter(prompt, config)
-            if args.format == "markdown":
-                output_text = render_markdown(ai_text, source_names, config.model, config.provider)
-            else:
-                output_text = render_html(ai_text, source_names, config.model, config.provider)
-        except Exception as api_exc:
-            provider_name = provider_display_name(config.provider)
-            print(f"[*] {provider_name} API failed ({api_exc}). Falling back to local deterministic triager...", file=sys.stderr)
-            output_text = generate_local_report(alerts, source_names)
+            with urllib.request.urlopen(request, timeout=90) as response:
+                payload = json.loads(response.read().decode("utf-8"))
+        except urllib.error.HTTPError as exc:
+            body = exc.read().decode("utf-8", errors="replace")
+            raise RuntimeError(f"Lỗi OpenAI-compatible API ({exc.code}): {body}") from exc
+        return payload["choices"][0]["message"]["content"]
 
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(output_text, encoding="utf-8")
-    except Exception as exc:
-        print(f"[!] {exc}", file=sys.stderr)
+    raise ValueError(f"Provider không được hỗ trợ: {settings.provider}")
+
+
+def build_security_tag_lines(record: ZapAlertRecord):
+    return [
+        "| Thuộc tính | Giá trị |",
+        "|---|---|",
+        f"| Plugin ID | `{record.plugin_id}` |",
+        f"| Alert Ref | `{record.alert_ref}` |",
+        f"| Risk | `{record.risk}` |",
+        f"| Confidence | `{record.confidence}` |",
+        f"| CWE | {record.cwe} |",
+        f"| WASC | {record.wasc} |",
+        f"| Tags | {markdown_table_value(record.tags)} |",
+        f"| Source JSON | `{record.source_json}` |",
+    ]
+
+
+def write_test_case_entries_report(records: List[ZapAlertRecord], output_dir, record_alert_ids=None):
+    output_path = Path(output_dir)
+    record_alert_ids = record_alert_ids or {}
+    lines = [
+        "# Danh sách test case kiểm chứng ZAP",
+        "",
+        "Tài liệu này tổng hợp test case kiểm chứng cho các alert ZAP theo từng request runtime. Mỗi entry trỏ về alert gốc trong `zap_triage_report.md`.",
+    ]
+
+    for record in records:
+        request_line = f"{record.method} {record.url}"
+        request_headers = record.request_header or f"{record.method} {record.url} HTTP/1.1"
+        payload = record.request_body or "{}"
+        lines.extend(
+            [
+                "",
+                f"## TC-ZAP-{record.index:03d}",
+                "",
+                f"- Alert liên quan: {record_alert_ids.get(record.index, record.alert_id)}",
+                f"- Mục tiêu test: Kiểm chứng alert `{record.alert_name}` bằng cách replay request runtime mà ZAP đã ghi nhận.",
+                f"- Source JSON: `{record.source_json}`",
+                "",
+                "### Input",
+                "",
+                "```http",
+                request_line,
+                "```",
+                "",
+                "Headers:",
+                "```http",
+                request_headers,
+                "```",
+                "",
+                "Payload:",
+                "```json",
+                payload,
+                "```",
+                "",
+                "### Thao tác",
+                "",
+                "1. Đảm bảo backend/frontend EShop và ngữ cảnh auth tương ứng đang chạy.",
+                "2. Chuẩn bị token, cookie hoặc session nếu request của ZAP có header xác thực.",
+                "3. Replay request theo method, URL, headers từ ZAP.",
+                "4. Ghi nhận status code, response headers và response body.",
+                "5. So sánh kết quả mới với evidence ZAP trong triage report.",
+                "",
+                "### Kết quả cần ghi nhận",
+                "",
+                f"- Nếu còn lỗi: Response vẫn chứa evidence `{record.evidence}` hoặc hành vi runtime vẫn khớp alert `{record.alert_name}`.",
+                "- Nếu đã an toàn: Response không còn evidence liên quan hoặc server trả trạng thái chặn/hardening phù hợp.",
+                "",
+                "### Trạng thái",
+                "",
+                "Chưa kiểm chứng",
+            ]
+        )
+
+    lines.extend(
+        [
+            "",
+            "## Ghi chú sử dụng",
+            "",
+            "- `Alert liên quan` trỏ về ID alert trong `zap_triage_report.md`.",
+            "- ZAP có thể ghi nhận endpoint ngoài phạm vi nếu browser hoặc môi trường runtime gọi domain khác; dùng `--target-prefix` để lọc target chính.",
+            "- Với endpoint yêu cầu đăng nhập, tester cần tái tạo auth context trước khi replay request.",
+            "- Kết luận cuối cùng vẫn phân loại theo `True Positive`, `False Positive`, hoặc `Needs Human Review`.",
+            "",
+        ]
+    )
+
+    report_path = output_path / "zap_test_cases.md"
+    report_path.write_text("\n".join(lines), encoding="utf-8")
+    return report_path
+
+
+def build_security_tag_lines_for_group(group: ZapAlertGroup):
+    record = group.records[0]
+    sources = sorted({item.source_json for item in group.records})
+    sites = sorted({item.site for item in group.records})
+    return [
+        "| Thuộc tính | Giá trị |",
+        "|---|---|",
+        f"| Plugin ID | `{record.plugin_id}` |",
+        f"| Alert Ref | `{record.alert_ref}` |",
+        f"| Risk | `{record.risk}` |",
+        f"| Confidence | `{record.confidence}` |",
+        f"| CWE | {record.cwe} |",
+        f"| WASC | {record.wasc} |",
+        f"| Tags | {markdown_table_value(record.tags)} |",
+        f"| Source JSON | {', '.join(f'`{source}`' for source in sources)} |",
+        f"| Site | {', '.join(f'`{site}`' for site in sites)} |",
+    ]
+
+
+def build_group_endpoint_table_lines(group: ZapAlertGroup):
+    lines = [
+        "| # | Method | URL | Param | Evidence |",
+        "|---|---|---|---|---|",
+    ]
+    for record in group.records:
+        lines.append(
+            "| {index} | {method} | `{url}` | `{param}` | `{evidence}` |".format(
+                index=record.index,
+                method=record.method,
+                url=markdown_table_value(record.url),
+                param=markdown_table_value(record.param),
+                evidence=markdown_table_value(record.evidence),
+            )
+        )
+    return lines
+
+
+def write_triage_outputs(records: List[ZapAlertRecord], ai_outputs: Dict[int, str], output_dir):
+    output_path = Path(output_dir)
+    alerts_dir = output_path / "alerts"
+    alerts_dir.mkdir(parents=True, exist_ok=True)
+    groups = group_alert_records(records)
+    record_alert_ids = {
+        record.index: group.alert_id
+        for group in groups
+        for record in group.records
+    }
+
+    table_lines = [
+        "| # | Alert | Endpoints | Risk | Confidence | CWE | WASC | Phân loại AI | Kết quả AI | Trạng thái kiểm chứng thủ công |",
+        "|---|---|---|---|---|---|---|---|---|---|",
+    ]
+    detail_sections = []
+
+    for group in groups:
+        record = group.records[0]
+        slug = f"{group.index:03d}_{slugify(record.alert_name)}"
+        prompt_path = alerts_dir / f"{slug}_prompt.md"
+        ai_output_path = alerts_dir / f"{slug}_ai_output.md"
+        prompt_path.write_text(build_group_prompt(group), encoding="utf-8")
+        ai_output = ai_outputs.get(group.index, "").strip()
+        formatted_ai_output = format_ai_output_for_triage_report(ai_output)
+        ai_classification = extract_ai_classification(ai_output)
+        ai_output_path.write_text(ai_output, encoding="utf-8")
+
+        table_lines.append(
+            "| {index} | `{alert}` | {endpoints} | {risk} | {confidence} | {cwe} | {wasc} | {classification} | `{ai}` | Chưa kiểm chứng |".format(
+                index=group.index,
+                alert=markdown_table_value(record.alert_name),
+                endpoints=len(group.records),
+                risk=markdown_table_value(record.risk),
+                confidence=markdown_table_value(record.confidence),
+                cwe=markdown_table_value(record.cwe),
+                wasc=markdown_table_value(record.wasc),
+                classification=markdown_table_value(ai_classification),
+                ai=ai_output_path.relative_to(output_path),
+            )
+        )
+        detail_sections.extend(
+            [
+                f"### {group.alert_id}: {record.alert_name}",
+                "",
+                "#### Tags lỗi",
+                *build_security_tag_lines_for_group(group),
+                "",
+                "#### Thông tin alert nhóm",
+                f"- Số endpoint/request instance bị ảnh hưởng: {len(group.records)}",
+                f"- Phân loại AI: {ai_classification}",
+                "- Trạng thái kiểm chứng thủ công: Chưa kiểm chứng",
+                "",
+                "#### Endpoints bị ảnh hưởng",
+                *build_group_endpoint_table_lines(group),
+                "",
+                "#### Bằng chứng runtime đại diện",
+                "",
+                "Request:",
+                "```http",
+                record.request_header or f"{record.method} {record.url} HTTP/1.1",
+                "```",
+                "",
+                "Request body:",
+                "```text",
+                record.request_body or "[Không có request body]",
+                "```",
+                "",
+                "Response:",
+                "```http",
+                record.response_header or "[Không có response header trong JSON]",
+                "```",
+                "",
+                "Response body excerpt:",
+                "```text",
+                record.response_body or "[Không có response body]",
+                "```",
+                "",
+                "#### Phân tích AI",
+                formatted_ai_output or "Chưa có output AI cho alert này.",
+                "",
+            ]
+        )
+
+    sources = sorted({record.source_json for record in records})
+    sites = sorted({record.site for record in records})
+    report = "\n".join(
+        [
+            "# Báo cáo ZAP AI Triage",
+            "",
+            "## Tổng quan",
+            "",
+            f"- Tổng số alert instance trong input: {len(records)}",
+            f"- Tổng số alert sau khi gom nhóm: {len(groups)}",
+            f"- Source JSON: {', '.join(f'`{source}`' for source in sources) if sources else 'N/A'}",
+            f"- Scan target/site: {', '.join(f'`{site}`' for site in sites) if sites else 'N/A'}",
+            "- Script đọc `site[].alerts[].instances[]` từ JSON ZAP, không hardcode số lượng alert.",
+            "- ZAP là DAST nên evidence chính là request/response runtime, không phải dòng code.",
+            "- Phân loại của AI là hỗ trợ triage; kết luận cuối cùng vẫn cần tester kiểm chứng.",
+            "",
+            "## Bảng tổng hợp alerts",
+            "",
+            *table_lines,
+            "",
+            "## Chi tiết từng alert",
+            "",
+            *detail_sections,
+            "## Checklist kiểm chứng thủ công",
+            "",
+            "- Xác nhận URL có thuộc target scan cần báo cáo hay không.",
+            "- Replay request với cùng method, headers, payload và auth context.",
+            "- Đối chiếu evidence trong response mới với evidence mà ZAP đã ghi nhận.",
+            "- Kiểm tra các alert trùng root cause để gom lại khi viết báo cáo cuối.",
+            "- Chỉ chốt `True Positive`, `False Positive`, hoặc `Needs Human Review` sau khi có đủ runtime context.",
+            "",
+        ]
+    )
+
+    report_path = output_path / "zap_triage_report.md"
+    report_path.write_text(report, encoding="utf-8")
+    write_test_case_entries_report(records, output_path, record_alert_ids)
+    return report_path
+
+
+def read_json_file(path):
+    return json.loads(Path(path).read_text(encoding="utf-8"))
+
+
+def collect_records_from_files(paths, target_prefixes=None, limit=None):
+    records = []
+    next_index = 1
+    for path in paths:
+        data = read_json_file(path)
+        file_records = collect_alert_records(
+            data,
+            Path(path).name,
+            start_index=next_index,
+            target_prefixes=target_prefixes,
+        )
+        records.extend(file_records)
+        next_index += len(file_records)
+        if limit is not None and len(records) >= limit:
+            return records[:limit]
+    return records
+
+
+def alert_group_key(record: ZapAlertRecord):
+    return (
+        record.plugin_id,
+        record.alert_ref,
+        record.alert_name,
+        record.risk,
+        record.confidence,
+        record.cwe,
+        record.wasc,
+        record.tags,
+    )
+
+
+def group_alert_records(records: List[ZapAlertRecord]):
+    groups_by_key = {}
+    groups = []
+    for record in records:
+        key = alert_group_key(record)
+        if key not in groups_by_key:
+            group = ZapAlertGroup(
+                index=len(groups) + 1,
+                alert_id=f"ZAP-{len(groups) + 1:03d}",
+                records=[],
+            )
+            groups_by_key[key] = group
+            groups.append(group)
+        groups_by_key[key].records.append(record)
+    return groups
+
+
+def parse_args(argv):
+    parser = argparse.ArgumentParser(description="Run AI triage for OWASP ZAP JSON alerts.")
+    parser.add_argument("json_files", nargs="+", help="Một hoặc nhiều file JSON report của ZAP.")
+    parser.add_argument(
+        "--output-dir",
+        default=str(DEFAULT_OUTPUT_DIR),
+        help="Thư mục output cho zap_triage_report.md, zap_test_cases.md và alerts/*.",
+    )
+    parser.add_argument(
+        "--target-prefix",
+        action="append",
+        default=[],
+        help="Chỉ lấy URL bắt đầu bằng prefix này. Có thể truyền nhiều lần, ví dụ --target-prefix http://localhost:3000.",
+    )
+    parser.add_argument(
+        "--offline",
+        action="store_true",
+        help="Không gọi AI provider; chỉ sinh prompt, skeleton AI output và markdown testcase.",
+    )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=None,
+        help="Giới hạn số alert instance cần xử lý.",
+    )
+    return parser.parse_args(argv)
+
+
+def main(argv=None):
+    configure_console_encoding()
+    args = parse_args(sys.argv[1:] if argv is None else argv)
+
+    if args.limit is not None and args.limit <= 0:
+        print("--limit phải là số nguyên dương.")
         return 1
 
-    print(f"[+] Wrote {provider_display_name(config.provider)} ZAP extraction report: {output_path}")
+    try:
+        records = collect_records_from_files(
+            args.json_files,
+            target_prefixes=args.target_prefix,
+            limit=args.limit,
+        )
+    except Exception as exc:
+        print(f"Lỗi khi đọc JSON ZAP: {exc}")
+        return 1
+
+    if not records:
+        print("Không tìm thấy alert instance nào trong input ZAP.")
+        return 0
+
+    groups = group_alert_records(records)
+    print(f"Tìm thấy {len(records)} alert instances từ ZAP.")
+    print(f"Gom thành {len(groups)} alert groups để AI triage.")
+    settings = None
+    if not args.offline:
+        try:
+            settings = get_ai_settings()
+        except ValueError as exc:
+            print(f"Lỗi cấu hình AI: {exc}")
+            print("Có thể chạy --offline để sinh prompt/report trước khi có API key.")
+            return 1
+        print(f"Provider: {settings.provider} | Model: {settings.model}")
+
+    ai_outputs = {}
+    for group in groups:
+        record = group.records[0]
+        prompt = build_group_prompt(group)
+        print(f"Triaging {group.alert_id}: {record.alert_name} ({len(group.records)} endpoint)")
+        if args.offline:
+            ai_outputs[group.index] = (
+                "## Output AI\n\n"
+                "Chưa gọi AI provider. Prompt đã được lưu để reviewer chạy triage sau.\n\n"
+                "## Kiểm chứng thủ công\n\n"
+                "- Trạng thái: Needs Human Review\n"
+            )
+            continue
+        try:
+            ai_outputs[group.index] = generate_ai_response(prompt, settings)
+        except Exception as exc:
+            print(
+                f"Lỗi khi gọi AI provider cho {group.alert_id} "
+                f"({record.alert_name}, {len(group.records)} endpoint): {exc}"
+            )
+            print("Dừng triage để tránh sinh report không có phân tích AI đầy đủ.")
+            return 1
+
+    report_path = write_triage_outputs(records, ai_outputs, args.output_dir)
+    print(f"Đã tạo ZAP triage report: {report_path}")
     return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    configure_console_encoding()
+    sys.exit(main())
