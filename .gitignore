@@ -16,3 +16,4 @@ eshop-sut
 
 .venv
 **/.venv
+src/semgrep/output/*
