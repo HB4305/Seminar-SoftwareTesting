@@ -291,13 +291,17 @@ class SemgrepAiTriageWorkflowTest(unittest.TestCase):
                 encoding="utf-8"
             )
 
-        self.assertIn("## SEMGREP-001: Hardcoded JWT Secret", report)
-        self.assertIn("### 4. Postman Test Case", report)
+        self.assertIn("## SEMGREP-001: JWT Secret hardcode", report)
+        self.assertIn("### 4. Test case Postman", report)
         self.assertIn("GET http://localhost:3000/api/users/me", report)
         self.assertIn("Authorization: Bearer <forged_admin_jwt>", report)
-        self.assertIn("## SEMGREP-002: Insecure HTTP Request", report)
+        self.assertIn("## SEMGREP-002: HTTP request không mã hóa", report)
         self.assertIn("GET http://localhost:3000/api/products", report)
-        self.assertIn("ZAP related alert", report)
+        self.assertIn("Alert ZAP liên quan", report)
+        self.assertIn("Mục tiêu test", report)
+        self.assertNotIn("Vulnerable behavior", report)
+        self.assertNotIn("Secure behavior", report)
+        self.assertNotIn("Needs Manual Verification", report)
 
     def test_postman_validation_report_marks_unknown_mapping_as_low_confidence(self):
         triage = load_triage_module()
@@ -327,6 +331,7 @@ class SemgrepAiTriageWorkflowTest(unittest.TestCase):
         self.assertIn("## SEMGREP-003: Potential security issue", report)
         self.assertIn("Mapping confidence: Low", report)
         self.assertIn("http://localhost:3000/<map-endpoint>", report)
+        self.assertIn("Cần xác minh thủ công", report)
 
 
 if __name__ == "__main__":

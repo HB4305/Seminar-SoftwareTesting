@@ -416,8 +416,8 @@ def runtime_mapping_for_record(record):
     rule = record.rule_id.lower()
     if "jwt-hardcode" in rule or "hardcoded-jwt-secret" in rule:
         return RuntimeMapping(
-            title="Hardcoded JWT Secret",
-            affected_feature="JWT authentication / admin authorization",
+            title="JWT Secret hardcode",
+            affected_feature="Xác thực JWT / phân quyền admin",
             method="GET",
             url="http://localhost:3000/api/users/me",
             headers="Authorization: Bearer <forged_admin_jwt>\nContent-Type: application/json",
@@ -430,7 +430,7 @@ def runtime_mapping_for_record(record):
             test_objective="Kiểm tra backend có chấp nhận JWT giả được ký bằng hardcoded secret hay không.",
             vulnerable_behavior="Server trả `200 OK` và chấp nhận token giả.",
             secure_behavior="Server trả `401 Unauthorized` hoặc `403 Forbidden`.",
-            zap_related_alert="Not directly detected / Authentication weakness may require authenticated active scan.",
+            zap_related_alert="ZAP không phát hiện trực tiếp; điểm yếu xác thực có thể cần authenticated active scan.",
             difference=(
                 "- Semgrep phát hiện root cause trong source code.\n"
                 "- ZAP cần runtime request hợp lệ hoặc attack path để quan sát hành vi."
@@ -444,8 +444,8 @@ def runtime_mapping_for_record(record):
         url = extract_first_http_url(record.code) or "http://localhost:3000/<api-path>"
         method = infer_method_from_code(record.code)
         return RuntimeMapping(
-            title="Insecure HTTP Request",
-            affected_feature="Frontend/API transport security",
+            title="HTTP request không mã hóa",
+            affected_feature="Bảo mật truyền tải frontend/API",
             method=method,
             url=url,
             headers="Content-Type: application/json",
@@ -458,7 +458,7 @@ def runtime_mapping_for_record(record):
             test_objective="Kiểm tra request đang dùng HTTP cleartext thay vì HTTPS.",
             vulnerable_behavior="Request gọi thành công qua `http://` hoặc dữ liệu nhạy cảm đi qua kênh không mã hóa.",
             secure_behavior="Ứng dụng dùng `https://` hoặc cấu hình base URL an toàn theo môi trường.",
-            zap_related_alert="May appear as passive/runtime transport or mixed-content evidence if ZAP observes the same request.",
+            zap_related_alert="Có thể xuất hiện như evidence truyền tải runtime nếu ZAP quan sát được request tương ứng.",
             difference=(
                 "- Semgrep phát hiện hardcoded `http://` trong source code.\n"
                 "- ZAP chỉ thấy lỗi nếu request đó thực sự được crawl/spider hoặc gửi qua proxy."
@@ -470,7 +470,7 @@ def runtime_mapping_for_record(record):
 
     return RuntimeMapping(
         title=record.message.strip(".") or "Semgrep Finding",
-        affected_feature="Needs manual source-to-runtime mapping",
+        affected_feature="Cần mapping thủ công từ source sang runtime",
         method="GET",
         url="http://localhost:3000/<map-endpoint>",
         headers="Content-Type: application/json",
@@ -482,7 +482,7 @@ def runtime_mapping_for_record(record):
         test_objective="Xác thực finding Semgrep bằng hành vi runtime nếu có thể.",
         vulnerable_behavior="Hành vi lỗi tái hiện được trong Postman.",
         secure_behavior="Hành vi lỗi không còn tái hiện hoặc được chặn an toàn.",
-        zap_related_alert="Unknown until mapped against ZAP report.",
+        zap_related_alert="Chưa xác định cho đến khi đối chiếu với ZAP report.",
         difference=(
             "- Semgrep cung cấp source evidence.\n"
             "- ZAP cung cấp runtime HTTP evidence nếu scan đi qua endpoint tương ứng."
@@ -496,13 +496,13 @@ def runtime_mapping_for_record(record):
 def write_postman_validation_report(records: List[FindingRecord], output_dir):
     output_path = Path(output_dir)
     lines = [
-        "# Semgrep Postman Validation Report",
+        "# Báo cáo kiểm chứng Semgrep bằng Postman",
         "",
         "Report này format finding Semgrep theo kiểu gần với ZAP Alert và thêm test case để reviewer copy sang Postman.",
         "",
-        "## Comparison Matrix",
+        "## Bảng so sánh",
         "",
-        "| Semgrep Finding | Source Evidence | Postman Result | ZAP Related Alert | Conclusion |",
+        "| Finding Semgrep | Bằng chứng source | Kết quả Postman | Alert ZAP liên quan | Kết luận |",
         "|---|---|---|---|---|",
     ]
 
@@ -511,7 +511,7 @@ def write_postman_validation_report(records: List[FindingRecord], output_dir):
         mapping = runtime_mapping_for_record(record)
         mappings.append((record, mapping))
         lines.append(
-            f"| SEMGREP-{record.index:03d}: {mapping.title} | `{record.file_path}:{record.line}` | Needs Manual Verification | {mapping.zap_related_alert} | {mapping.conclusion} |"
+            f"| SEMGREP-{record.index:03d}: {mapping.title} | `{record.file_path}:{record.line}` | Cần xác minh thủ công | {mapping.zap_related_alert} | {mapping.conclusion} |"
         )
 
     for record, mapping in mappings:
@@ -520,34 +520,34 @@ def write_postman_validation_report(records: List[FindingRecord], output_dir):
                 "",
                 f"## SEMGREP-{record.index:03d}: {mapping.title}",
                 "",
-                "### 1. Alert Summary",
-                f"- Tool: Semgrep",
-                f"- Type: SAST",
+                "### 1. Tóm tắt alert",
+                f"- Công cụ: Semgrep",
+                f"- Loại: SAST",
                 f"- Rule ID: `{record.rule_id}`",
                 f"- Severity: {record.severity}",
                 f"- CWE: {record.cwe}",
                 f"- OWASP: {record.owasp}",
-                "- Status: Needs Manual Verification",
+                "- Trạng thái: Cần xác minh thủ công",
                 "",
-                "### 2. Source Evidence",
+                "### 2. Bằng chứng source",
                 f"- File: `{record.file_path}`",
-                f"- Line: {record.line}",
-                "- Vulnerable code:",
+                f"- Dòng: {record.line}",
+                "- Code liên quan:",
                 "```text",
                 record.code,
                 "```",
                 "",
-                "### 3. Runtime Mapping",
-                f"- Affected feature: {mapping.affected_feature}",
-                f"- Related endpoint: `{mapping.method} {mapping.url}`",
+                "### 3. Mapping runtime",
+                f"- Feature bị ảnh hưởng: {mapping.affected_feature}",
+                f"- Endpoint liên quan: `{mapping.method} {mapping.url}`",
                 f"- Method: `{mapping.method}`",
                 "- Base URL: `http://localhost:3000`",
-                "- Auth required: Yes" if "Authorization:" in mapping.headers else "- Auth required: No / depends on endpoint",
+                "- Cần auth: Có" if "Authorization:" in mapping.headers else "- Cần auth: Không / tùy endpoint",
                 f"- Mapping confidence: {mapping.confidence}",
-                f"- Mapping note: {mapping.note}",
+                f"- Ghi chú mapping: {mapping.note}",
                 "",
-                "### 4. Postman Test Case",
-                f"- Test objective: {mapping.test_objective}",
+                "### 4. Test case Postman",
+                f"- Mục tiêu test: {mapping.test_objective}",
                 "- URL:",
                 "```http",
                 f"{mapping.method} {mapping.url}",
@@ -560,21 +560,21 @@ def write_postman_validation_report(records: List[FindingRecord], output_dir):
                 "```json",
                 mapping.payload,
                 "```",
-                "- Pre-test setup:",
+                "- Chuẩn bị trước khi test:",
                 "```text",
                 mapping.pre_test_setup,
                 "```",
                 "",
-                "### 5. Expected Result",
-                f"- Vulnerable behavior: {mapping.vulnerable_behavior}",
-                f"- Secure behavior: {mapping.secure_behavior}",
-                "- Evidence to capture: status code, response body, screenshot Postman, request URL/header/body.",
+                "### 5. Kết quả mong đợi",
+                f"- Hành vi khi còn lỗi: {mapping.vulnerable_behavior}",
+                f"- Hành vi an toàn: {mapping.secure_behavior}",
+                "- Evidence cần thu thập: status code, response body, screenshot Postman, request URL/header/body.",
                 "",
-                "### 6. ZAP Comparison",
-                f"- ZAP related alert: {mapping.zap_related_alert}",
-                "- Difference:",
+                "### 6. So sánh với ZAP",
+                f"- Alert ZAP liên quan: {mapping.zap_related_alert}",
+                "- Khác biệt:",
                 mapping.difference,
-                f"- Conclusion: {mapping.conclusion}",
+                f"- Kết luận: {mapping.conclusion}",
             ]
         )
 
