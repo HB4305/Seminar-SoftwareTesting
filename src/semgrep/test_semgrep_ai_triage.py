@@ -324,9 +324,44 @@ class SemgrepAiTriageWorkflowTest(unittest.TestCase):
         self.assertIn("## TC-SEMGREP-002", report)
         self.assertIn("- Finding liên quan: SEMGREP-002", report)
         self.assertIn("GET http://localhost:3000/api/products", report)
+        self.assertIn("Không có request body.", report)
+        self.assertIn("- Độ tin cậy payload: High", report)
         self.assertIn("Chưa kiểm chứng", report)
         self.assertNotIn("Độ tin cậy mapping", report)
         self.assertNotIn("Bằng chứng cần thu thập", report)
+
+    def test_triage_report_embeds_generated_postman_payload_in_each_finding(self):
+        triage = load_triage_module()
+        record = triage.FindingRecord(
+            index=5,
+            rule_id="typescript.react.security.react-insecure-request.react-insecure-request",
+            file_path="frontend-mobile/App.js",
+            line=189,
+            severity="ERROR",
+            message="Unencrypted request over HTTP detected.",
+            code=(
+                'const response = await fetch(`${API_URL}/login`, {\n'
+                '  method: "POST",\n'
+                '  headers: { "Content-Type": "application/json" },\n'
+                '  body: JSON.stringify({ email, password }),\n'
+                '});'
+            ),
+            cwe="CWE-319",
+            owasp="A02:2021",
+            likelihood="LOW",
+            impact="MEDIUM",
+            confidence="MEDIUM",
+        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            report_path = triage.write_triage_outputs([record], {}, Path(tmpdir))
+            report = report_path.read_text(encoding="utf-8")
+
+        self.assertIn("#### Postman/PoC tự động", report)
+        self.assertIn("- Method: `POST`", report)
+        self.assertIn("- URL: `http://localhost:3000/api/login`", report)
+        self.assertIn('"email": "{{test_email}}"', report)
+        self.assertIn('"password": "{{test_password}}"', report)
+        self.assertIn("- Độ tin cậy payload: High", report)
 
     def test_triage_report_detail_entries_include_security_tags(self):
         triage = load_triage_module()
@@ -490,7 +525,13 @@ class SemgrepAiTriageWorkflowTest(unittest.TestCase):
             line=189,
             severity="ERROR",
             message="Unencrypted request over HTTP detected.",
-            code='const response = await fetch(`${API_URL}/login`, {\n  method: "POST",\n  headers: { "Content-Type": "application/json" },\n});',
+            code=(
+                'const response = await fetch(`${API_URL}/login`, {\n'
+                '  method: "POST",\n'
+                '  headers: { "Content-Type": "application/json" },\n'
+                '  body: JSON.stringify({ email, password }),\n'
+                '});'
+            ),
             cwe="CWE-319",
             owasp="A02:2021",
             likelihood="LOW",
@@ -517,11 +558,171 @@ class SemgrepAiTriageWorkflowTest(unittest.TestCase):
 
         self.assertEqual(login_mapping.method, "POST")
         self.assertEqual(login_mapping.url, "http://localhost:3000/api/login")
+        self.assertEqual(
+            json.loads(login_mapping.payload),
+            {
+                "email": "{{test_email}}",
+                "password": "{{test_password}}",
+            },
+        )
         self.assertEqual(orders_mapping.method, "GET")
         self.assertEqual(
             orders_mapping.url,
             "http://localhost:3000/api/orders/my-orders",
         )
+        self.assertEqual(orders_mapping.payload, "Không có request body.")
+
+    def test_postman_mapping_builds_checkout_payload_with_postman_variables(self):
+        triage = load_triage_module()
+        record = triage.FindingRecord(
+            index=11,
+            rule_id="typescript.react.security.react-insecure-request.react-insecure-request",
+            file_path="frontend-mobile/App.js",
+            line=384,
+            severity="ERROR",
+            message="Unencrypted request over HTTP detected.",
+            code=(
+                'const response = await fetch(`${API_URL}/checkout`, {\n'
+                '  method: "POST",\n'
+                '  body: JSON.stringify({\n'
+                '    items: cart.length > 1 ? cart.slice(0, -1) : cart,\n'
+                '    total_amount: finalAmount,\n'
+                '    coupon_id: couponResult?.coupon_id || null,\n'
+                '  }),\n'
+                '});'
+            ),
+            cwe="CWE-319",
+            owasp="A02:2021",
+            likelihood="LOW",
+            impact="MEDIUM",
+            confidence="MEDIUM",
+        )
+
+        mapping = triage.runtime_mapping_for_record(record)
+        payload = json.loads(mapping.payload)
+
+        self.assertEqual(
+            payload["items"],
+            [
+                {
+                    "product_id": "{{product_id}}",
+                    "quantity": 1,
+                    "price": 100000,
+                }
+            ],
+        )
+        self.assertEqual(payload["total_amount"], 100000)
+        self.assertIsNone(payload["coupon_id"])
+
+    def test_postman_mapping_prefers_endpoint_on_marked_finding_line(self):
+        triage = load_triage_module()
+        record = triage.FindingRecord(
+            index=5,
+            rule_id="typescript.react.security.react-insecure-request.react-insecure-request",
+            file_path="frontend-mobile/App.js",
+            line=189,
+            severity="ERROR",
+            message="Unencrypted request over HTTP detected.",
+            code=(
+                "   174: const orders = await fetch(`${API_URL}/orders/my-orders`);\n"
+                "=> 189: const response = await fetch(`${API_URL}/login`, {\n"
+                '   190:   method: "POST",\n'
+                "   191:   body: JSON.stringify({ email, password }),\n"
+                "   192: });"
+            ),
+            cwe="CWE-319",
+            owasp="A02:2021",
+            likelihood="LOW",
+            impact="MEDIUM",
+            confidence="MEDIUM",
+        )
+
+        mapping = triage.runtime_mapping_for_record(record)
+
+        self.assertEqual(mapping.url, "http://localhost:3000/api/login")
+
+    def test_postman_mapping_extracts_payload_after_marked_finding_line(self):
+        triage = load_triage_module()
+        record = triage.FindingRecord(
+            index=12,
+            rule_id="typescript.react.security.react-insecure-request.react-insecure-request",
+            file_path="frontend-mobile/App.js",
+            line=400,
+            severity="ERROR",
+            message="Unencrypted request over HTTP detected.",
+            code=(
+                "   390: body: JSON.stringify({\n"
+                "   391:   items: cart,\n"
+                "   392:   total_amount: finalAmount,\n"
+                "   393:   coupon_id: null,\n"
+                "   394: }),\n"
+                "=> 400: await fetch(`${API_URL}/coupon-usage`, {\n"
+                '   401:   method: "POST",\n'
+                "   402:   body: JSON.stringify({ coupon_id: couponResult.coupon_id }),\n"
+                "   403: });"
+            ),
+            cwe="CWE-319",
+            owasp="A02:2021",
+            likelihood="LOW",
+            impact="MEDIUM",
+            confidence="MEDIUM",
+        )
+
+        mapping = triage.runtime_mapping_for_record(record)
+
+        self.assertEqual(
+            json.loads(mapping.payload),
+            {"coupon_id": "{{coupon_id}}"},
+        )
+
+    def test_collect_findings_reads_enough_context_to_extract_request_body(self):
+        triage = load_triage_module()
+        source_lines = [
+            "const request = fetch(`${API_URL}/register`, {",
+            '  method: "POST",',
+            '  headers: { "Content-Type": "application/json" },',
+            "  // request metadata",
+            "  // validation metadata",
+            "  // UI state metadata",
+            "  body: JSON.stringify({",
+            "    name: registerName,",
+            "    email: registerEmail,",
+            "    password: registerPassword,",
+            "  }),",
+            "});",
+        ]
+        with tempfile.TemporaryDirectory() as tmpdir:
+            source_path = Path(tmpdir) / "App.js"
+            source_path.write_text("\n".join(source_lines), encoding="utf-8")
+            findings = [
+                {
+                    "check_id": "typescript.react.security.react-insecure-request.react-insecure-request",
+                    "path": str(source_path),
+                    "start": {"line": 1},
+                    "extra": {
+                        "severity": "ERROR",
+                        "message": "Unencrypted request over HTTP detected.",
+                        "lines": "requires login",
+                        "metadata": {},
+                    },
+                }
+            ]
+
+            record = triage.collect_finding_records(findings)[0]
+
+        self.assertIn("body: JSON.stringify", record.code)
+        self.assertIn("password: registerPassword", record.code)
+
+    def test_source_snippet_does_not_add_trailing_space_to_blank_lines(self):
+        triage = load_triage_module()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            source_path = Path(tmpdir) / "App.js"
+            source_path.write_text("first line\n\nthird line\n", encoding="utf-8")
+
+            snippet = triage.get_source_code_snippet(source_path, 2)
+
+        self.assertIn("=> 2:", snippet)
+        self.assertFalse(any(line.endswith(" ") for line in snippet.splitlines()))
 
     def test_test_case_entries_mark_unknown_mapping_for_manual_review(self):
         triage = load_triage_module()

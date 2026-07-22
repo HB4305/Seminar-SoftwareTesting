@@ -12,6 +12,7 @@ from typing import Dict, Iterable, List, Mapping, NamedTuple, Optional
 SCRIPT_DIR = Path(__file__).resolve().parent
 DEFAULT_OUTPUT_DIR = SCRIPT_DIR / "output"
 DEFAULT_AI_MAX_TOKENS = 1800
+NO_REQUEST_BODY = "Không có request body."
 
 
 def configure_console_encoding(stdout=None, stderr=None):
@@ -228,7 +229,8 @@ def get_source_code_snippet(file_path, line_number, context_lines=5):
     for idx in range(start_idx, end_idx):
         line_num = idx + 1
         marker = "=> " if line_num == line_number else "   "
-        snippet_lines.append(f"{marker}{line_num}: {lines[idx]}")
+        separator = ": " if lines[idx] else ":"
+        snippet_lines.append(f"{marker}{line_num}{separator}{lines[idx]}")
     return "\n".join(snippet_lines)
 
 
@@ -295,21 +297,32 @@ def collect_finding_records(findings: Iterable[dict], source_root=None):
         metadata = extra.get("metadata", {})
         line = finding.get("start", {}).get("line") or 0
         code = extra.get("lines", "")
+        rule_id = finding.get("check_id", "unknown-rule")
+        message = extra.get("message", "")
 
         if not code or code == "requires login":
             resolved_path = resolve_file_path(finding.get("path", ""), source_root=source_root)
-            code = get_source_code_snippet(resolved_path, line) if resolved_path else ""
+            is_http_finding = (
+                "insecure-request" in rule_id.lower()
+                or "cleartext" in message.lower()
+            )
+            context_lines = 15 if is_http_finding else 5
+            code = (
+                get_source_code_snippet(resolved_path, line, context_lines=context_lines)
+                if resolved_path
+                else ""
+            )
             if not code:
                 code = "[Không có source snippet trong JSON và không định vị được file nguồn]"
 
         records.append(
             FindingRecord(
                 index=index,
-                rule_id=finding.get("check_id", "unknown-rule"),
+                rule_id=rule_id,
                 file_path=finding.get("path", "unknown-file"),
                 line=line,
                 severity=extra.get("severity", "UNKNOWN"),
-                message=extra.get("message", ""),
+                message=message,
                 code=code,
                 cwe=join_metadata(metadata.get("cwe")),
                 owasp=join_metadata(metadata.get("owasp")),
@@ -405,13 +418,18 @@ def extract_first_http_url(text):
 
 
 def extract_runtime_url_from_code(text):
-    explicit_url = extract_first_http_url(text)
-    if explicit_url:
-        return explicit_url
+    marked_line = re.search(r"(?m)^=>\s*\d+:\s*(?P<code>.*)$", text or "")
+    candidates = [marked_line.group("code")] if marked_line else []
+    candidates.append(text or "")
 
-    api_url_match = re.search(r"\$\{API_URL\}([^`'\"),;]+)", text or "")
-    if api_url_match:
-        return f"http://localhost:3000/api{api_url_match.group(1)}"
+    for candidate in candidates:
+        explicit_url = extract_first_http_url(candidate)
+        if explicit_url:
+            return explicit_url
+
+        api_url_match = re.search(r"\$\{API_URL\}([^`'\"),;]+)", candidate)
+        if api_url_match:
+            return f"http://localhost:3000/api{api_url_match.group(1)}"
 
     return ""
 
@@ -427,6 +445,148 @@ def infer_method_from_code(code):
     return "GET"
 
 
+def extract_json_stringify_object(code):
+    source = code or ""
+    marked_line = re.search(r"(?m)^=>\s*\d+:", source)
+    if marked_line:
+        source = source[marked_line.start() :]
+    normalized = re.sub(r"(?m)^(?:=>\s*|\s*)\d+:\s?", "", source)
+    match = re.search(r"\bbody\s*:\s*JSON\.stringify\s*\(", normalized)
+    if not match:
+        return ""
+
+    start = normalized.find("{", match.end())
+    if start < 0:
+        return ""
+
+    depth = 0
+    quote = None
+    escaped = False
+    for index in range(start, len(normalized)):
+        char = normalized[index]
+        if quote:
+            if escaped:
+                escaped = False
+            elif char == "\\":
+                escaped = True
+            elif char == quote:
+                quote = None
+            continue
+        if char in {'"', "'", "`"}:
+            quote = char
+        elif char == "{":
+            depth += 1
+        elif char == "}":
+            depth -= 1
+            if depth == 0:
+                return normalized[start : index + 1]
+    return ""
+
+
+def split_top_level_properties(object_text):
+    if not object_text.startswith("{") or not object_text.endswith("}"):
+        return []
+
+    properties = []
+    current = []
+    depths = {"{": 0, "[": 0, "(": 0}
+    closing = {"}": "{", "]": "[", ")": "("}
+    quote = None
+    escaped = False
+
+    for char in object_text[1:-1]:
+        if quote:
+            current.append(char)
+            if escaped:
+                escaped = False
+            elif char == "\\":
+                escaped = True
+            elif char == quote:
+                quote = None
+            continue
+        if char in {'"', "'", "`"}:
+            quote = char
+            current.append(char)
+        elif char in depths:
+            depths[char] += 1
+            current.append(char)
+        elif char in closing:
+            depths[closing[char]] = max(0, depths[closing[char]] - 1)
+            current.append(char)
+        elif char == "," and not any(depths.values()):
+            if "".join(current).strip():
+                properties.append("".join(current).strip())
+            current = []
+        else:
+            current.append(char)
+
+    if "".join(current).strip():
+        properties.append("".join(current).strip())
+    return properties
+
+
+def extract_payload_fields(code):
+    object_text = extract_json_stringify_object(code)
+    fields = []
+    for prop in split_top_level_properties(object_text):
+        match = re.match(
+            r"\s*(?:['\"](?P<quoted>[^'\"]+)['\"]|(?P<plain>[A-Za-z_$][\w$]*))\s*(?::(?P<value>.*))?$",
+            prop,
+            re.DOTALL,
+        )
+        if match:
+            fields.append(
+                (
+                    match.group("quoted") or match.group("plain"),
+                    (match.group("value") or "").strip(),
+                )
+            )
+    return fields
+
+
+def sample_payload_value(field, expression, url):
+    samples = {
+        "email": "{{test_email}}",
+        "password": "{{test_password}}",
+        "name": "{{test_name}}",
+        "phone": "{{test_phone}}",
+        "shippingAddress": "{{shipping_address}}",
+        "resetToken": "{{reset_token}}",
+        "newPassword": "{{new_password}}",
+        "code": "{{coupon_code}}",
+        "total_amount": 100000,
+        "user_id": "{{user_id}}",
+        "items": [
+            {
+                "product_id": "{{product_id}}",
+                "quantity": 1,
+                "price": 100000,
+            }
+        ],
+        "coupon_id": "{{coupon_id}}",
+    }
+    if field == "coupon_id" and url.rstrip("/").endswith("/checkout"):
+        return None
+    if field in samples:
+        return samples[field]
+    variable = re.sub(r"(?<!^)(?=[A-Z])", "_", field).lower()
+    return "{{" + variable + "}}"
+
+
+def infer_sample_payload(code, method, url):
+    if method.upper() in {"GET", "HEAD"}:
+        return NO_REQUEST_BODY
+
+    fields = extract_payload_fields(code)
+    if not fields:
+        return "{}"
+    payload = {
+        field: sample_payload_value(field, expression, url)
+        for field, expression in fields
+    }
+    return json.dumps(payload, ensure_ascii=False, indent=2)
+
+
 def runtime_mapping_for_record(record):
     rule = record.rule_id.lower()
     if "jwt-hardcode" in rule or "hardcoded-jwt-secret" in rule:
@@ -436,7 +596,7 @@ def runtime_mapping_for_record(record):
             method="GET",
             url="http://localhost:3000/api/users/me",
             headers="Authorization: Bearer <forged_admin_jwt>\nContent-Type: application/json",
-            payload="{}",
+            payload=NO_REQUEST_BODY,
             pre_test_setup=(
                 "1. Dùng `src/semgrep/exploit.js` để tạo JWT giả.\n"
                 "2. Copy token sinh ra vào header Authorization.\n"
@@ -464,7 +624,7 @@ def runtime_mapping_for_record(record):
             method=method,
             url=url,
             headers="Content-Type: application/json",
-            payload="{}",
+            payload=infer_sample_payload(record.code, method, url),
             pre_test_setup=(
                 "1. Mở source line được Semgrep báo để xác nhận API path.\n"
                 "2. Đảm bảo backend/frontend local đang chạy.\n"
@@ -489,7 +649,7 @@ def runtime_mapping_for_record(record):
         method="GET",
         url="http://localhost:3000/<map-endpoint>",
         headers="Content-Type: application/json",
-        payload="{}",
+        payload=NO_REQUEST_BODY,
         pre_test_setup=(
             "1. Đọc source evidence để xác định endpoint hoặc feature liên quan.\n"
             "2. Điền method, URL, header và payload thật trước khi test Postman."
@@ -520,6 +680,36 @@ def write_test_case_entries_report(records: List[FindingRecord], output_dir):
         mapping = runtime_mapping_for_record(record)
         request = f"{mapping.method} {mapping.url}"
         action = "Gửi request và ghi nhận status code, response body."
+        if mapping.payload == NO_REQUEST_BODY:
+            payload_lines = [
+                "Payload:",
+                NO_REQUEST_BODY,
+                "",
+                "- Nguồn payload: Suy luận từ HTTP method không sử dụng request body.",
+                "- Độ tin cậy payload: High",
+            ]
+        elif mapping.payload == "{}":
+            payload_lines = [
+                "Payload mẫu:",
+                "```json",
+                mapping.payload,
+                "```",
+                "",
+                "- Nguồn payload: Không trích xuất được request body từ source context.",
+                "- Độ tin cậy payload: Low",
+                "- Tester cần điền payload thật trước khi chạy PoC.",
+            ]
+        else:
+            payload_lines = [
+                "Payload mẫu:",
+                "```json",
+                mapping.payload,
+                "```",
+                "",
+                "- Nguồn payload: Tự động suy luận từ `body: JSON.stringify(...)` trong source.",
+                "- Độ tin cậy payload: High",
+                "- Thay các biến `{{...}}` bằng giá trị Postman environment trước khi chạy PoC.",
+            ]
         lines.extend(
             [
                 "",
@@ -539,10 +729,7 @@ def write_test_case_entries_report(records: List[FindingRecord], output_dir):
                 mapping.headers,
                 "```",
                 "",
-                "Payload:",
-                "```json",
-                mapping.payload,
-                "```",
+                *payload_lines,
                 "",
                 "### Thao tác",
                 "",
@@ -576,6 +763,67 @@ def write_test_case_entries_report(records: List[FindingRecord], output_dir):
     report_path = output_path / "semgrep_test_cases.md"
     report_path.write_text("\n".join(lines), encoding="utf-8")
     return report_path
+
+
+def build_triage_postman_lines(record: FindingRecord) -> List[str]:
+    mapping = runtime_mapping_for_record(record)
+    if mapping.payload == NO_REQUEST_BODY:
+        payload_lines = [
+            "Payload:",
+            NO_REQUEST_BODY,
+            "",
+            "- Nguồn payload: Suy luận từ HTTP method không sử dụng request body.",
+            "- Độ tin cậy payload: High",
+        ]
+    elif mapping.payload == "{}":
+        payload_lines = [
+            "Payload mẫu:",
+            "```json",
+            mapping.payload,
+            "```",
+            "",
+            "- Nguồn payload: Không trích xuất được request body từ source context.",
+            "- Độ tin cậy payload: Low",
+            "- Tester cần điền payload thật trước khi chạy PoC.",
+        ]
+    else:
+        payload_lines = [
+            "Payload mẫu:",
+            "```json",
+            mapping.payload,
+            "```",
+            "",
+            "- Nguồn payload: Tự động suy luận từ `body: JSON.stringify(...)` trong source.",
+            "- Độ tin cậy payload: High",
+            "- Thay các biến `{{...}}` bằng giá trị Postman environment trước khi chạy PoC.",
+        ]
+
+    return [
+        "#### Postman/PoC tự động",
+        f"- Mục tiêu test: {mapping.test_objective}",
+        f"- Feature ảnh hưởng: {mapping.affected_feature}",
+        f"- Method: `{mapping.method}`",
+        f"- URL: `{mapping.url}`",
+        f"- Độ tin cậy mapping: {mapping.confidence}",
+        f"- Ghi chú mapping: {mapping.note}",
+        "",
+        "Headers:",
+        "```http",
+        mapping.headers,
+        "```",
+        "",
+        *payload_lines,
+        "",
+        "Pre-test setup:",
+        "```text",
+        mapping.pre_test_setup,
+        "```",
+        "",
+        "Kết quả kỳ vọng:",
+        f"- Nếu còn lỗi: {mapping.vulnerable_behavior}",
+        f"- Nếu đã an toàn: {mapping.secure_behavior}",
+        "",
+    ]
 
 
 def build_security_tag_lines(record: FindingRecord) -> List[str]:
@@ -670,6 +918,7 @@ def write_triage_outputs(records: List[FindingRecord], ai_outputs: Dict[int, str
                 record.code,
                 "```",
                 "",
+                *build_triage_postman_lines(record),
                 "#### Phân tích AI",
                 formatted_ai_output or "Chưa có output AI cho finding này.",
                 "",
