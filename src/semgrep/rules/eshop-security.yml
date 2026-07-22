@@ -1,0 +1,402 @@
+rules:
+  - id: eshop.jwt.hardcoded-secret-constant
+    languages:
+      - javascript
+      - typescript
+    severity: ERROR
+    message: JWT secret is hardcoded in source. Move it to a strong environment variable and rotate leaked tokens.
+    metadata:
+      cwe:
+        - "CWE-798: Use of Hard-coded Credentials"
+      owasp:
+        - "A07:2021 - Identification and Authentication Failures"
+      category: security
+      technology:
+        - nodejs
+        - jwt
+    patterns:
+      - pattern-either:
+          - pattern: const SECRET_KEY = "...";
+          - pattern: let SECRET_KEY = "...";
+          - pattern: var SECRET_KEY = "...";
+    paths:
+      include:
+        - "backend/**/*.js"
+        - "eshop-sut/backend/**/*.js"
+
+  - id: eshop.jwt.hardcoded-secret-use
+    languages:
+      - javascript
+      - typescript
+    severity: ERROR
+    message: JWT is signed or verified with a string literal secret. Use a secret from a protected environment variable.
+    metadata:
+      cwe:
+        - "CWE-798: Use of Hard-coded Credentials"
+      owasp:
+        - "A07:2021 - Identification and Authentication Failures"
+      category: security
+      technology:
+        - nodejs
+        - jwt
+    pattern-regex: "jwt\\.(sign|verify)\\s*\\([^\\n]*,\\s*['\"]"
+    paths:
+      include:
+        - "backend/**/*.js"
+        - "eshop-sut/backend/**/*.js"
+
+  - id: eshop.backend.cors-allow-all
+    languages:
+      - javascript
+      - typescript
+    severity: WARNING
+    message: Express CORS is enabled without an explicit origin allowlist. Configure allowed frontend/admin/mobile origins.
+    metadata:
+      cwe:
+        - "CWE-942: Permissive Cross-domain Policy with Untrusted Domains"
+      owasp:
+        - "A05:2021 - Security Misconfiguration"
+      category: security
+      technology:
+        - express
+    pattern: app.use(cors());
+    paths:
+      include:
+        - "backend/**/*.js"
+        - "eshop-sut/backend/**/*.js"
+
+  - id: eshop.backend.plaintext-password-storage
+    languages:
+      - javascript
+      - typescript
+    severity: ERROR
+    message: User passwords are stored or seeded as plaintext. Hash passwords with bcrypt/argon2 before persistence.
+    metadata:
+      cwe:
+        - "CWE-256: Plaintext Storage of a Password"
+      owasp:
+        - "A02:2021 - Cryptographic Failures"
+      category: security
+      technology:
+        - sqlite
+        - nodejs
+    pattern-regex: "(db\\.(run|prepare)\\s*\\(\\s*['\"`]([^'\"`]*password[^'\"`]*)['\"`])"
+    paths:
+      include:
+        - "backend/**/*.js"
+        - "eshop-sut/backend/**/*.js"
+
+  - id: eshop.backend.plaintext-password-compare
+    languages:
+      - javascript
+      - typescript
+    severity: ERROR
+    message: Password is compared directly as plaintext. Compare a submitted password with a password hash using a password hashing library.
+    metadata:
+      cwe:
+        - "CWE-256: Plaintext Storage of a Password"
+      owasp:
+        - "A02:2021 - Cryptographic Failures"
+      category: security
+      technology:
+        - nodejs
+    patterns:
+      - pattern-either:
+          - pattern: if ($USER.password === $PASSWORD) { ... }
+          - pattern: if ($USER.password == $PASSWORD) { ... }
+    paths:
+      include:
+        - "backend/**/*.js"
+        - "eshop-sut/backend/**/*.js"
+
+  - id: eshop.backend.weak-reset-token-random
+    languages:
+      - javascript
+      - typescript
+    severity: ERROR
+    message: Password reset token is generated with Math.random(), which is predictable. Use crypto.randomInt() or crypto.randomBytes().
+    metadata:
+      cwe:
+        - "CWE-338: Use of Cryptographically Weak Pseudo-Random Number Generator"
+      owasp:
+        - "A02:2021 - Cryptographic Failures"
+      category: security
+      technology:
+        - nodejs
+    pattern: Math.random()
+    paths:
+      include:
+        - "backend/server.js"
+        - "eshop-sut/backend/server.js"
+
+  - id: eshop.backend.sql-template-string
+    languages:
+      - javascript
+      - typescript
+    severity: ERROR
+    message: SQL query is built with a template string. Use sqlite parameter placeholders instead of interpolating request data.
+    metadata:
+      cwe:
+        - "CWE-89: Improper Neutralization of Special Elements used in an SQL Command"
+      owasp:
+        - "A03:2021 - Injection"
+      category: security
+      technology:
+        - sqlite
+        - nodejs
+    pattern-regex: "`SELECT[^`]*\\$\\{[^}]+\\}[^`]*`"
+    paths:
+      include:
+        - "backend/server.js"
+        - "eshop-sut/backend/server.js"
+
+  - id: eshop.backend.profile-role-mass-assignment
+    languages:
+      - javascript
+      - typescript
+    severity: ERROR
+    message: Profile update accepts role from req.body. Do not allow users to change authorization fields through self-service profile APIs.
+    metadata:
+      cwe:
+        - "CWE-915: Improperly Controlled Modification of Dynamically-Determined Object Attributes"
+      owasp:
+        - "A01:2021 - Broken Access Control"
+      category: security
+      technology:
+        - express
+    patterns:
+      - pattern: const { ..., role, ... } = req.body;
+    paths:
+      include:
+        - "backend/server.js"
+        - "eshop-sut/backend/server.js"
+
+  - id: eshop.backend.admin-route-missing-role-check
+    languages:
+      - javascript
+      - typescript
+    severity: ERROR
+    message: Admin endpoint requires authentication but does not check req.user.role === 'admin'. Add authorization checks for admin routes.
+    metadata:
+      cwe:
+        - "CWE-862: Missing Authorization"
+      owasp:
+        - "A01:2021 - Broken Access Control"
+      category: security
+      technology:
+        - express
+    pattern-regex: "app\\.(get|post|put|delete)\\(\\s*['\"]\\/api\\/admin\\/[^'\"]*['\"]\\s*,\\s*authenticateToken"
+    paths:
+      include:
+        - "backend/server.js"
+        - "eshop-sut/backend/server.js"
+
+  - id: eshop.backend.trusts-client-total-amount
+    languages:
+      - javascript
+      - typescript
+    severity: ERROR
+    message: Backend reads total_amount from req.body. Recalculate totals server-side from product IDs, quantities, and coupon state.
+    metadata:
+      cwe:
+        - "CWE-602: Client-Side Enforcement of Server-Side Security"
+      owasp:
+        - "A04:2021 - Insecure Design"
+      category: security
+      technology:
+        - express
+    pattern-regex: "const\\s*\\{[^}]*total_amount[^}]*\\}\\s*=\\s*req\\.body"
+    paths:
+      include:
+        - "backend/server.js"
+        - "eshop-sut/backend/server.js"
+
+  - id: eshop.backend.trusts-client-user-id
+    languages:
+      - javascript
+      - typescript
+    severity: WARNING
+    message: Backend reads user_id from req.body for coupon logic. Derive user identity from the authenticated token instead.
+    metadata:
+      cwe:
+        - "CWE-807: Reliance on Untrusted Inputs in a Security Decision"
+      owasp:
+        - "A01:2021 - Broken Access Control"
+      category: security
+      technology:
+        - express
+    pattern-regex: "const\\s*\\{[^}]*user_id[^}]*\\}\\s*=\\s*req\\.body"
+    paths:
+      include:
+        - "backend/server.js"
+        - "eshop-sut/backend/server.js"
+
+  - id: eshop.backend.invalid-order-transition
+    languages:
+      - javascript
+      - typescript
+    severity: WARNING
+    message: Order state machine allows canceled orders to become delivered. Remove this invalid transition.
+    metadata:
+      cwe:
+        - "CWE-840: Business Logic Errors"
+      owasp:
+        - "A04:2021 - Insecure Design"
+      category: security
+      technology:
+        - express
+    pattern: |
+      if (currentStatus === "canceled" && status === "delivered")
+        isValidTransition = true;
+    paths:
+      include:
+        - "backend/server.js"
+        - "eshop-sut/backend/server.js"
+
+  - id: eshop.frontend.cleartext-http-url
+    languages:
+      - javascript
+      - typescript
+    severity: ERROR
+    message: Frontend uses a cleartext HTTP API URL. Use HTTPS outside local-only development.
+    metadata:
+      cwe:
+        - "CWE-319: Cleartext Transmission of Sensitive Information"
+      owasp:
+        - "A02:2021 - Cryptographic Failures"
+      category: security
+      technology:
+        - react
+        - react-native
+    pattern-regex: "http://(localhost|[0-9]{1,3}(\\.[0-9]{1,3}){3})"
+    paths:
+      include:
+        - "frontend-web/src/**/*.jsx"
+        - "frontend-admin/src/**/*.jsx"
+        - "frontend-mobile/**/*.js"
+        - "backend/test_profile.js"
+        - "eshop-sut/frontend-web/src/**/*.jsx"
+        - "eshop-sut/frontend-admin/src/**/*.jsx"
+        - "eshop-sut/frontend-mobile/**/*.js"
+        - "eshop-sut/backend/test_profile.js"
+
+  - id: eshop.frontend.dangerously-set-inner-html
+    languages:
+      - javascript
+      - typescript
+    severity: ERROR
+    message: React dangerouslySetInnerHTML renders unsanitized HTML. Sanitize trusted HTML or render text normally.
+    metadata:
+      cwe:
+        - "CWE-79: Improper Neutralization of Input During Web Page Generation"
+      owasp:
+        - "A03:2021 - Injection"
+      category: security
+      technology:
+        - react
+    pattern-regex: "dangerouslySetInnerHTML\\s*=\\s*\\{\\s*\\{\\s*__html\\s*:"
+    paths:
+      include:
+        - "frontend-web/src/**/*.jsx"
+        - "frontend-admin/src/**/*.jsx"
+        - "eshop-sut/frontend-web/src/**/*.jsx"
+        - "eshop-sut/frontend-admin/src/**/*.jsx"
+
+  - id: eshop.frontend.localstorage-token
+    languages:
+      - javascript
+      - typescript
+    severity: WARNING
+    message: Auth token is stored in localStorage, where XSS can read it. Prefer secure HttpOnly cookies or short-lived in-memory tokens.
+    metadata:
+      cwe:
+        - "CWE-922: Insecure Storage of Sensitive Information"
+      owasp:
+        - "A05:2021 - Security Misconfiguration"
+      category: security
+      technology:
+        - react
+    patterns:
+      - pattern-either:
+          - pattern: localStorage.setItem($KEY, $VALUE)
+          - pattern: localStorage.getItem($KEY)
+          - pattern: localStorage.removeItem($KEY)
+      - metavariable-regex:
+          metavariable: $KEY
+          regex: ".*[Tt]oken.*"
+    paths:
+      include:
+        - "frontend-web/src/**/*.jsx"
+        - "frontend-admin/src/**/*.jsx"
+        - "eshop-sut/frontend-web/src/**/*.jsx"
+        - "eshop-sut/frontend-admin/src/**/*.jsx"
+
+  - id: eshop.frontend.password-input-type-text
+    languages:
+      - javascript
+      - typescript
+    severity: WARNING
+    message: Password field is rendered with type='text'. Use type='password' to avoid exposing entered credentials on screen.
+    metadata:
+      cwe:
+        - "CWE-549: Missing Password Field Masking"
+      owasp:
+        - "A07:2021 - Identification and Authentication Failures"
+      category: security
+      technology:
+        - react
+    pattern: |
+      <input
+        ...
+        type="text"
+        ...
+        value={password}
+        ...
+      />
+    paths:
+      include:
+        - "frontend-web/src/**/*.jsx"
+        - "eshop-sut/frontend-web/src/**/*.jsx"
+
+  - id: eshop.frontend.editable-checkout-total
+    languages:
+      - javascript
+      - typescript
+    severity: WARNING
+    message: Checkout total is editable on the client. Totals must be recalculated and enforced on the server.
+    metadata:
+      cwe:
+        - "CWE-602: Client-Side Enforcement of Server-Side Security"
+      owasp:
+        - "A04:2021 - Insecure Design"
+      category: security
+      technology:
+        - react
+    patterns:
+      - pattern: const [editableTotal, setEditableTotal] = useState($VALUE);
+    paths:
+      include:
+        - "frontend-web/src/**/*.jsx"
+        - "frontend-mobile/**/*.js"
+        - "eshop-sut/frontend-web/src/**/*.jsx"
+        - "eshop-sut/frontend-mobile/**/*.js"
+
+  - id: eshop.mobile.checkout-drops-cart-item
+    languages:
+      - javascript
+      - typescript
+    severity: WARNING
+    message: Mobile checkout conditionally drops the last cart item before sending checkout data. Send the exact cart and validate it server-side.
+    metadata:
+      cwe:
+        - "CWE-840: Business Logic Errors"
+      owasp:
+        - "A04:2021 - Insecure Design"
+      category: security
+      technology:
+        - react-native
+    pattern: "items: cart.length > 1 ? cart.slice(0, -1) : cart"
+    paths:
+      include:
+        - "frontend-mobile/**/*.js"
+        - "eshop-sut/frontend-mobile/**/*.js"
