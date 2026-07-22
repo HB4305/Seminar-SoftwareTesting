@@ -70,7 +70,7 @@ Chọn source root theo vị trí source EShop.
 PowerShell:
 
 ```powershell
-semgrep scan --config "p/owasp-top-ten" --config "p/nodejs" --exclude node_modules --exclude dist --exclude build --exclude .next --json -o src/semgrep/output/semgrep_results.json ./eshop-sut
+semgrep scan --config "p/owasp-top-ten" --config "p/nodejs" --config "p/javascript" --config "p/react" --exclude node_modules --exclude dist --exclude build --exclude .next --json -o src/semgrep/output/semgrep_results.json ./eshop-sut
 ```
 
 Git Bash/Bash:
@@ -79,6 +79,8 @@ Git Bash/Bash:
 semgrep scan \
   --config "p/owasp-top-ten" \
   --config "p/nodejs" \
+  --config "p/javascript" \
+  --config "p/react" \
   --exclude node_modules \
   --exclude dist \
   --exclude build \
@@ -96,7 +98,7 @@ PowerShell:
 
 ```powershell
 $env:SOURCE_ROOT="C:\path\to\eshop-sut"
-semgrep scan --config "p/owasp-top-ten" --config "p/nodejs" --exclude node_modules --exclude dist --exclude build --exclude .next --json -o src/semgrep/output/semgrep_results.json $env:SOURCE_ROOT
+semgrep scan --config "p/owasp-top-ten" --config "p/nodejs" --config "p/javascript" --config "p/react" --exclude node_modules --exclude dist --exclude build --exclude .next --json -o src/semgrep/output/semgrep_results.json $env:SOURCE_ROOT
 ```
 
 Git Bash/Bash:
@@ -107,6 +109,8 @@ SOURCE_ROOT="/path/to/eshop-sut"
 semgrep scan \
   --config "p/owasp-top-ten" \
   --config "p/nodejs" \
+  --config "p/javascript" \
+  --config "p/react" \
   --exclude node_modules \
   --exclude dist \
   --exclude build \
@@ -115,6 +119,8 @@ semgrep scan \
   -o src/semgrep/output/semgrep_results.json \
   "$SOURCE_ROOT"
 ```
+
+Lưu ý: EShop dùng backend Node.js/JavaScript và frontend React/React Native, nên lệnh scan chính dùng thêm `p/javascript` và `p/react` bên cạnh `p/owasp-top-ten` và `p/nodejs`. Các ruleset bổ sung này giúp Semgrep kiểm tra tốt hơn các pattern trong file `.js`, `.jsx` và code React.
 
 ## 4. Chạy AI triage
 

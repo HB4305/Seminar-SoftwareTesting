@@ -25,7 +25,7 @@ Lưu ý: OWASP Top 10 là nhóm rủi ro, không phải một checklist tự đ�
 
 SAST (Static Application Security Testing) là kiểm thử bảo mật bằng cách phân tích mã nguồn hoặc file cấu hình mà không cần chạy ứng dụng. SAST phù hợp để phát hiện sớm hardcoded secret, pattern gọi API không an toàn, code injection, lỗi framework phổ biến và một số cấu hình rủi ro.
 
-Semgrep là công cụ SAST chạy bằng CLI, dùng rule dạng pattern để tìm đoạn code có dấu hiệu nguy hiểm. Trong project này, Semgrep được dùng với ruleset `p/owasp-top-ten` và `p/nodejs`, sau đó output JSON được đưa vào script AI triage để sinh báo cáo kiểm chứng.
+Semgrep là công cụ SAST chạy bằng CLI, dùng rule dạng pattern để tìm đoạn code có dấu hiệu nguy hiểm. Trong project này, Semgrep được dùng với ruleset `p/owasp-top-ten`, `p/nodejs`, `p/javascript` và `p/react`, sau đó output JSON được đưa vào script AI triage để sinh báo cáo kiểm chứng.
 
 ## 3. Cài đặt Semgrep
 
@@ -88,24 +88,28 @@ Seminar-SoftwareTesting/
 └── src/semgrep/
 ```
 
-Quét nhanh EShop bằng OWASP Top 10:
+Quét nhanh EShop bằng các ruleset chính:
 
 ```bash
-semgrep scan --config "p/owasp-top-ten" ./eshop-sut
+semgrep scan --config "p/owasp-top-ten" --config "p/nodejs" --config "p/javascript" --config "p/react" ./eshop-sut
 ```
 
-Quét thêm rule Node.js:
+Quét EShop với ruleset phù hợp cho backend Node.js và frontend React:
 
 ```bash
 semgrep scan \
   --config "p/owasp-top-ten" \
   --config "p/nodejs" \
+  --config "p/javascript" \
+  --config "p/react" \
   --exclude node_modules \
   --exclude dist \
   --exclude build \
   --exclude .next \
   ./eshop-sut
 ```
+
+Lưu ý: EShop dùng backend Node.js/JavaScript và frontend React/React Native, nên lệnh scan nên dùng thêm `p/javascript` và `p/react` bên cạnh `p/owasp-top-ten` và `p/nodejs`.
 
 Option khác là dùng file `.semgrepignore` để Semgrep tự bỏ qua các thư mục/file không cần scan. Cách này gọn hơn khi phải chạy nhiều lần hoặc dùng chung với pipeline.
 
@@ -128,6 +132,8 @@ Sau đó có thể bỏ các flag `--exclude` khỏi lệnh scan:
 semgrep scan \
   --config "p/owasp-top-ten" \
   --config "p/nodejs" \
+  --config "p/javascript" \
+  --config "p/react" \
   ./eshop-sut
 ```
 
@@ -140,6 +146,8 @@ mkdir -p src/semgrep/output
 semgrep scan \
   --config "p/owasp-top-ten" \
   --config "p/nodejs" \
+  --config "p/javascript" \
+  --config "p/react" \
   --exclude node_modules \
   --exclude dist \
   --exclude build \
@@ -156,6 +164,8 @@ mkdir -p src/semgrep/output
 semgrep scan \
   --config "p/owasp-top-ten" \
   --config "p/nodejs" \
+  --config "p/javascript" \
+  --config "p/react" \
   --json \
   -o src/semgrep/output/semgrep_results.json \
   ./eshop-sut
@@ -168,6 +178,8 @@ SOURCE_ROOT="/path/to/eshop-sut"
 semgrep scan \
   --config "p/owasp-top-ten" \
   --config "p/nodejs" \
+  --config "p/javascript" \
+  --config "p/react" \
   --exclude node_modules \
   --exclude dist \
   --exclude build \
@@ -217,7 +229,7 @@ $env:SOURCE_ROOT="C:\path\to\eshop-sut"
 
 ### 5.3. Quét mã nguồn và xuất kết quả JSON
 
-Trong flow chính, nhóm chạy một lần với cả ruleset OWASP Top 10 và Node.js, đồng thời xuất kết quả ra JSON. Ruleset OWASP giúp rà soát các nhóm lỗi bảo mật phổ biến, còn `p/nodejs` bổ sung rule phù hợp với backend/frontend JavaScript của EShop.
+Trong flow chính, nhóm chạy một lần với các ruleset OWASP Top 10, Node.js, JavaScript và React, đồng thời xuất kết quả ra JSON.
 
 Nếu source nằm trong repo tại `./eshop-sut`:
 
@@ -226,6 +238,8 @@ mkdir -p src/semgrep/output
 semgrep scan \
   --config "p/owasp-top-ten" \
   --config "p/nodejs" \
+  --config "p/javascript" \
+  --config "p/react" \
   --exclude node_modules \
   --exclude dist \
   --exclude build \
@@ -242,6 +256,8 @@ mkdir -p src/semgrep/output
 semgrep scan \
   --config "p/owasp-top-ten" \
   --config "p/nodejs" \
+  --config "p/javascript" \
+  --config "p/react" \
   --json \
   -o src/semgrep/output/semgrep_results.json \
   ./eshop-sut
@@ -253,6 +269,8 @@ Nếu source nằm ở path khác:
 semgrep scan \
   --config "p/owasp-top-ten" \
   --config "p/nodejs" \
+  --config "p/javascript" \
+  --config "p/react" \
   --exclude node_modules \
   --exclude dist \
   --exclude build \
@@ -276,6 +294,8 @@ ls src/semgrep/output/semgrep_results.json
 ```
 
 File `semgrep_results.json` là bằng chứng scan gốc, nên giữ lại để đối chiếu với báo cáo triage và kết quả demo.
+
+Lưu ý: EShop dùng backend Node.js/JavaScript và frontend React/React Native, nên flow chính dùng thêm `p/javascript` và `p/react`. Hai ruleset này giúp Semgrep kiểm tra tốt hơn các pattern trong file `.js`, `.jsx` và code React, thay vì chỉ dựa vào `p/owasp-top-ten` và `p/nodejs`.
 
 ### 5.4. Cấu hình AI provider cho bước triage
 
