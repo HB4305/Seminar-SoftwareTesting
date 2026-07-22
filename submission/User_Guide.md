@@ -107,6 +107,32 @@ semgrep scan \
   ./eshop-sut
 ```
 
+Option khác là dùng file `.semgrepignore` để Semgrep tự bỏ qua các thư mục/file không cần scan. Cách này gọn hơn khi phải chạy nhiều lần hoặc dùng chung với pipeline.
+
+Tạo file ignore trong root source EShop:
+
+```bash
+cat > ./eshop-sut/.semgrepignore <<'EOF'
+node_modules/
+dist/
+build/
+.next/
+coverage/
+*.min.js
+EOF
+```
+
+Sau đó có thể bỏ các flag `--exclude` khỏi lệnh scan:
+
+```bash
+semgrep scan \
+  --config "p/owasp-top-ten" \
+  --config "p/nodejs" \
+  ./eshop-sut
+```
+
+Chỉ nên ignore các thư mục generated, dependency, build output hoặc file nhiễu. Không nên ignore source chính như `backend/`, `frontend/src/` vì có thể làm mất finding thật.
+
 Xuất JSON để xử lý tiếp:
 
 ```bash
@@ -118,6 +144,18 @@ semgrep scan \
   --exclude dist \
   --exclude build \
   --exclude .next \
+  --json \
+  -o src/semgrep/output/semgrep_results.json \
+  ./eshop-sut
+```
+
+Nếu đã tạo `./eshop-sut/.semgrepignore`, có thể dùng lệnh JSON ngắn hơn:
+
+```bash
+mkdir -p src/semgrep/output
+semgrep scan \
+  --config "p/owasp-top-ten" \
+  --config "p/nodejs" \
   --json \
   -o src/semgrep/output/semgrep_results.json \
   ./eshop-sut
@@ -192,6 +230,18 @@ semgrep scan \
   --exclude dist \
   --exclude build \
   --exclude .next \
+  --json \
+  -o src/semgrep/output/semgrep_results.json \
+  ./eshop-sut
+```
+
+Nếu source đã có `.semgrepignore`, lệnh flow chính có thể rút gọn:
+
+```bash
+mkdir -p src/semgrep/output
+semgrep scan \
+  --config "p/owasp-top-ten" \
+  --config "p/nodejs" \
   --json \
   -o src/semgrep/output/semgrep_results.json \
   ./eshop-sut
