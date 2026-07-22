@@ -1,26 +1,27 @@
 # LUỒNG HOẠT ĐỘNG KIỂM THỬ BẢO MẬT (SECURITY TESTING WORKFLOW)
 
-Tài liệu này mô tả chi tiết quy trình kết hợp các công cụ kiểm thử bảo mật (Semgrep, AI Assist, và OWASP ZAP) được nhóm đề xuất áp dụng cho hệ thống EShop.
+Tài liệu này mô tả quy trình kiểm thử bảo mật của nhóm cho hệ thống EShop với hai nhánh tách biệt: Semgrep cho SAST và OWASP ZAP cho DAST. Mỗi nhánh đều có bước AI triage và sinh testcase riêng để phục vụ kiểm chứng thủ công.
 
 ## 1. Sơ đồ quy trình tổng quan
 
 ```mermaid
 graph TD
-    A[Mã nguồn EShop] -->|Quét tĩnh định kỳ| B(Semgrep SAST)
-    B -->|Danh sách cảnh báo lỗi| C{Google Gemini API}
-    
-    C -->|Phân tích & Lọc| D[Lỗi giả - False Positives]
-    C -->|Xác nhận & Giải thích| E[Lỗ hổng thực - True Positives]
-    
-    E --> F[Sinh mã khai thác thử - PoC Exploit]
-    E --> G[Gợi ý bản vá mã nguồn - Code Fix]
-    
-    H[Hệ thống EShop đang chạy] -->|Quét động Baseline| I(OWASP ZAP DAST)
-    I -->|Phát hiện lỗ hổng Runtime| J[Xác thực bằng PoC của AI]
-    
-    F --> J
-    J --> K[Báo cáo bảo mật tổng hợp]
-    G --> L[Phát hành bản vá an toàn]
+    A[Mã nguồn EShop] -->|Quét tĩnh| B(Semgrep SAST)
+    B -->|JSON findings| C[AI Triage Semgrep]
+    C --> D[semgrep_triage_report.md]
+    C --> E[semgrep_test_cases.md]
+    E --> F[Kiểm chứng thủ công theo testcase Semgrep]
+
+    G[EShop đang chạy] -->|Authenticated scan| H(OWASP ZAP DAST)
+    H -->|JSON alerts| I[AI Triage ZAP]
+    I --> J[zap_triage_report.md]
+    I --> K[zap_test_cases.md]
+    K --> L[Kiểm chứng thủ công theo testcase ZAP]
+
+    D --> M[Báo cáo bảo mật tổng hợp]
+    F --> M
+    J --> M
+    L --> M
 ```
 
 ## 2. Diễn giải chi tiết các bước
@@ -28,30 +29,41 @@ graph TD
 ### Bước 1: Quét mã nguồn tĩnh (SAST) bằng Semgrep
 - **Mục tiêu:** Rà soát lỗ hổng ở mức source code trước khi ứng dụng được triển khai.
 - **Hoạt động:** 
-  - Đưa mã nguồn của hệ thống EShop (có chứa các lỗ hổng mẫu như SQL Injection, Weak Hashing) qua Semgrep.
-  - Semgrep sử dụng bộ ruleset chuẩn (OWASP Top 10) để phân tích cú pháp và luồng dữ liệu (data flow) nhằm tìm kiếm các đoạn code rủi ro.
-- **Đầu ra:** Danh sách các cảnh báo bảo mật. (Tuy nhiên, có thể bao gồm nhiều lỗi giả - false positives - do công cụ chưa hiểu hết ngữ cảnh toàn cục của ứng dụng).
+  - Đưa mã nguồn EShop qua Semgrep với ruleset chính `p/owasp-top-ten`.
+  - Xuất kết quả scan ra JSON để làm đầu vào cho bước AI triage.
+- **Đầu ra:** File JSON findings thô từ Semgrep.
 
-### Bước 2: Triage và Phân tích bằng AI (AI-Augmented)
-- **Mục tiêu:** Giảm thiểu False-Positive và gia tăng sự hiểu biết về lỗ hổng.
+### Bước 2: AI triage cho nhánh Semgrep
+- **Mục tiêu:** Phân loại finding của Semgrep, giải thích root cause và sinh testcase kiểm chứng riêng cho từng finding.
 - **Hoạt động:**
-  - **Triage (Lọc lỗi):** Cung cấp kết quả (JSON) từ Semgrep kèm đoạn code của EShop cho Google Gemini thông qua API. AI đóng vai trò phân tích bối cảnh để loại bỏ các cảnh báo không có khả năng bị khai thác thực tế.
-  - **Phân tích sâu:** AI giải thích cơ chế dẫn đến lỗ hổng bằng ngôn ngữ tự nhiên.
-  - **Hỗ trợ kiểm thử:** AI tự động sinh ra kịch bản hoặc đoạn mã khai thác mẫu (PoC - Proof of Concept) phục vụ cho việc kiểm chứng thực tế.
-  - **Gợi ý sửa chữa:** AI cung cấp đoạn code đã được vá an toàn.
-- **Đầu ra:** Danh sách lỗ hổng đã được xác thực (True Positives), kịch bản PoC và gợi ý bản vá code.
+  - Cung cấp JSON findings của Semgrep kèm source context cho script AI triage.
+  - AI phân loại finding theo `True Positive`, `False Positive` hoặc `Needs Human Review`.
+  - AI sinh báo cáo triage tổng hợp và file testcase riêng cho từng finding.
+  - Với các finding quan trọng, AI có thể gợi ý PoC hoặc hướng khắc phục để tester/dev tham khảo.
+- **Đầu ra:** `semgrep_triage_report.md`, `semgrep_test_cases.md`, và các file phân tích per-finding.
 
-### Bước 3: Kiểm chứng động (DAST) bằng OWASP ZAP
-- **Mục tiêu:** Khẳng định xem lỗ hổng trong code có thể thực sự bị khai thác từ góc độ người dùng bên ngoài hay không.
+### Bước 3: Quét động (DAST) bằng OWASP ZAP
+- **Mục tiêu:** Thu thập runtime evidence từ ứng dụng đang chạy qua request/response thực tế.
 - **Hoạt động:** 
   - Khởi chạy hệ thống EShop trong môi trường thử nghiệm.
-  - Sử dụng OWASP ZAP rà quét thụ động (Passive) và chủ động (Active) vào các endpoint như form đăng nhập, trang giỏ hàng, thanh tìm kiếm.
-- **Đầu ra:** Kết quả đối chiếu với cảnh báo từ SAST. ZAP sẽ giúp chỉ ra những lỗ hổng lộ diện trực tiếp trên giao diện hoặc qua API trả về.
+  - Dùng OWASP ZAP GUI khi cần quan sát proxy, context và authentication flow.
+  - Dùng ZAP CLI theo authenticated scan để giảm rủi ro thao tác login sai lặp lại và giữ đúng ngữ cảnh user/admin cần kiểm thử.
+  - Xuất report JSON từ ZAP để đưa sang bước AI triage của nhánh DAST.
+- **Đầu ra:** File JSON alerts từ ZAP với runtime evidence tương ứng.
 
-### Bước 4: Đối chiếu chéo và Vá lỗi (Patching)
-- **Mục tiêu:** Hoàn thiện quy trình báo cáo và khắc phục.
+### Bước 4: AI triage cho nhánh ZAP
+- **Mục tiêu:** Gom nhóm alert runtime, giải thích ý nghĩa bảo mật và sinh testcase replay riêng cho từng alert group.
 - **Hoạt động:**
-  - Kiểm thử viên (Tester) sử dụng PoC do AI sinh ra để thực hiện tấn công giả lập trên hệ thống EShop đang chạy.
-  - So sánh kết quả khai thác thực tế bằng PoC với cảnh báo của ZAP và Semgrep để kết luận lỗ hổng.
-  - Sau khi xác nhận thành công, team sử dụng đoạn code gợi ý của AI để vá lỗi (apply patch) ngay trên source code EShop.
-- **Đầu ra:** Lỗ hổng được khắc phục triệt để; hoàn tất tài liệu chứng minh và báo cáo kiểm thử.
+  - Cung cấp report JSON của ZAP cho script AI triage.
+  - AI gom các alert instance thành alert group, giữ lại runtime evidence đại diện và phân loại từng nhóm alert.
+  - AI sinh testcase replay cho từng endpoint/request instance trong `zap_test_cases.md`.
+- **Đầu ra:** `zap_triage_report.md`, `zap_test_cases.md`, và các file phân tích per-alert.
+
+### Bước 5: Kiểm chứng thủ công và tổng hợp báo cáo
+- **Mục tiêu:** Xác nhận finding/alert bằng testcase đúng với từng nhánh và hoàn thiện báo cáo cuối.
+- **Hoạt động:**
+  - Tester chạy testcase từ `semgrep_test_cases.md` để kiểm chứng finding của nhánh SAST.
+  - Tester chạy testcase từ `zap_test_cases.md` để replay runtime evidence của nhánh DAST.
+  - Ghi nhận kết quả kiểm chứng thủ công, mức độ ảnh hưởng và trạng thái cuối cùng.
+  - Developer dùng kết quả đã được kiểm chứng để sửa lỗi, bổ sung test, và rà lại sau khi vá.
+- **Đầu ra:** Báo cáo bảo mật tổng hợp, evidence kiểm chứng thủ công, và trạng thái xử lý của từng finding/alert.

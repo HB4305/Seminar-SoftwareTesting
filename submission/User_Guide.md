@@ -772,113 +772,166 @@ Sau khi chạy thành công, kiểm tra các output chính:
 - `src/zap/output/markdown/alerts/*_prompt.md`: prompt tiếng Việt gửi AI cho từng alert group.
 - `src/zap/output/markdown/alerts/*_ai_output.md`: output AI tương ứng từng alert group.
 
-## 10. Test endpoint để đối chiếu ZAP với Semgrep
+## 10. Ví dụ testcase từ Semgrep và ZAP
 
-Mục tiêu phần này là dùng runtime evidence từ ZAP hoặc `curl` để kiểm tra finding từ Semgrep có biểu hiện trên ứng dụng đang chạy hay không.
+Sau khi chạy AI triage, mỗi nhánh Semgrep và ZAP đều sinh ra test case riêng để người kiểm thử tái hiện lại finding/alert bằng evidence tương ứng. Phần này không còn dùng để đối chiếu chéo giữa hai tool; thay vào đó, nó minh họa cách đọc một testcase mẫu và phần phân tích AI gắn với testcase đó.
 
-### 10.1. Chuẩn bị token đăng nhập
+### 10.1. Ví dụ testcase Semgrep
 
-Đăng nhập admin:
+Ví dụ dưới đây tương ứng với finding hardcoded JWT secret của Semgrep:
 
-```bash
-curl -s -X POST http://localhost:3000/api/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"admin@eshop.com","password":"Admin123!"}'
-```
-
-Đăng nhập user:
-
-```bash
-curl -s -X POST http://localhost:3000/api/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"test@eshop.com","password":"Test1234!"}'
-```
-
-Copy giá trị `token` trong response để dùng ở các bước sau:
-
-```bash
-TOKEN="paste_token_here"
-```
-
-### 10.2. Đối chiếu hardcoded JWT secret
-
-Semgrep finding:
-
-- Rule: `javascript.jsonwebtoken.security.jwt-hardcode.hardcoded-jwt-secret`
+- Rule ID: `javascript.jsonwebtoken.security.jwt-hardcode.hardcoded-jwt-secret`
 - File: `backend/server.js`
+- CWE: CWE-798
 - OWASP: A07 Authentication Failures
 
-Kiểm tra runtime:
+Testcase mẫu:
 
-```bash
-curl -i http://localhost:3000/api/users/me \
-  -H "Authorization: Bearer $TOKEN"
+##### TC-SEMGREP-001
+
+- Finding liên quan: SEMGREP-001
+- Mục tiêu test: Kiểm chứng khả năng giả mạo JWT khi `SECRET_KEY` bị hardcode trong source code.
+
+###### Input
+
+- Source evidence:
+  - `const SECRET_KEY = "super_secret_key_that_should_not_be_here";`
+  - `jwt.sign(..., SECRET_KEY)`
+  - `jwt.verify(..., SECRET_KEY)`
+- PoC: `weekly-reports/Group06_05/evidence/semgrep/exploit.js`
+
+###### Thao tác
+
+1. Chạy PoC để tạo forged token:
+   ```bash
+   node weekly-reports/Group06_05/evidence/semgrep/exploit.js
+   ```
+2. Copy token sinh ra từ PoC.
+3. Gửi request kiểm tra:
+   ```bash
+   curl -i http://localhost:3000/api/users/me \
+     -H "Authorization: Bearer <forged_token>"
+   ```
+4. Ghi nhận status code, response body và quyền mà backend suy ra từ token.
+
+###### Kết quả cần ghi nhận
+
+- Nếu còn lỗi: backend chấp nhận forged token, cho phép truy cập như user/admin hợp lệ.
+- Nếu đã an toàn: forged token bị từ chối, backend trả `401/403` hoặc lỗi verify JWT.
+
+###### Trạng thái
+
+Chưa kiểm chứng
+
+Phần AI triage liên quan:
+
+##### Trích AI triage cho SEMGREP-001
+
+###### 1. Giải thích lỗ hổng
+
+Lỗ hổng xảy ra do khóa bí mật (`SECRET_KEY`) dùng để ký và xác thực JWT được khai báo tĩnh trực tiếp trong mã nguồn tại `backend/server.js`.
+
+###### 2. Proof of Concept
+
+Khi có được chuỗi `super_secret_key_that_should_not_be_here`, kẻ tấn công có thể tự tạo một JWT hợp lệ:
+
+```javascript
+const jwt = require('jsonwebtoken');
+const LEAKED_SECRET = "super_secret_key_that_should_not_be_here";
+const payload = { id: 1, role: "admin" };
+const forgedToken = jwt.sign(payload, LEAKED_SECRET);
+console.log("Bearer " + forgedToken);
 ```
 
-Kết quả cần ghi nhận:
+###### 3. Mức độ ảnh hưởng
 
-- Nếu token hợp lệ trả `200`, endpoint đang tin vào JWT.
-- Nếu tạo được token giả bằng secret hardcode trong PoC và backend vẫn trả `200`, finding được xác nhận là lỗi nghiêm trọng.
-- Nếu backend đã đổi secret qua biến môi trường hoặc verify thất bại, cập nhật trạng thái finding thành đã khắc phục hoặc không tái lập được.
+- Authentication Bypass.
+- Privilege Escalation.
+- Truy cập, sửa đổi hoặc xóa dữ liệu trái phép nếu token giả được backend tin tưởng.
 
-### 10.3. Đối chiếu cleartext HTTP request
+###### 4. Khuyến nghị khắc phục
 
-Semgrep finding:
+Không lưu secret trong source code. Chuyển `SECRET_KEY` sang biến môi trường như `process.env.JWT_SECRET`, không commit `.env`, và rotate toàn bộ token cũ sau khi thay secret.
 
-- Rule: `typescript.react.security.react-insecure-request.react-insecure-request`
-- File: `frontend-mobile/App.js`
-- OWASP: A04 Cryptographic Failures
+Ý nghĩa của testcase này là: AI triage đã chỉ ra root cause nằm ở secret hardcode và mô tả rõ đường khai thác bằng forged JWT; vì vậy testcase tập trung vào việc chứng minh forged token có được backend chấp nhận hay không.
 
-Kiểm tra runtime:
+### 10.2. Ví dụ testcase ZAP
 
-```bash
-curl -i http://localhost:3000/api/users/me \
-  -H "Authorization: Bearer $TOKEN"
+Ví dụ dưới đây lấy từ testcase đầu tiên trong `src/zap/output/markdown/zap_test_cases.md`, tương ứng với alert `ZAP-001`.
+
+Testcase mẫu:
+
+##### TC-ZAP-001
+
+- Alert liên quan: ZAP-001
+- Mục tiêu test: Kiểm chứng alert `CSP: Failure to Define Directive with No Fallback` bằng cách replay request runtime mà ZAP đã ghi nhận.
+- Source JSON: `backend_basic.json`
+
+###### Input
+
+```http
+GET http://localhost:3000
 ```
 
-Kết quả cần ghi nhận:
-
-- Nếu ứng dụng đang chạy production mà vẫn dùng `http://`, đây là rủi ro truyền dữ liệu nhạy cảm không mã hóa.
-- Nếu chỉ là lab local, đánh dấu là finding hợp lệ về pattern nhưng cần phân loại theo môi trường.
-- Trong ZAP report, đối chiếu alert `HTTP Only Site` hoặc các request đi qua `http://localhost:3000`.
-
-### 10.4. Đối chiếu CORS/Cross-Domain Misconfiguration
-
-ZAP thường phát hiện `Access-Control-Allow-Origin: *` trên backend.
-
-```bash
-curl -i http://localhost:3000/api/products?search=iphone \
-  -H "Origin: http://evil.local"
+Headers:
+```http
+GET http://localhost:3000 HTTP/1.1
+host: localhost:3000
+user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36
+pragma: no-cache
+cache-control: no-cache
+Authorization: Bearer <token_da_zap_ghi_nhan>
 ```
 
-Kết quả cần ghi nhận:
-
-- Nếu response có `Access-Control-Allow-Origin: *`, alert ZAP có evidence rõ.
-- Nếu endpoint trả dữ liệu công khai, impact thấp hơn endpoint trả dữ liệu cá nhân.
-- Nếu endpoint cần đăng nhập, chạy lại với `Authorization: Bearer $TOKEN` để đánh giá rủi ro đọc dữ liệu từ origin lạ.
-
-### 10.5. Đối chiếu SQL Injection trên search sản phẩm
-
-Trong tài liệu Semgrep, nhóm từng ghi nhận trường hợp SQL Injection ở `backend/server.js` có thể bị ruleset mặc định bỏ sót. Vì vậy cần test thủ công:
-
-```bash
-curl -i "http://localhost:3000/api/products?search=' OR '1'='1"
+Payload:
+```json
+{}
 ```
 
-Kết quả cần ghi nhận:
+###### Thao tác
 
-- Nếu response trả danh sách sản phẩm bất thường hoặc lỗi SQL, cần mở source kiểm tra query có nối chuỗi trực tiếp không.
-- Nếu response được parameterize và không thay đổi bất thường, ghi nhận là không tái lập được.
-- So sánh với ZAP: active scan có thể tạo alert Injection hoặc không; nếu ZAP không báo nhưng test tay tái lập được, đó là false negative của DAST.
+1. Đảm bảo backend/frontend EShop và ngữ cảnh auth tương ứng đang chạy.
+2. Chuẩn bị token, cookie hoặc session nếu request của ZAP có header xác thực.
+3. Replay request theo method, URL, headers từ ZAP.
+4. Ghi nhận status code, response headers và response body.
+5. So sánh kết quả mới với evidence ZAP trong triage report.
 
-### 10.6. Mẫu bảng đối chiếu
+###### Kết quả cần ghi nhận
 
-| Finding/Alert        | Nguồn         | Endpoint/File                                     | Evidence runtime                                            | Kết luận                                      |
-| -------------------- | ------------- | ------------------------------------------------- | ----------------------------------------------------------- | --------------------------------------------- |
-| Hardcoded JWT Secret | Semgrep       | `backend/server.js`, `/api/users/me`              | Token hợp lệ/giả mạo được backend chấp nhận hoặc bị từ chối | Confirmed / Fixed / Needs Verification        |
-| Cleartext HTTP       | Semgrep + ZAP | `frontend-mobile/App.js`, `http://localhost:3000` | Request dùng HTTP, ZAP có`HTTP Only Site`                   | Confirmed / Dev-only                          |
-| CORS`*`              | ZAP           | `/api/products?search=`                           | Header`Access-Control-Allow-Origin`                         | Confirmed / Low impact / Needs Auth Check     |
-| SQL Injection search | Manual + ZAP  | `/api/products?search=`                           | Response bất thường hoặc lỗi SQL                            | Confirmed / False Negative / Not Reproducible |
+- Nếu còn lỗi: Response vẫn chứa evidence `default-src 'none'` hoặc hành vi runtime vẫn khớp alert `CSP: Failure to Define Directive with No Fallback`.
+- Nếu đã an toàn: Response không còn evidence liên quan hoặc server trả trạng thái chặn/hardening phù hợp.
+
+###### Trạng thái
+
+Chưa kiểm chứng
+
+Phần AI triage liên quan:
+
+##### Trích AI triage cho ZAP-001
+
+###### ZAP-001: CSP: Failure to Define Directive with No Fallback
+
+- Phân loại AI: True Positive
+- Risk: Medium
+- Confidence: High
+- Evidence đại diện: `Content-Security-Policy: default-src 'none'`
+
+###### Lý do phân loại
+
+- Các response quan sát được đều trả về header `Content-Security-Policy` với giá trị `default-src 'none'`.
+- AI triage đánh giá policy CSP hiện tại chưa định nghĩa đầy đủ các directive cần thiết, nên đây là vấn đề cấu hình có thật ở cấp hệ thống.
+
+###### Tác động thực tế
+
+- CSP cấu hình chưa đầy đủ có thể làm giảm hiệu quả phòng vệ trước XSS.
+- Vấn đề ảnh hưởng rộng vì cùng một pattern xuất hiện trên nhiều endpoint/response.
+
+###### Khuyến nghị khắc phục
+
+- Bổ sung đầy đủ các directive như `script-src`, `style-src`, `img-src`, `connect-src`.
+- Kiểm tra lại CSP ở các response chính sau khi sửa để xác nhận policy đã chặt chẽ và nhất quán.
+
+Ý nghĩa của testcase này là: AI triage đã xác định đây là `True Positive` dựa trên runtime evidence mà ZAP thu được, nên testcase tập trung vào việc replay lại chính request đó để kiểm tra response hiện tại còn chứa CSP evidence tương tự hay không.
 
 ## 11. Ranh giới trách nhiệm: Tester vs Developer vs SOC
 
