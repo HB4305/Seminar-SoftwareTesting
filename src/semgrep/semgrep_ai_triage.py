@@ -593,10 +593,23 @@ def build_security_tag_lines(record: FindingRecord) -> List[str]:
 
 
 def format_ai_output_for_triage_report(ai_output: str) -> str:
+    ai_output = (ai_output or "").strip()
+    fence_match = re.match(r"^```(?:markdown|md)\s*\n(?P<body>.*)\n```\s*$", ai_output, re.DOTALL | re.IGNORECASE)
+    if fence_match:
+        ai_output = fence_match.group("body").strip()
+
     formatted_lines = []
     in_code_block = False
-    for line in (ai_output or "").splitlines():
-        if line.lstrip().startswith("```"):
+    in_markdown_fence = False
+    for line in ai_output.splitlines():
+        stripped_line = line.lstrip()
+        if re.match(r"^```(?:markdown|md)\s*$", stripped_line, re.IGNORECASE):
+            in_markdown_fence = True
+            continue
+        if in_markdown_fence and stripped_line == "```":
+            in_markdown_fence = False
+            continue
+        if stripped_line.startswith("```"):
             in_code_block = not in_code_block
             formatted_lines.append(line)
             continue
