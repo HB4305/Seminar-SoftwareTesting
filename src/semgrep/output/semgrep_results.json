@@ -1,0 +1,566 @@
+{
+  "version": "1.170.1",
+  "results": [
+    {
+      "check_id": "javascript.jsonwebtoken.security.jwt-hardcode.hardcoded-jwt-secret",
+      "path": "eshop-sut\\backend\\server.js",
+      "start": { "line": 51, "col": 64, "offset": 1638 },
+      "end": { "line": 51, "col": 74, "offset": 1648 },
+      "extra": {
+        "message": "A hard-coded credential was detected. It is not recommended to store credentials in source-code, as this risks secrets being leaked and used by either an internal or external malicious adversary. It is recommended to use environment variables to securely provide credentials or retrieve credentials from a secure vault or HSM (Hardware Security Module).",
+        "metadata": {
+          "cwe": ["CWE-798: Use of Hard-coded Credentials"],
+          "references": [
+            "https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html"
+          ],
+          "owasp": [
+            "A07:2021 - Identification and Authentication Failures",
+            "A07:2025 - Authentication Failures"
+          ],
+          "asvs": {
+            "control_id": "3.5.2 Static API keys or secret",
+            "control_url": "https://github.com/OWASP/ASVS/blob/master/4.0/en/0x12-V3-Session-management.md#v35-token-based-session-management",
+            "section": "V3: Session Management Verification Requirements",
+            "version": "4"
+          },
+          "category": "security",
+          "technology": ["jwt", "javascript", "secrets"],
+          "cwe2022-top25": true,
+          "cwe2021-top25": true,
+          "subcategory": ["vuln"],
+          "likelihood": "HIGH",
+          "impact": "MEDIUM",
+          "confidence": "HIGH",
+          "license": "Semgrep Rules License v1.0. For more details, visit semgrep.dev/legal/rules-license",
+          "vulnerability_class": ["Hard-coded Secrets"],
+          "source": "https://semgrep.dev/r/javascript.jsonwebtoken.security.jwt-hardcode.hardcoded-jwt-secret",
+          "shortlink": "https://sg.run/4xN9"
+        },
+        "severity": "WARNING",
+        "fingerprint": "requires login",
+        "lines": "requires login",
+        "validation_state": "NO_VALIDATOR",
+        "engine_kind": "OSS"
+      }
+    },
+    {
+      "check_id": "javascript.jsonwebtoken.security.jwt-hardcode.hardcoded-jwt-secret",
+      "path": "eshop-sut\\backend\\server.js",
+      "start": { "line": 105, "col": 21, "offset": 3544 },
+      "end": { "line": 105, "col": 31, "offset": 3554 },
+      "extra": {
+        "message": "A hard-coded credential was detected. It is not recommended to store credentials in source-code, as this risks secrets being leaked and used by either an internal or external malicious adversary. It is recommended to use environment variables to securely provide credentials or retrieve credentials from a secure vault or HSM (Hardware Security Module).",
+        "metadata": {
+          "cwe": ["CWE-798: Use of Hard-coded Credentials"],
+          "references": [
+            "https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html"
+          ],
+          "owasp": [
+            "A07:2021 - Identification and Authentication Failures",
+            "A07:2025 - Authentication Failures"
+          ],
+          "asvs": {
+            "control_id": "3.5.2 Static API keys or secret",
+            "control_url": "https://github.com/OWASP/ASVS/blob/master/4.0/en/0x12-V3-Session-management.md#v35-token-based-session-management",
+            "section": "V3: Session Management Verification Requirements",
+            "version": "4"
+          },
+          "category": "security",
+          "technology": ["jwt", "javascript", "secrets"],
+          "cwe2022-top25": true,
+          "cwe2021-top25": true,
+          "subcategory": ["vuln"],
+          "likelihood": "HIGH",
+          "impact": "MEDIUM",
+          "confidence": "HIGH",
+          "license": "Semgrep Rules License v1.0. For more details, visit semgrep.dev/legal/rules-license",
+          "vulnerability_class": ["Hard-coded Secrets"],
+          "source": "https://semgrep.dev/r/javascript.jsonwebtoken.security.jwt-hardcode.hardcoded-jwt-secret",
+          "shortlink": "https://sg.run/4xN9"
+        },
+        "severity": "WARNING",
+        "fingerprint": "requires login",
+        "lines": "requires login",
+        "validation_state": "NO_VALIDATOR",
+        "engine_kind": "OSS"
+      }
+    },
+    {
+      "check_id": "javascript.jsonwebtoken.security.jwt-hardcode.hardcoded-jwt-secret",
+      "path": "eshop-sut\\backend\\test_profile.js",
+      "start": { "line": 4, "col": 49, "offset": 121 },
+      "end": { "line": 4, "col": 91, "offset": 163 },
+      "extra": {
+        "message": "A hard-coded credential was detected. It is not recommended to store credentials in source-code, as this risks secrets being leaked and used by either an internal or external malicious adversary. It is recommended to use environment variables to securely provide credentials or retrieve credentials from a secure vault or HSM (Hardware Security Module).",
+        "metadata": {
+          "cwe": ["CWE-798: Use of Hard-coded Credentials"],
+          "references": [
+            "https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html"
+          ],
+          "owasp": [
+            "A07:2021 - Identification and Authentication Failures",
+            "A07:2025 - Authentication Failures"
+          ],
+          "asvs": {
+            "control_id": "3.5.2 Static API keys or secret",
+            "control_url": "https://github.com/OWASP/ASVS/blob/master/4.0/en/0x12-V3-Session-management.md#v35-token-based-session-management",
+            "section": "V3: Session Management Verification Requirements",
+            "version": "4"
+          },
+          "category": "security",
+          "technology": ["jwt", "javascript", "secrets"],
+          "cwe2022-top25": true,
+          "cwe2021-top25": true,
+          "subcategory": ["vuln"],
+          "likelihood": "HIGH",
+          "impact": "MEDIUM",
+          "confidence": "HIGH",
+          "license": "Semgrep Rules License v1.0. For more details, visit semgrep.dev/legal/rules-license",
+          "vulnerability_class": ["Hard-coded Secrets"],
+          "source": "https://semgrep.dev/r/javascript.jsonwebtoken.security.jwt-hardcode.hardcoded-jwt-secret",
+          "shortlink": "https://sg.run/4xN9"
+        },
+        "severity": "WARNING",
+        "fingerprint": "requires login",
+        "lines": "requires login",
+        "validation_state": "NO_VALIDATOR",
+        "engine_kind": "OSS"
+      }
+    },
+    {
+      "check_id": "typescript.react.security.react-insecure-request.react-insecure-request",
+      "path": "eshop-sut\\frontend-mobile\\App.js",
+      "start": { "line": 174, "col": 30, "offset": 5282 },
+      "end": { "line": 176, "col": 9, "offset": 5393 },
+      "extra": {
+        "message": "Unencrypted request over HTTP detected.",
+        "metadata": {
+          "vulnerability": "Insecure Transport",
+          "owasp": [
+            "A03:2017 - Sensitive Data Exposure",
+            "A02:2021 - Cryptographic Failures",
+            "A04:2025 - Cryptographic Failures"
+          ],
+          "cwe": ["CWE-319: Cleartext Transmission of Sensitive Information"],
+          "references": ["https://www.npmjs.com/package/axios"],
+          "category": "security",
+          "technology": ["react"],
+          "subcategory": ["vuln"],
+          "likelihood": "LOW",
+          "impact": "MEDIUM",
+          "confidence": "MEDIUM",
+          "license": "Semgrep Rules License v1.0. For more details, visit semgrep.dev/legal/rules-license",
+          "vulnerability_class": ["Mishandled Sensitive Information"],
+          "source": "https://semgrep.dev/r/typescript.react.security.react-insecure-request.react-insecure-request",
+          "shortlink": "https://sg.run/1n0b"
+        },
+        "severity": "ERROR",
+        "fingerprint": "requires login",
+        "lines": "requires login",
+        "validation_state": "NO_VALIDATOR",
+        "engine_kind": "OSS"
+      }
+    },
+    {
+      "check_id": "typescript.react.security.react-insecure-request.react-insecure-request",
+      "path": "eshop-sut\\frontend-mobile\\App.js",
+      "start": { "line": 189, "col": 30, "offset": 5765 },
+      "end": { "line": 193, "col": 9, "offset": 5937 },
+      "extra": {
+        "message": "Unencrypted request over HTTP detected.",
+        "metadata": {
+          "vulnerability": "Insecure Transport",
+          "owasp": [
+            "A03:2017 - Sensitive Data Exposure",
+            "A02:2021 - Cryptographic Failures",
+            "A04:2025 - Cryptographic Failures"
+          ],
+          "cwe": ["CWE-319: Cleartext Transmission of Sensitive Information"],
+          "references": ["https://www.npmjs.com/package/axios"],
+          "category": "security",
+          "technology": ["react"],
+          "subcategory": ["vuln"],
+          "likelihood": "LOW",
+          "impact": "MEDIUM",
+          "confidence": "MEDIUM",
+          "license": "Semgrep Rules License v1.0. For more details, visit semgrep.dev/legal/rules-license",
+          "vulnerability_class": ["Mishandled Sensitive Information"],
+          "source": "https://semgrep.dev/r/typescript.react.security.react-insecure-request.react-insecure-request",
+          "shortlink": "https://sg.run/1n0b"
+        },
+        "severity": "ERROR",
+        "fingerprint": "requires login",
+        "lines": "requires login",
+        "validation_state": "NO_VALIDATOR",
+        "engine_kind": "OSS"
+      }
+    },
+    {
+      "check_id": "typescript.react.security.react-insecure-request.react-insecure-request",
+      "path": "eshop-sut\\frontend-mobile\\App.js",
+      "start": { "line": 222, "col": 30, "offset": 6902 },
+      "end": { "line": 230, "col": 9, "offset": 7173 },
+      "extra": {
+        "message": "Unencrypted request over HTTP detected.",
+        "metadata": {
+          "vulnerability": "Insecure Transport",
+          "owasp": [
+            "A03:2017 - Sensitive Data Exposure",
+            "A02:2021 - Cryptographic Failures",
+            "A04:2025 - Cryptographic Failures"
+          ],
+          "cwe": ["CWE-319: Cleartext Transmission of Sensitive Information"],
+          "references": ["https://www.npmjs.com/package/axios"],
+          "category": "security",
+          "technology": ["react"],
+          "subcategory": ["vuln"],
+          "likelihood": "LOW",
+          "impact": "MEDIUM",
+          "confidence": "MEDIUM",
+          "license": "Semgrep Rules License v1.0. For more details, visit semgrep.dev/legal/rules-license",
+          "vulnerability_class": ["Mishandled Sensitive Information"],
+          "source": "https://semgrep.dev/r/typescript.react.security.react-insecure-request.react-insecure-request",
+          "shortlink": "https://sg.run/1n0b"
+        },
+        "severity": "ERROR",
+        "fingerprint": "requires login",
+        "lines": "requires login",
+        "validation_state": "NO_VALIDATOR",
+        "engine_kind": "OSS"
+      }
+    },
+    {
+      "check_id": "typescript.react.security.react-insecure-request.react-insecure-request",
+      "path": "eshop-sut\\frontend-mobile\\App.js",
+      "start": { "line": 244, "col": 30, "offset": 7680 },
+      "end": { "line": 248, "col": 9, "offset": 7865 },
+      "extra": {
+        "message": "Unencrypted request over HTTP detected.",
+        "metadata": {
+          "vulnerability": "Insecure Transport",
+          "owasp": [
+            "A03:2017 - Sensitive Data Exposure",
+            "A02:2021 - Cryptographic Failures",
+            "A04:2025 - Cryptographic Failures"
+          ],
+          "cwe": ["CWE-319: Cleartext Transmission of Sensitive Information"],
+          "references": ["https://www.npmjs.com/package/axios"],
+          "category": "security",
+          "technology": ["react"],
+          "subcategory": ["vuln"],
+          "likelihood": "LOW",
+          "impact": "MEDIUM",
+          "confidence": "MEDIUM",
+          "license": "Semgrep Rules License v1.0. For more details, visit semgrep.dev/legal/rules-license",
+          "vulnerability_class": ["Mishandled Sensitive Information"],
+          "source": "https://semgrep.dev/r/typescript.react.security.react-insecure-request.react-insecure-request",
+          "shortlink": "https://sg.run/1n0b"
+        },
+        "severity": "ERROR",
+        "fingerprint": "requires login",
+        "lines": "requires login",
+        "validation_state": "NO_VALIDATOR",
+        "engine_kind": "OSS"
+      }
+    },
+    {
+      "check_id": "typescript.react.security.react-insecure-request.react-insecure-request",
+      "path": "eshop-sut\\frontend-mobile\\App.js",
+      "start": { "line": 272, "col": 30, "offset": 8722 },
+      "end": { "line": 276, "col": 9, "offset": 8931 },
+      "extra": {
+        "message": "Unencrypted request over HTTP detected.",
+        "metadata": {
+          "vulnerability": "Insecure Transport",
+          "owasp": [
+            "A03:2017 - Sensitive Data Exposure",
+            "A02:2021 - Cryptographic Failures",
+            "A04:2025 - Cryptographic Failures"
+          ],
+          "cwe": ["CWE-319: Cleartext Transmission of Sensitive Information"],
+          "references": ["https://www.npmjs.com/package/axios"],
+          "category": "security",
+          "technology": ["react"],
+          "subcategory": ["vuln"],
+          "likelihood": "LOW",
+          "impact": "MEDIUM",
+          "confidence": "MEDIUM",
+          "license": "Semgrep Rules License v1.0. For more details, visit semgrep.dev/legal/rules-license",
+          "vulnerability_class": ["Mishandled Sensitive Information"],
+          "source": "https://semgrep.dev/r/typescript.react.security.react-insecure-request.react-insecure-request",
+          "shortlink": "https://sg.run/1n0b"
+        },
+        "severity": "ERROR",
+        "fingerprint": "requires login",
+        "lines": "requires login",
+        "validation_state": "NO_VALIDATOR",
+        "engine_kind": "OSS"
+      }
+    },
+    {
+      "check_id": "typescript.react.security.react-insecure-request.react-insecure-request",
+      "path": "eshop-sut\\frontend-mobile\\App.js",
+      "start": { "line": 296, "col": 30, "offset": 9549 },
+      "end": { "line": 303, "col": 9, "offset": 9802 },
+      "extra": {
+        "message": "Unencrypted request over HTTP detected.",
+        "metadata": {
+          "vulnerability": "Insecure Transport",
+          "owasp": [
+            "A03:2017 - Sensitive Data Exposure",
+            "A02:2021 - Cryptographic Failures",
+            "A04:2025 - Cryptographic Failures"
+          ],
+          "cwe": ["CWE-319: Cleartext Transmission of Sensitive Information"],
+          "references": ["https://www.npmjs.com/package/axios"],
+          "category": "security",
+          "technology": ["react"],
+          "subcategory": ["vuln"],
+          "likelihood": "LOW",
+          "impact": "MEDIUM",
+          "confidence": "MEDIUM",
+          "license": "Semgrep Rules License v1.0. For more details, visit semgrep.dev/legal/rules-license",
+          "vulnerability_class": ["Mishandled Sensitive Information"],
+          "source": "https://semgrep.dev/r/typescript.react.security.react-insecure-request.react-insecure-request",
+          "shortlink": "https://sg.run/1n0b"
+        },
+        "severity": "ERROR",
+        "fingerprint": "requires login",
+        "lines": "requires login",
+        "validation_state": "NO_VALIDATOR",
+        "engine_kind": "OSS"
+      }
+    },
+    {
+      "check_id": "typescript.react.security.react-insecure-request.react-insecure-request",
+      "path": "eshop-sut\\frontend-mobile\\App.js",
+      "start": { "line": 362, "col": 30, "offset": 11626 },
+      "end": { "line": 370, "col": 9, "offset": 11922 },
+      "extra": {
+        "message": "Unencrypted request over HTTP detected.",
+        "metadata": {
+          "vulnerability": "Insecure Transport",
+          "owasp": [
+            "A03:2017 - Sensitive Data Exposure",
+            "A02:2021 - Cryptographic Failures",
+            "A04:2025 - Cryptographic Failures"
+          ],
+          "cwe": ["CWE-319: Cleartext Transmission of Sensitive Information"],
+          "references": ["https://www.npmjs.com/package/axios"],
+          "category": "security",
+          "technology": ["react"],
+          "subcategory": ["vuln"],
+          "likelihood": "LOW",
+          "impact": "MEDIUM",
+          "confidence": "MEDIUM",
+          "license": "Semgrep Rules License v1.0. For more details, visit semgrep.dev/legal/rules-license",
+          "vulnerability_class": ["Mishandled Sensitive Information"],
+          "source": "https://semgrep.dev/r/typescript.react.security.react-insecure-request.react-insecure-request",
+          "shortlink": "https://sg.run/1n0b"
+        },
+        "severity": "ERROR",
+        "fingerprint": "requires login",
+        "lines": "requires login",
+        "validation_state": "NO_VALIDATOR",
+        "engine_kind": "OSS"
+      }
+    },
+    {
+      "check_id": "typescript.react.security.react-insecure-request.react-insecure-request",
+      "path": "eshop-sut\\frontend-mobile\\App.js",
+      "start": { "line": 384, "col": 30, "offset": 12424 },
+      "end": { "line": 395, "col": 9, "offset": 12835 },
+      "extra": {
+        "message": "Unencrypted request over HTTP detected.",
+        "metadata": {
+          "vulnerability": "Insecure Transport",
+          "owasp": [
+            "A03:2017 - Sensitive Data Exposure",
+            "A02:2021 - Cryptographic Failures",
+            "A04:2025 - Cryptographic Failures"
+          ],
+          "cwe": ["CWE-319: Cleartext Transmission of Sensitive Information"],
+          "references": ["https://www.npmjs.com/package/axios"],
+          "category": "security",
+          "technology": ["react"],
+          "subcategory": ["vuln"],
+          "likelihood": "LOW",
+          "impact": "MEDIUM",
+          "confidence": "MEDIUM",
+          "license": "Semgrep Rules License v1.0. For more details, visit semgrep.dev/legal/rules-license",
+          "vulnerability_class": ["Mishandled Sensitive Information"],
+          "source": "https://semgrep.dev/r/typescript.react.security.react-insecure-request.react-insecure-request",
+          "shortlink": "https://sg.run/1n0b"
+        },
+        "severity": "ERROR",
+        "fingerprint": "requires login",
+        "lines": "requires login",
+        "validation_state": "NO_VALIDATOR",
+        "engine_kind": "OSS"
+      }
+    },
+    {
+      "check_id": "typescript.react.security.react-insecure-request.react-insecure-request",
+      "path": "eshop-sut\\frontend-mobile\\App.js",
+      "start": { "line": 400, "col": 15, "offset": 13044 },
+      "end": { "line": 407, "col": 11, "offset": 13321 },
+      "extra": {
+        "message": "Unencrypted request over HTTP detected.",
+        "metadata": {
+          "vulnerability": "Insecure Transport",
+          "owasp": [
+            "A03:2017 - Sensitive Data Exposure",
+            "A02:2021 - Cryptographic Failures",
+            "A04:2025 - Cryptographic Failures"
+          ],
+          "cwe": ["CWE-319: Cleartext Transmission of Sensitive Information"],
+          "references": ["https://www.npmjs.com/package/axios"],
+          "category": "security",
+          "technology": ["react"],
+          "subcategory": ["vuln"],
+          "likelihood": "LOW",
+          "impact": "MEDIUM",
+          "confidence": "MEDIUM",
+          "license": "Semgrep Rules License v1.0. For more details, visit semgrep.dev/legal/rules-license",
+          "vulnerability_class": ["Mishandled Sensitive Information"],
+          "source": "https://semgrep.dev/r/typescript.react.security.react-insecure-request.react-insecure-request",
+          "shortlink": "https://sg.run/1n0b"
+        },
+        "severity": "ERROR",
+        "fingerprint": "requires login",
+        "lines": "requires login",
+        "validation_state": "NO_VALIDATOR",
+        "engine_kind": "OSS"
+      }
+    }
+  ],
+  "errors": [],
+  "paths": {
+    "scanned": [
+      "eshop-sut\\api_specification.md",
+      "eshop-sut\\backend\\database.js",
+      "eshop-sut\\backend\\database.sqlite",
+      "eshop-sut\\backend\\package-lock.json",
+      "eshop-sut\\backend\\package.json",
+      "eshop-sut\\backend\\server.js",
+      "eshop-sut\\backend\\test_profile.js",
+      "eshop-sut\\frontend-admin\\.gitignore",
+      "eshop-sut\\frontend-admin\\eslint.config.js",
+      "eshop-sut\\frontend-admin\\index.html",
+      "eshop-sut\\frontend-admin\\package-lock.json",
+      "eshop-sut\\frontend-admin\\package.json",
+      "eshop-sut\\frontend-admin\\postcss.config.js",
+      "eshop-sut\\frontend-admin\\public\\favicon.svg",
+      "eshop-sut\\frontend-admin\\public\\icons.svg",
+      "eshop-sut\\frontend-admin\\README.md",
+      "eshop-sut\\frontend-admin\\src\\App.css",
+      "eshop-sut\\frontend-admin\\src\\App.jsx",
+      "eshop-sut\\frontend-admin\\src\\assets\\react.svg",
+      "eshop-sut\\frontend-admin\\src\\assets\\vite.svg",
+      "eshop-sut\\frontend-admin\\src\\index.css",
+      "eshop-sut\\frontend-admin\\src\\main.jsx",
+      "eshop-sut\\frontend-admin\\tailwind.config.js",
+      "eshop-sut\\frontend-admin\\vite.config.js",
+      "eshop-sut\\frontend-mobile\\.gitignore",
+      "eshop-sut\\frontend-mobile\\App.js",
+      "eshop-sut\\frontend-mobile\\app.json",
+      "eshop-sut\\frontend-mobile\\index.js",
+      "eshop-sut\\frontend-mobile\\package-lock.json",
+      "eshop-sut\\frontend-mobile\\package.json",
+      "eshop-sut\\frontend-web\\.gitignore",
+      "eshop-sut\\frontend-web\\eslint.config.js",
+      "eshop-sut\\frontend-web\\index.html",
+      "eshop-sut\\frontend-web\\package-lock.json",
+      "eshop-sut\\frontend-web\\package.json",
+      "eshop-sut\\frontend-web\\postcss.config.js",
+      "eshop-sut\\frontend-web\\public\\favicon.svg",
+      "eshop-sut\\frontend-web\\public\\icons.svg",
+      "eshop-sut\\frontend-web\\README.md",
+      "eshop-sut\\frontend-web\\src\\App.css",
+      "eshop-sut\\frontend-web\\src\\App.jsx",
+      "eshop-sut\\frontend-web\\src\\assets\\react.svg",
+      "eshop-sut\\frontend-web\\src\\assets\\vite.svg",
+      "eshop-sut\\frontend-web\\src\\context\\AuthContext.jsx",
+      "eshop-sut\\frontend-web\\src\\context\\CartContext.jsx",
+      "eshop-sut\\frontend-web\\src\\index.css",
+      "eshop-sut\\frontend-web\\src\\main.jsx",
+      "eshop-sut\\frontend-web\\src\\pages\\Cart.jsx",
+      "eshop-sut\\frontend-web\\src\\pages\\Checkout.jsx",
+      "eshop-sut\\frontend-web\\src\\pages\\ForgotPassword.jsx",
+      "eshop-sut\\frontend-web\\src\\pages\\Home.jsx",
+      "eshop-sut\\frontend-web\\src\\pages\\Login.jsx",
+      "eshop-sut\\frontend-web\\src\\pages\\ProductDetail.jsx",
+      "eshop-sut\\frontend-web\\src\\pages\\Profile.jsx",
+      "eshop-sut\\frontend-web\\src\\pages\\Register.jsx",
+      "eshop-sut\\frontend-web\\tailwind.config.js",
+      "eshop-sut\\frontend-web\\vite.config.js",
+      "eshop-sut\\package-lock.json",
+      "eshop-sut\\README.md",
+      "eshop-sut\\run_servers.sh",
+      "eshop-sut\\setup_guide.md"
+    ]
+  },
+  "time": {
+    "rules": [],
+    "rules_parse_time": 0.24551987648010254,
+    "profiling_times": {
+      "config_time": 2.1628546714782715,
+      "core_time": 5.368847131729126,
+      "ignores_time": 0.0005903244018554688,
+      "total_time": 7.554360628128052
+    },
+    "parsing_time": {
+      "total_time": 0.0,
+      "per_file_time": { "mean": 0.0, "std_dev": 0.0 },
+      "very_slow_stats": { "time_ratio": 0.0, "count_ratio": 0.0 },
+      "very_slow_files": []
+    },
+    "scanning_time": {
+      "total_time": 4.160083532333374,
+      "per_file_time": {
+        "mean": 0.025679527977366508,
+        "std_dev": 0.005575735905013899
+      },
+      "very_slow_stats": { "time_ratio": 0.0, "count_ratio": 0.0 },
+      "very_slow_files": []
+    },
+    "matching_time": {
+      "total_time": 0.0,
+      "per_file_and_rule_time": { "mean": 0.0, "std_dev": 0.0 },
+      "very_slow_stats": { "time_ratio": 0.0, "count_ratio": 0.0 },
+      "very_slow_rules_on_files": []
+    },
+    "tainting_time": {
+      "total_time": 0.0,
+      "per_def_and_rule_time": { "mean": 0.0, "std_dev": 0.0 },
+      "very_slow_stats": { "time_ratio": 0.0, "count_ratio": 0.0 },
+      "very_slow_rules_on_defs": []
+    },
+    "fixpoint_timeouts": [
+      {
+        "error_type": "Fixpoint timeout",
+        "severity": "warn",
+        "message": "Fixpoint timeout while performing taint analysis at eshop-sut\\frontend-web\\src\\pages\\Profile.jsx:5:24 [rules: 1, first: javascript.express.security.x-frame-options-misconfiguration.x-frame-options-misconfiguration]",
+        "location": {
+          "path": "eshop-sut\\frontend-web\\src\\pages\\Profile.jsx",
+          "start": { "line": 5, "col": 25, "offset": 158 },
+          "end": { "line": 5, "col": 32, "offset": 165 }
+        }
+      }
+    ],
+    "prefiltering": {
+      "project_level_time": 0.0,
+      "file_level_time": 0.0,
+      "rules_with_project_prefilters_ratio": 0.0,
+      "rules_with_file_prefilters_ratio": 0.9852451213707758,
+      "rules_selected_ratio": 0.058067586863398385,
+      "rules_matched_ratio": 0.058067586863398385
+    },
+    "targets": [],
+    "total_bytes": 0,
+    "max_memory_bytes": 1007601408
+  },
+  "engine_requested": "OSS",
+  "skipped_rules": [],
+  "profiling_results": []
+}

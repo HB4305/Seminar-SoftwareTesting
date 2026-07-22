@@ -66,14 +66,7 @@ semgrep --version
 Windows PowerShell:
 
 ```powershell
-python -m pip install --user pipx
-python -m pipx ensurepath
-python -m pipx install semgrep
-```
-
-Đóng và mở lại PowerShell, sau đó kiểm tra:
-
-```powershell
+python -m pip install semgrep
 semgrep --version
 ```
 
