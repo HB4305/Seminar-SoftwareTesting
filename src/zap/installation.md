@@ -66,13 +66,24 @@ sudo snap install zaproxy --classic
 zaproxy
 ```
 
-### Cách 2: Cài thủ công bằng file tải về
+### Cách 2: Cài thủ công bằng package từ trang chủ
 
-1. Tải file cài đặt phù hợp cho Linux từ trang chủ. ZAP cung cấp 2 định dạng:
+1. Vào trang [ZAP Download](https://www.zaproxy.org/download/) và tải package phù hợp:
    - **Linux Installer (.sh):** Trình cài đặt có giao diện đồ họa (GUI). File này sẽ tự động giải nén, cài đặt ZAP vào hệ thống và tạo shortcut ứng dụng. Yêu cầu hệ thống phải hỗ trợ môi trường đồ họa để có thể hiển thị cửa sổ cài đặt.
-   - **Linux Package (.tar.gz):** Bản đóng gói dạng Portable (không cần cài đặt). Bao gồm các file thực thi đã được biên dịch sẵn. Phù hợp cho mọi môi trường Linux, đặc biệt là khi không thể khởi chạy giao diện cài đặt `.sh` hoặc người dùng không có quyền quản trị (root).
-2. Nếu bạn dùng bản Installer, cần cấp quyền thực thi trước (ví dụ: `chmod +x ZAP_2.15.0_Linux_Installer.sh`), sau đó chạy file `.sh` và làm theo các bước trên màn hình.
-3. Nếu bạn dùng bản Package (.tar.gz), đầu tiên hãy giải nén file (ví dụ: `tar -xf ZAP_2.15.0_Linux.tar.gz`) và truy cập vào thư mục vừa giải nén. Khởi chạy ZAP bằng lệnh:
+   - **Linux Package (.tar.gz):** Bản portable, không cần chạy installer. Phù hợp khi không có quyền root, không muốn cài vào hệ thống, hoặc installer `.sh` không mở được.
+   - **Cross Platform Package (.zip/.tar.gz):** Bản chạy được trên Windows, Linux và macOS nếu máy đã có Java 17+.
+2. Nếu dùng bản Installer, cấp quyền thực thi trước, sau đó chạy file `.sh` và làm theo các bước trên màn hình:
+   ```bash
+   chmod +x ZAP_<version>_Linux_Installer.sh
+   ./ZAP_<version>_Linux_Installer.sh
+   ```
+3. Nếu dùng bản Linux Package, giải nén file và chạy ZAP GUI từ thư mục vừa giải nén:
+   ```bash
+   tar -xf ZAP_<version>_Linux.tar.gz
+   cd ZAP_<version>
+   ./zap.sh
+   ```
+4. Nếu dùng bản Cross Platform Package, giải nén package rồi chạy script tương ứng trong thư mục ZAP:
    ```bash
    ./zap.sh
    ```

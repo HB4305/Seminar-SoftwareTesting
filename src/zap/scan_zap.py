@@ -47,6 +47,25 @@ def _env_bool(name: str, default: bool = False) -> bool:
     return value.strip().lower() in {"1", "true", "yes", "y", "on"}
 
 
+def _positive_int(value: str) -> int:
+    """Parse số nguyên dương cho các giới hạn scan từ CLI/env."""
+    try:
+        parsed = int(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("must be a positive integer") from exc
+    if parsed <= 0:
+        raise argparse.ArgumentTypeError("must be a positive integer")
+    return parsed
+
+
+def _env_positive_int(name: str) -> int | None:
+    """Đọc số nguyên dương từ biến môi trường; bỏ qua khi chưa cấu hình."""
+    value = os.getenv(name)
+    if value is None or value.strip() == "":
+        return None
+    return _positive_int(value)
+
+
 def build_parser(load_env: bool = True) -> argparse.ArgumentParser:
     """Tạo CLI parser; test có thể bỏ qua việc load file .env local."""
     if load_env:
@@ -69,6 +88,15 @@ def build_parser(load_env: bool = True) -> argparse.ArgumentParser:
         "--ajax-spider",
         action=argparse.BooleanOptionalAction,
         default=_env_bool("ZAP_AJAX_SPIDER"),
+    )
+    parser.add_argument(
+        "--max-urls",
+        type=_positive_int,
+        default=_env_positive_int("ZAP_MAX_URLS"),
+        help=(
+            "Giới hạn số URL được phép active scan. Nếu crawl vượt giới hạn, "
+            "script bỏ qua active scan để tránh quá tải RAM."
+        ),
     )
 
     parser.add_argument(
@@ -170,12 +198,35 @@ def configure_scan_policy(zap) -> str | None:
     return None
 
 
+def _same_origin(url: str, target: str) -> bool:
+    """Kiểm tra URL có cùng scheme/host/port với target scan hay không."""
+    parsed_url = urlparse(url)
+    parsed_target = urlparse(target)
+    return (
+        parsed_url.scheme == parsed_target.scheme
+        and parsed_url.hostname == parsed_target.hostname
+        and parsed_url.port == parsed_target.port
+    )
+
+
+def discovered_target_urls(zap, target: str) -> list[str]:
+    """Lấy danh sách URL cùng origin mà ZAP đã ghi nhận cho target."""
+    try:
+        urls = zap.core.urls(baseurl=target)
+    except TypeError:
+        urls = zap.core.urls()
+    return sorted(
+        {url for url in urls if isinstance(url, str) and _same_origin(url, target)}
+    )
+
+
 def execute_scan(
     zap,
     target: str,
     context_id: str,
     ajax_spider: bool,
     scan_policy_name: str | None = None,
+    max_urls: int | None = None,
 ) -> None:
     """Chạy crawl, đợi passive scan, rồi active scan cho một target URL."""
     print(f"[*] Opening target URL: {target}")
@@ -194,6 +245,17 @@ def execute_scan(
         print("[*] Skipping AJAX Spider. Use --ajax-spider for SPA targets.")
 
     wait_for_passive_scan(zap)
+
+    if max_urls is not None:
+        discovered_urls = discovered_target_urls(zap, target)
+        discovered_count = len(discovered_urls)
+        print(f"\n[*] URL budget: discovered {discovered_count}/{max_urls} URLs for active scan.")
+        if discovered_count > max_urls:
+            print(
+                "[!] Skipping Active Scan because URL budget was exceeded. "
+                "Reduce AJAX Spider scope/time or increase --max-urls if this is expected."
+            )
+            return
 
     print("\n--- [4/4] ACTIVE SCAN ---")
     ascan_id = zap.ascan.scan(target, contextid=context_id, scanpolicyname=scan_policy_name)
@@ -282,7 +344,14 @@ def run(args) -> int:
             context_id = state.context_id
             verify_authenticated_session(args.zap_url)
         scan_policy_name = configure_scan_policy(zap)
-        execute_scan(zap, target, context_id, args.ajax_spider, scan_policy_name)
+        execute_scan(
+            zap,
+            target,
+            context_id,
+            args.ajax_spider,
+            scan_policy_name,
+            args.max_urls,
+        )
         print_alert_summary(zap, target)
         write_report(zap, args.report_format, report_path)
     except (OSError, RuntimeError, ValueError, subprocess.SubprocessError) as exc:

@@ -114,8 +114,10 @@ Bật `Forced User Mode` để ZAP tự động gắn user đã cấu hình vào
 
 ### Context
 
-Sau khi context và user đã sẵn sàng, dùng spider để khám phá endpoint trước. Nếu ứng dụng dùng nhiều JavaScript route, chạy thêm AJAX Spider. Chỉ chuyển sang Active Scan khi đã xác nhận scope đúng.
+Sau khi context và user đã sẵn sàng, dùng spider để khám phá endpoint trước. Nếu ứng dụng dùng nhiều JavaScript route, chạy thêm AJAX Spider. Chỉ chuyển sang Active Scan khi đã xác nhận scope đúng và số URL trong `Sites` không quá lớn. Với frontend SPA, nếu AJAX Spider tạo hàng trăm hoặc hàng nghìn URL, nên dừng ở passive scan rồi active scan backend/API riêng để tránh quá tải RAM.
 
 ![1784624313541](image/gui_scan/1784624313541.png)
 
 Trong cây `Contexts` hoặc `Sites`, chọn host/context cần quét, mở menu chuột phải và chọn `Spider...`. Với frontend SPA, có thể chọn `AJAX Spider...` để ZAP điều khiển trình duyệt và khám phá route động.
+
+Khi chạy bằng CLI, dùng thêm `--max-urls 300` cho frontend user/admin. Nếu số URL đã crawl vượt giới hạn này, script sẽ bỏ qua Active Scan và vẫn xuất report passive/crawl để làm evidence.

@@ -401,6 +401,20 @@ sudo snap install zaproxy --classic
 zaproxy
 ```
 
+Qua trang chủ bằng package:
+
+1. Mở https://www.zaproxy.org/download/.
+2. Tải **Linux Package** nếu dùng Linux, hoặc **Cross Platform Package** nếu cần bản chạy đa nền tảng.
+3. Giải nén file tải về, ví dụ:
+
+```bash
+tar -xf ZAP_<version>_Linux.tar.gz
+cd ZAP_<version>
+./zap.sh
+```
+
+Với Windows/macOS, trang Download cũng có installer riêng cho từng hệ điều hành. Windows và Linux package cần Java 17+ đã cài sẵn; macOS installer đã bundle Java.
+
 Nếu ZAP GUI trên Linux báo môi trường headless hoặc cửa sổ trắng, kiểm tra lại Java bản đầy đủ và dùng hướng dẫn chi tiết trong `src/zap/installation.md`.
 
 ### 7.2. Cài dependency cho CLI flow
@@ -442,9 +456,12 @@ Các biến quan trọng trong `src/zap/.env`:
 ZAP_TARGET=http://localhost:3000
 ZAP_URL=http://localhost:8090
 ZAP_AUTH_ROLE=none
+ZAP_MAX_URLS=300
 ZAP_REPORT_FORMAT=json
 ZAP_REPORT_FILE=src/zap/output/backend_basic.json
 ```
+
+`ZAP_MAX_URLS` là giới hạn số URL trước khi chạy active scan. Nếu spider/AJAX Spider crawl vượt giới hạn này, script vẫn giữ kết quả spider/passive scan và xuất report, nhưng bỏ qua active scan để tránh quá tải RAM. Có thể bỏ trống biến này nếu muốn active scan không bị giới hạn.
 
 Nếu scan có authentication, điền credential test tương ứng:
 
@@ -506,7 +523,7 @@ Flow này dùng để scan các chức năng cần đăng nhập như giỏ hàn
 6. Mở tab `Users`, tạo user test và nhập username/password.
 7. Bật `Forced User Mode` để ZAP gắn user đã cấu hình vào request trong context.
 8. Chạy `Spider...` hoặc `AJAX Spider...` trên context. Với frontend React/SPA, ưu tiên bật AJAX Spider.
-9. Chỉ chạy `Active Scan...` sau khi scope đúng và tài khoản test có thể bị thay đổi dữ liệu mà không ảnh hưởng môi trường thật.
+9. Chỉ chạy `Active Scan...` sau khi scope đúng, số URL trong `Sites` không quá lớn, và tài khoản test có thể bị thay đổi dữ liệu mà không ảnh hưởng môi trường thật. Nếu AJAX Spider tạo hàng trăm hoặc hàng nghìn URL, nên dừng ở passive scan cho frontend rồi active scan backend/API riêng.
 
 Kết quả cần lưu lại:
 
@@ -517,7 +534,7 @@ Kết quả cần lưu lại:
 
 ## 9. Chạy ZAP bằng CLI trong `src/zap`
 
-Script `src/zap/scan_zap.py` tự động kết nối ZAP daemon, chuẩn bị context/auth nếu cần, chạy spider, tùy chọn AJAX Spider, passive scan, active scan và export report. Script hiện hỗ trợ target local trên các cổng `3000`, `5173`, `5174`.
+Script `src/zap/scan_zap.py` tự động kết nối ZAP daemon, chuẩn bị context/auth nếu cần, chạy spider, tùy chọn AJAX Spider, passive scan, active scan và export report. Script hiện hỗ trợ target local trên các cổng `3000`, `5173`, `5174`. Với frontend SPA, dùng thêm `--max-urls` để đặt ngân sách URL trước active scan; nếu crawl vượt ngân sách, script sẽ bỏ qua active scan để tránh tràn RAM.
 
 ### 9.1. Chạy CLI không login
 
@@ -538,6 +555,7 @@ Frontend user public, có AJAX Spider để khám phá route SPA:
 python src/zap/scan_zap.py \
   --target http://localhost:5173 \
   --ajax-spider \
+  --max-urls 300 \
   --report-format json \
   --output-file src/zap/output/frontend_public_basic.json
 ```
@@ -556,6 +574,7 @@ python src/zap/scan_zap.py \
   --auth-role user \
   --forced-user \
   --ajax-spider \
+  --max-urls 300 \
   --report-format json \
   --output-file src/zap/output/frontend_user_basic.json
 ```
@@ -568,6 +587,7 @@ python src/zap/scan_zap.py \
   --auth-role admin \
   --forced-user \
   --ajax-spider \
+  --max-urls 300 \
   --report-format json \
   --output-file src/zap/output/frontend_admin_basic.json
 ```
@@ -585,6 +605,8 @@ python src/zap/scan_zap.py \
 
 Nếu scan authenticated báo `401/403`, kiểm tra credential trong `.env`, endpoint login `http://localhost:3000/api/login`, và endpoint verify `http://localhost:3000/api/users/me`.
 
+Khi thấy log dạng `URL budget: discovered 13055/300 URLs for active scan`, nghĩa là frontend đã crawl vượt `--max-urls`; lúc đó report vẫn có dữ liệu spider/passive scan, nhưng sẽ không có bằng chứng active scan cho target đó. Nếu cần active scan, ưu tiên chạy trên backend/API `http://localhost:3000` hoặc giảm scope frontend trước khi tăng giới hạn.
+
 ### 9.3. Ý nghĩa flag chính
 
 | Flag | Ý nghĩa |
@@ -595,6 +617,7 @@ Nếu scan authenticated báo `401/403`, kiểm tra credential trong `.env`, end
 | `--auth-role` | Chọn tài khoản seed để đăng nhập: `none`, `user`, `admin`. |
 | `--forced-user` | Bật Forced User Mode để scan dưới user đã cấu hình. |
 | `--ajax-spider` | Dùng AJAX Spider, cần thiết cho frontend React/SPA. |
+| `--max-urls` | Giới hạn số URL trước active scan; nếu vượt giới hạn thì bỏ qua active scan để tránh quá tải RAM. |
 | `--report-format` | `html` để đọc thủ công, `json` để pipeline/AI xử lý. |
 | `--output-file` | Đường dẫn file report đầu ra. |
 
@@ -791,6 +814,7 @@ Kết quả cần ghi nhận:
 - OWASP Top 10 2025: https://owasp.org/www-project-top-ten/
 - Semgrep documentation: https://semgrep.dev/docs/
 - OWASP ZAP Getting Started: https://www.zaproxy.org/getting-started/
+- OWASP ZAP Download: https://www.zaproxy.org/download/
 - OWASP ZAP Report Generation: https://www.zaproxy.org/docs/desktop/addons/report-generation/
 - Tài liệu trong repo: `docs/semgrep/`, `src/semgrep/`, `docs/zap/`, `src/zap/`, `weekly-reports/Group06_06/Group06.md`.
 
