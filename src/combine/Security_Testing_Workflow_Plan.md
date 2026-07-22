@@ -15,19 +15,19 @@ Semgrep SAST -> AI triage -> PoC/testcase -> OWASP ZAP DAST -> đối chiếu ch
 - `src/semgrep/sg_rs.json`: kết quả scan Semgrep hiện tại; số findings phụ thuộc vào nội dung mảng `results`.
 - `src/semgrep/semgrep_ai_triage.py`: script gửi toàn bộ findings Semgrep sang provider AI đã cấu hình để phân tích.
 - `src/zap/scan_zap.py`: script chạy OWASP ZAP scan và xuất report.
-- `src/zap/ai_triage_zap.py`: script parse ZAP HTML report, tạo AI/offline triage markdown và block cho submission.
-- `src/zap/test_ai_triage_zap.py`: unit test cho parser và renderer của ZAP AI triage.
+- `src/zap/zap_ai_triage.py`: script parse ZAP JSON report, tạo AI triage markdown.
+- `src/zap/test_zap_ai_triage.py`: unit test cho parser và renderer của ZAP AI triage.
 
 ## Việc cần làm tiếp theo
 
 ### 1. Ổn định test và cấu hình ZAP AI triage
 
-- Sửa `DEFAULT_MODEL` hoặc test để thống nhất model giữa `ai_triage_zap.py` và `test_ai_triage_zap.py`.
+- Sửa `DEFAULT_MODEL` hoặc test để thống nhất model giữa `zap_ai_triage.py` và `test_zap_ai_triage.py`.
 - Sửa kỳ vọng của `resolve_output_path()` để thống nhất dùng path tuyệt đối hoặc tương đối.
 - Chạy lại:
 
 ```bash
-rtk python -m unittest src/zap/test_ai_triage_zap.py
+python3 -m unittest src/zap/test_zap_ai_triage.py
 ```
 
 ### 2. Mở rộng Semgrep AI triage

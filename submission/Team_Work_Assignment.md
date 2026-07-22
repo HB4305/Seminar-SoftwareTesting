@@ -84,8 +84,8 @@ Output Pha 1 phải đủ 3 phần để các thành viên khác dùng lại ở
 <!-- ZAP_AI_TRIAGE_START -->
 ### AI-Triage cho ZAP Track
 
-- Input: `docs/zap/output/2026-06-29-ZAP-Report-.html`
-- Tool: OWASP ZAP report + Gemini/offline AI triage script `docs/zap/ai_triage_zap.py`
+- Input: `src/zap/output/backend_basic.json`
+- Tool: OWASP ZAP report + Gemini/offline AI triage script `src/zap/zap_ai_triage.py`
 - Tổng alert đã parse: 12
 - High: 1
 - Medium: 3
@@ -111,8 +111,8 @@ PoC/reproducer ưu tiên:
 - Actual theo ZAP: payload có thể kích hoạt script trong browser.
 
 Testcase/evidence cần nộp:
-- ZAP report gốc trong `docs/zap/output` hoặc `zap_report.html`.
-- AI triage output trong `docs/zap/ai_triage_output.md`.
+- ZAP report gốc trong `src/zap/output` hoặc `zap_report.json`.
+- AI triage output trong `src/zap/output/zap_ai_triage_report.md`.
 - Screenshot/log khi reproduce finding ưu tiên cao nhất.
 - Human audit note: AI chỉ hỗ trợ draft; nhóm kiểm chứng bằng request/response thật và source/runtime evidence.
 

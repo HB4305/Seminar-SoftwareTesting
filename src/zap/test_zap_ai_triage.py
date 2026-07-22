@@ -7,7 +7,7 @@ from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from openrouter_zap_json_extract import OpenRouterConfig, build_prompt, call_openrouter, config_from_env
+from zap_ai_triage import OpenRouterConfig, build_prompt, call_openrouter, config_from_env
 
 
 class OpenRouterPromptTests(unittest.TestCase):

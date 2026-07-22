@@ -661,7 +661,7 @@ Khi đọc report, nhóm cần kiểm chứng:
 
 ## 10. Sử dụng AI để phân tích ZAP report
 
-Script `src/zap/openrouter_zap_json_extract.py` đọc report JSON của ZAP, lọc alert có risk đáng chú ý, chuẩn hóa endpoint/evidence và sinh báo cáo Markdown. Script ưu tiên OpenAI nếu có `OPENAI_API_KEY`, nếu không thì dùng OpenRouter khi có `OPENROUTER_API_KEY`. Nếu API lỗi, script fallback sang local deterministic triager.
+Script `src/zap/zap_ai_triage.py` đọc report JSON của ZAP, lọc alert có risk đáng chú ý, chuẩn hóa endpoint/evidence và sinh báo cáo Markdown. Script ưu tiên OpenAI nếu có `OPENAI_API_KEY`, nếu không thì dùng OpenRouter khi có `OPENROUTER_API_KEY`. Nếu API lỗi, script fallback sang local deterministic triager.
 
 ### 10.1. Cấu hình AI provider
 
@@ -689,19 +689,19 @@ Không commit API key thật vào repository.
 ### 10.2. Chạy AI triage cho một hoặc nhiều report
 
 ```bash
-python src/zap/openrouter_zap_json_extract.py \
+python src/zap/zap_ai_triage.py \
   --input \
     src/zap/output/backend_basic.json \
     src/zap/output/frontend_user_basic.json \
     src/zap/output/frontend_admin_basic.json \
   --format markdown \
-  --output src/zap/output/zap_openrouter_result.md
+  --output src/zap/output/zap_ai_triage_report.md
 ```
 
 Nếu chỉ có một report:
 
 ```bash
-python src/zap/openrouter_zap_json_extract.py \
+python src/zap/zap_ai_triage.py \
   --input src/zap/output/backend_basic.json \
   --format markdown \
   --output src/zap/output/zap_backend_ai_triage.md

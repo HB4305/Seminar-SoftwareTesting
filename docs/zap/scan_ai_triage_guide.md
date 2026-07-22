@@ -25,51 +25,44 @@ docker run -u zap --network host -d ghcr.io/zaproxy/zaproxy:stable zap.sh -daemo
 ### 2.1 Scan backend
 
 ```bash
-python3 docs/zap/scan_zap.py --target http://localhost:3000 --report-file docs/zap/output/backend_report.html
+python3 src/zap/scan_zap.py --target http://localhost:3000 --report-format json --output-file src/zap/output/backend_basic.json
 ```
 
 ### 2.2 Scan frontend
 
 ```bash
-python3 docs/zap/scan_zap.py --target http://localhost:5173 --ajax-spider --report-file docs/zap/output/frontend_report.html
+python3 src/zap/scan_zap.py --target http://localhost:5173 --auth-role user --forced-user --ajax-spider --report-format json --output-file src/zap/output/frontend_user_basic.json
 ```
 
 ### 2.3 Scan admin
 
 ```bash
-python3 docs/zap/scan_zap.py --target http://localhost:5174 --ajax-spider --report-file docs/zap/output/admin_report.html
+python3 src/zap/scan_zap.py --target http://localhost:5174 --auth-role admin --forced-user --ajax-spider --report-format json --output-file src/zap/output/frontend_admin_basic.json
 ```
 
 ## 3. Chạy AI triage cho report
 
-### 3.1 Nếu có Gemini API key
-Tạo file docs/zap/.env với nội dung:
+### 3.1 Cấu hình AI provider
+Mở file `src/zap/.env` và điền:
 
 ```env
-GEMINI_API_KEY=your_gemini_api_key_here
+OPENROUTER_API_KEY=your_openrouter_key
 ```
 
 Sau đó chạy:
 
 ```bash
-python3 docs/zap/ai_triage_zap.py --input docs/zap/output/backend_report.html --use-ai
-```
-
-### 3.2 Nếu không dùng Gemini
-
-```bash
-python3 docs/zap/ai_triage_zap.py --input docs/zap/output/backend_report.html
+python3 src/zap/zap_ai_triage.py \
+  --input src/zap/output/backend_basic.json \
+  --format markdown \
+  --output src/zap/output/zap_ai_triage_report.md
 ```
 
 ## 4. Kết quả đầu ra
 
 Sau khi chạy xong, các file sẽ được sinh ra tại:
-- Report HTML: docs/zap/output/*.html
-- AI triage markdown: docs/zap/output/*_ai_triage.md
-
-Ví dụ:
-- docs/zap/output/backend_report.html
-- docs/zap/output/backend_report_ai_triage.md
+- Report JSON: src/zap/output/*.json
+- AI triage markdown: src/zap/output/zap_ai_triage_report.md
 
 ## 5. Ghi chú quan trọng
 

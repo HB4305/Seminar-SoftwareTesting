@@ -2,7 +2,7 @@
 """Extract OWASP ZAP JSON alerts with OpenRouter/Gemini.
 
 Usage:
-    python src/zap/openrouter_zap_json_extract.py \
+    python src/zap/zap_ai_triage.py \
       --input src/zap/output/backend_basic.json \
       --format markdown \
       --output src/zap/output/zap_openrouter_result.md

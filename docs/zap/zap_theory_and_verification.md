@@ -256,9 +256,8 @@ Mỗi target **một dòng** trong bảng evidence — không cộng chung nếu
 Triage offline (tùy chọn):
 
 ```bash
-python src/zap/ai_triage_zap.py \
-  --input src/zap/output/backend_basic.json \
-  --offline
+python src/zap/zap_ai_triage.py \
+  --input src/zap/output/backend_basic.json
 ```
 
 Output mặc định: `src/zap/output/zap_ai_triage_report.md`
