@@ -3,6 +3,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 SCRIPT_PATH = Path(__file__).with_name("semgrep_ai_triage.py")
@@ -95,6 +96,50 @@ class SemgrepAiTriageWorkflowTest(unittest.TestCase):
         self.assertEqual(settings.api_key, "openrouter-key")
         self.assertEqual(settings.base_url, "https://openrouter.ai/api/v1")
 
+    def test_get_ai_settings_reads_max_tokens_for_openrouter(self):
+        triage = load_triage_module()
+
+        settings = triage.get_ai_settings(
+            {
+                "AI_PROVIDER": "openai-compatible",
+                "AI_MODEL": "google/gemini-2.5-flash-lite",
+                "OPENROUTER_API_KEY": "openrouter-key",
+                "OPENROUTER_BASE_URL": "https://openrouter.ai/api/v1",
+                "AI_MAX_TOKENS": "1200",
+            },
+            env_file="",
+        )
+
+        self.assertEqual(settings.max_tokens, 1200)
+
+    def test_openai_compatible_request_limits_max_tokens(self):
+        triage = load_triage_module()
+        settings = triage.AiSettings(
+            provider="openai-compatible",
+            model="google/gemini-2.5-flash-lite",
+            api_key="openrouter-key",
+            base_url="https://openrouter.ai/api/v1",
+        )
+        captured = {}
+        response = mock.Mock()
+        response.__enter__ = mock.Mock(return_value=response)
+        response.__exit__ = mock.Mock(return_value=None)
+        response.read = mock.Mock(
+            return_value=b'{"choices":[{"message":{"content":"triage ok"}}]}'
+        )
+
+        def fake_urlopen(request, timeout):
+            captured["body"] = json.loads(request.data.decode("utf-8"))
+            captured["timeout"] = timeout
+            return response
+
+        with mock.patch("urllib.request.urlopen", side_effect=fake_urlopen):
+            result = triage.generate_ai_response("prompt", settings)
+
+        self.assertEqual(result, "triage ok")
+        self.assertEqual(captured["body"]["max_tokens"], 1800)
+        self.assertEqual(captured["timeout"], 90)
+
     def test_configure_console_encoding_reconfigures_utf8_capable_streams(self):
         triage = load_triage_module()
 
@@ -152,6 +197,54 @@ class SemgrepAiTriageWorkflowTest(unittest.TestCase):
         self.assertIn("Human Validation", report)
         self.assertIn("const SECRET_KEY", prompt)
         self.assertIn("AI output body", ai_output)
+
+    def test_build_prompt_includes_source_first_three_state_classification_context(self):
+        triage = load_triage_module()
+        record = triage.FindingRecord(
+            index=4,
+            rule_id="typescript.react.security.react-insecure-request.react-insecure-request",
+            file_path="eshop-sut/frontend-mobile/App.js",
+            line=174,
+            severity="ERROR",
+            message="Unencrypted request over HTTP detected.",
+            code='const API_URL = "http://localhost:3000";',
+            cwe="CWE-319",
+            owasp="A02:2021",
+            likelihood="LOW",
+            impact="MEDIUM",
+            confidence="MEDIUM",
+        )
+
+        prompt = triage.build_prompt(record)
+
+        self.assertIn("Project/source context for static triage", prompt)
+        self.assertIn("Read and compare the source evidence before classification", prompt)
+        self.assertIn("File role: application runtime code", prompt)
+        self.assertIn("localhost HTTP can be dev/lab-only", prompt)
+        self.assertIn("Classification: True Positive / False Positive / Needs Human Review", prompt)
+        self.assertNotIn("Duplicate / Same Root Cause", prompt)
+
+    def test_build_prompt_marks_test_files_as_test_helper_context(self):
+        triage = load_triage_module()
+        record = triage.FindingRecord(
+            index=3,
+            rule_id="javascript.jsonwebtoken.security.jwt-hardcode.hardcoded-jwt-secret",
+            file_path="eshop-sut/backend/test_profile.js",
+            line=4,
+            severity="WARNING",
+            message="Hard-coded credential",
+            code='jwt.sign({ id: 2 }, "secret");',
+            cwe="CWE-798",
+            owasp="A07:2021",
+            likelihood="HIGH",
+            impact="MEDIUM",
+            confidence="HIGH",
+        )
+
+        prompt = triage.build_prompt(record)
+
+        self.assertIn("File role: test/helper code", prompt)
+        self.assertIn("do not classify it as True Positive unless it is deployed", prompt)
 
     def test_write_triage_outputs_creates_postman_validation_report(self):
         triage = load_triage_module()

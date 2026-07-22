@@ -11,6 +11,7 @@ from typing import Dict, Iterable, List, Mapping, NamedTuple, Optional
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 DEFAULT_OUTPUT_DIR = SCRIPT_DIR / "output"
+DEFAULT_AI_MAX_TOKENS = 1800
 
 
 def configure_console_encoding(stdout=None, stderr=None):
@@ -29,6 +30,7 @@ class AiSettings(NamedTuple):
     model: str
     api_key: str
     base_url: Optional[str] = None
+    max_tokens: int = DEFAULT_AI_MAX_TOKENS
 
 
 class FindingRecord(NamedTuple):
@@ -105,6 +107,17 @@ def get_ai_settings(env: Optional[Mapping[str, str]] = None, env_file=None):
     provider = merged_env.get("AI_PROVIDER", "gemini").strip().lower()
     default_model = "gemini-2.5-flash" if provider == "gemini" else ""
     model = merged_env.get("AI_MODEL", default_model).strip()
+    max_tokens_raw = (
+        merged_env.get("AI_MAX_TOKENS")
+        or merged_env.get("OPENROUTER_MAX_TOKENS")
+        or str(DEFAULT_AI_MAX_TOKENS)
+    )
+    try:
+        max_tokens = int(str(max_tokens_raw).strip())
+    except ValueError as exc:
+        raise ValueError("AI_MAX_TOKENS phải là số nguyên dương.") from exc
+    if max_tokens <= 0:
+        raise ValueError("AI_MAX_TOKENS phải là số nguyên dương.")
 
     if provider == "gemini":
         api_key = merged_env.get("AI_API_KEY") or merged_env.get("GEMINI_API_KEY")
@@ -133,7 +146,13 @@ def get_ai_settings(env: Optional[Mapping[str, str]] = None, env_file=None):
     if provider == "openai-compatible" and not base_url:
         raise ValueError("Chưa thiết lập OPENROUTER_BASE_URL hoặc OPENAI_BASE_URL cho provider openai-compatible.")
 
-    return AiSettings(provider=provider, model=model, api_key=api_key, base_url=base_url)
+    return AiSettings(
+        provider=provider,
+        model=model,
+        api_key=api_key,
+        base_url=base_url,
+        max_tokens=max_tokens,
+    )
 
 
 def resolve_file_path(original_path, source_root=None):
@@ -221,6 +240,54 @@ def join_metadata(value):
     return "N/A"
 
 
+def infer_file_role(file_path):
+    normalized = str(file_path or "").replace("\\", "/").lower()
+    name = Path(normalized).name
+    if (
+        name.startswith("test_")
+        or name.endswith(".test.js")
+        or name.endswith(".spec.js")
+        or "/test/" in normalized
+        or "/tests/" in normalized
+    ):
+        return "test/helper code"
+    if "/backend/" in normalized and name in {"server.js", "app.js", "index.js"}:
+        return "backend runtime entrypoint"
+    if "/frontend-" in normalized or "/frontend/" in normalized:
+        return "application runtime code"
+    if "/backend/" in normalized:
+        return "backend application code"
+    return "unknown; reviewer must confirm whether this file is deployed"
+
+
+def build_static_triage_context(record):
+    file_role = infer_file_role(record.file_path)
+    code_lower = (record.code or "").lower()
+    rule_lower = (record.rule_id or "").lower()
+    context_lines = [
+        "Project/source context for static triage:",
+        "- Read and compare the source evidence before classification.",
+        "- Semgrep is SAST: classify from source evidence and deployment context, not from HTTP responses.",
+        "- EShop is scanned as a local lab app; localhost findings need environment review before final risk.",
+        f"- File role: {file_role}.",
+        "- True Positive: source evidence matches the rule and the vulnerable code is reachable in the relevant app/runtime context.",
+        "- False Positive: source evidence or file role proves the finding is not a real vulnerability for this app.",
+        "- Needs Human Review: config, deployment usage, runtime reachability, or data sensitivity is unknown.",
+        "- If this is test/helper code, do not classify it as True Positive unless it is deployed or reused by runtime code.",
+        "- localhost HTTP can be dev/lab-only; classify it as False Positive only when source/config proves production is not affected.",
+        "- If several findings share one root cause, mention that in the explanation but still choose one of the three classifications.",
+    ]
+    if "localhost" in code_lower or "http://127.0.0.1" in code_lower:
+        context_lines.append(
+            "- This snippet references a local HTTP endpoint; verify production API_URL/base URL before calling it a real transport-security vulnerability."
+        )
+    if "jwt" in rule_lower or "secret" in code_lower:
+        context_lines.append(
+            "- For JWT/secret findings, confirm whether the secret signs or verifies real application tokens and whether the file is part of runtime code."
+        )
+    return "\n".join(context_lines)
+
+
 def collect_finding_records(findings: Iterable[dict], source_root=None):
     records = []
     for index, finding in enumerate(findings, start=1):
@@ -276,13 +343,15 @@ Source code context:
 {record.code}
 ```
 
+{build_static_triage_context(record)}
+
 Hãy trả lời bằng Markdown với các mục:
-1. True Positive / False Positive / Needs Manual Verification.
+1. Classification: True Positive / False Positive / Needs Human Review.
 2. Giải thích lỗ hổng trong bối cảnh EShop.
 3. PoC hoặc testcase kiểm chứng.
 4. Impact thực tế.
 5. Remediation cụ thể.
-6. Human validation cần làm trước khi kết luận cuối cùng.
+6. Human validation cần làm trước khi kết luận cuối cùng, nhất là file có chạy thật không và production config có bị ảnh hưởng không.
 """
 
 
@@ -302,6 +371,7 @@ def generate_ai_response(prompt, settings):
             {
                 "model": settings.model,
                 "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": settings.max_tokens,
             }
         ).encode("utf-8")
         request = urllib.request.Request(
