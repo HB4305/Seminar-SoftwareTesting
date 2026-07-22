@@ -20,3 +20,5 @@ eshop-sut
 skills-lock.json
 .agents
 .claude
+
+.playwright-mcp/

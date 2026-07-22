@@ -1,0 +1,1203 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>T09 Security Testing - Seminar Slides</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%23071d2e' d='M32 4 52 12v18c0 13-8 24-20 30C20 54 12 43 12 30V12l20-8Z'/%3E%3Cpath fill='%23c7f05b' d='m22 33 7 7 15-18 5 4-19 23-13-12 5-4Z'/%3E%3C/svg%3E"
+    />
+    <style>
+      :root {
+        --ink: #0b1014;
+        --paper: #f4f1e8;
+        --line: rgba(11, 16, 20, 0.16);
+        --muted: #59616a;
+        --navy: #071d2e;
+        --blue: #0f4c81;
+        --cyan: #4bc3d6;
+        --lime: #c7f05b;
+        --amber: #f0b84b;
+        --red: #d84a3a;
+        --white: #f9faf6;
+        --mono: "IBM Plex Mono", "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+        --sans: "Aptos Display", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        background: #1b2025;
+        color: var(--ink);
+        font-family: var(--sans);
+      }
+
+      body {
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+      }
+
+      .deck {
+        width: 100vw;
+        height: 100dvh;
+        position: relative;
+        overflow: hidden;
+        background: var(--paper);
+      }
+
+      .slide {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        grid-template-rows: 82px 1fr 52px;
+        padding: 34px 52px 28px;
+        opacity: 0;
+        transform: translateX(3%);
+        pointer-events: none;
+        transition: opacity 380ms ease, transform 480ms cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      .slide.active {
+        opacity: 1;
+        transform: translateX(0);
+        pointer-events: auto;
+      }
+
+      .slide::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background:
+          linear-gradient(90deg, rgba(7, 29, 46, 0.05) 1px, transparent 1px),
+          linear-gradient(rgba(7, 29, 46, 0.04) 1px, transparent 1px);
+        background-size: 44px 44px;
+        mask-image: linear-gradient(130deg, rgba(0, 0, 0, 0.9), transparent 65%);
+      }
+
+      .slide.dark {
+        background:
+          radial-gradient(circle at 88% 16%, rgba(75, 195, 214, 0.2), transparent 28%),
+          radial-gradient(circle at 12% 86%, rgba(199, 240, 91, 0.16), transparent 30%),
+          var(--navy);
+        color: var(--white);
+      }
+
+      .slide.dark::before {
+        background:
+          linear-gradient(90deg, rgba(249, 250, 246, 0.08) 1px, transparent 1px),
+          linear-gradient(rgba(249, 250, 246, 0.05) 1px, transparent 1px);
+      }
+
+      header,
+      main,
+      footer {
+        position: relative;
+        z-index: 1;
+      }
+
+      header {
+        display: flex;
+        align-items: start;
+        justify-content: space-between;
+        border-top: 1px solid currentColor;
+        padding-top: 12px;
+      }
+
+      .kicker,
+      .index,
+      .mono,
+      code {
+        font-family: var(--mono);
+      }
+
+      .kicker {
+        font-size: 12px;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: var(--blue);
+      }
+
+      .dark .kicker {
+        color: var(--lime);
+      }
+
+      .index {
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      .dark .index {
+        color: rgba(249, 250, 246, 0.62);
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+
+      h1 {
+        max-width: 960px;
+        font-size: clamp(54px, 7vw, 92px);
+        line-height: 0.93;
+        letter-spacing: -0.065em;
+        font-weight: 850;
+      }
+
+      h2 {
+        max-width: 900px;
+        font-size: clamp(40px, 4.8vw, 68px);
+        line-height: 0.96;
+        letter-spacing: -0.055em;
+        font-weight: 840;
+      }
+
+      h3 {
+        font-size: clamp(21px, 1.9vw, 30px);
+        line-height: 1.08;
+        letter-spacing: -0.03em;
+      }
+
+      code {
+        color: inherit;
+        font-size: 0.92em;
+      }
+
+      .lead {
+        max-width: 740px;
+        color: var(--muted);
+        font-size: clamp(19px, 2vw, 26px);
+        line-height: 1.34;
+      }
+
+      .dark .lead {
+        color: rgba(249, 250, 246, 0.74);
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: 1fr;
+        align-content: center;
+        justify-items: center;
+        text-align: center;
+      }
+
+      .hero .lead {
+        margin-inline: auto;
+      }
+
+      .quote-slide {
+        display: grid;
+        align-content: center;
+        justify-items: center;
+        text-align: center;
+        gap: 30px;
+      }
+
+      .quote-mark {
+        font-size: clamp(78px, 10vw, 150px);
+        line-height: 0.55;
+        color: var(--lime);
+        font-family: Georgia, "Times New Roman", serif;
+      }
+
+      .quote-text {
+        max-width: 1040px;
+        font-size: clamp(46px, 6.3vw, 92px);
+        line-height: 0.94;
+        letter-spacing: -0.065em;
+        font-weight: 860;
+      }
+
+      .quote-note {
+        max-width: 760px;
+        color: rgba(249, 250, 246, 0.72);
+        font-size: clamp(18px, 1.8vw, 24px);
+        line-height: 1.36;
+      }
+
+      .thanks-slide {
+        display: grid;
+        align-content: center;
+        justify-items: center;
+        text-align: center;
+        gap: 24px;
+      }
+
+      .thanks-title {
+        max-width: 1120px;
+        font-family: "Segoe UI", Arial, sans-serif;
+        font-size: clamp(54px, 7.8vw, 104px);
+        line-height: 1;
+        letter-spacing: -0.035em;
+        font-weight: 760;
+      }
+
+      .qna-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 210px;
+        border: 1px solid rgba(199, 240, 91, 0.54);
+        border-radius: 999px;
+        padding: 14px 28px;
+        background: rgba(199, 240, 91, 0.12);
+        color: var(--lime);
+        font-family: var(--mono);
+        font-size: clamp(18px, 2vw, 28px);
+        letter-spacing: 0.08em;
+      }
+
+      .content {
+        display: grid;
+        gap: 24px;
+        align-content: center;
+      }
+
+      .split {
+        display: grid;
+        grid-template-columns: 0.86fr 1.14fr;
+        gap: 28px;
+        align-items: center;
+      }
+
+      .split.reverse {
+        grid-template-columns: 1.1fr 0.9fr;
+      }
+
+      .grid-2 {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .grid-3 {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .grid-4 {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .stack {
+        display: grid;
+        gap: 16px;
+      }
+
+      .panel {
+        min-height: 132px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.45);
+        border-radius: 22px;
+        padding: 22px;
+      }
+
+      .panel.strong {
+        background: var(--navy);
+        color: var(--white);
+      }
+
+      .panel.strong .caption {
+        color: rgba(249, 250, 246, 0.76);
+      }
+
+      .panel.strong code {
+        color: rgba(249, 250, 246, 0.9);
+      }
+
+      .panel.lime {
+        background: var(--lime);
+        color: var(--ink);
+      }
+
+      .panel.blue {
+        background: var(--blue);
+        color: var(--white);
+      }
+
+      .panel.blue .caption {
+        color: rgba(249, 250, 246, 0.78);
+      }
+
+      .panel.warn {
+        border-left: 8px solid var(--red);
+      }
+
+      .dark .panel {
+        border-color: rgba(249, 250, 246, 0.16);
+        background: rgba(249, 250, 246, 0.07);
+      }
+
+      .caption {
+        color: var(--muted);
+        font-size: 15px;
+        line-height: 1.38;
+      }
+
+      .dark .caption {
+        color: rgba(249, 250, 246, 0.67);
+      }
+
+      .tag-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+        margin-top: 30px;
+      }
+
+      .tag {
+        border: 1px solid currentColor;
+        border-radius: 999px;
+        padding: 8px 13px;
+        font-family: var(--mono);
+        font-size: 12px;
+      }
+
+      .list {
+        display: grid;
+        gap: 12px;
+      }
+
+      .item {
+        display: grid;
+        grid-template-columns: 28px 1fr;
+        gap: 12px;
+        align-items: start;
+        padding-top: 12px;
+        border-top: 1px solid var(--line);
+      }
+
+      .dark .item {
+        border-top-color: rgba(249, 250, 246, 0.16);
+      }
+
+      .dot {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: var(--lime);
+        border: 1px solid rgba(11, 16, 20, 0.3);
+      }
+
+      .num {
+        color: var(--blue);
+        font-family: var(--mono);
+        font-size: 13px;
+      }
+
+      .dark .num {
+        color: var(--cyan);
+      }
+
+      .big-number {
+        font-size: clamp(64px, 8vw, 116px);
+        line-height: 0.84;
+        letter-spacing: -0.08em;
+        font-weight: 860;
+      }
+
+      .codebox {
+        border: 1px solid rgba(75, 195, 214, 0.32);
+        background: #08141f;
+        color: #e8fff0;
+        border-radius: 18px;
+        padding: 18px;
+        font-family: var(--mono);
+        font-size: clamp(12px, 1.25vw, 16px);
+        line-height: 1.42;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+
+      .table {
+        display: grid;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        overflow: hidden;
+      }
+
+      .table.cols-3 {
+        grid-template-columns: 0.8fr 1.2fr 1.6fr;
+      }
+
+      .table.cols-4 {
+        grid-template-columns: 0.72fr 1.05fr 1fr 1.5fr;
+      }
+
+      .table > div {
+        padding: 12px 14px;
+        border-right: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+        font-size: clamp(14px, 1.25vw, 17px);
+        line-height: 1.28;
+      }
+
+      .table > div:nth-child(3n) {
+        border-right: 0;
+      }
+
+      .table.cols-4 > div:nth-child(3n) {
+        border-right: 1px solid var(--line);
+      }
+
+      .table.cols-4 > div:nth-child(4n) {
+        border-right: 0;
+      }
+
+      .owasp-title {
+        max-width: 1080px;
+        font-size: clamp(34px, 3.7vw, 54px);
+      }
+
+      .owasp-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .owasp-card {
+        display: grid;
+        grid-template-columns: 58px 1fr;
+        gap: 12px;
+        align-items: start;
+        min-height: 82px;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.5);
+        padding: 13px 15px;
+      }
+
+      .owasp-code {
+        display: grid;
+        place-items: center;
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        background: var(--navy);
+        color: var(--lime);
+        font-family: var(--mono);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .owasp-card h3 {
+        font-size: clamp(16px, 1.45vw, 21px);
+        line-height: 1.04;
+        margin-bottom: 5px;
+      }
+
+      .owasp-card p {
+        color: var(--muted);
+        font-size: clamp(12px, 1.05vw, 15px);
+        line-height: 1.28;
+      }
+
+      .head {
+        background: var(--navy);
+        color: var(--white);
+        font-family: var(--mono);
+        font-size: 12px !important;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .workflow-slide {
+        display: grid;
+        align-items: center;
+      }
+
+      .workflow-photo {
+        width: 100%;
+        max-height: calc(100dvh - 180px);
+        object-fit: contain;
+        border-radius: 24px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.38);
+        box-shadow: 0 24px 60px rgba(7, 29, 46, 0.16);
+      }
+
+      .install-slide {
+        grid-template-rows: 70px 1fr 44px;
+        padding-block: 26px 22px;
+      }
+
+      .install-slide h2 {
+        font-size: clamp(38px, 4.35vw, 62px);
+      }
+
+      .install-slide .panel {
+        min-height: 116px;
+        padding: 18px 20px;
+      }
+
+      .install-slide .codebox {
+        padding: 16px;
+        font-size: clamp(12px, 1.18vw, 15px);
+      }
+
+      .env-slide .codebox {
+        font-size: clamp(11px, 1.04vw, 14px);
+        line-height: 1.34;
+      }
+
+      .footer-line {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+        border-bottom: 1px solid currentColor;
+        padding-bottom: 8px;
+        color: var(--muted);
+        gap: 18px;
+      }
+
+      .dark .footer-line {
+        color: rgba(249, 250, 246, 0.65);
+      }
+
+      .notes {
+        display: none;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .slide {
+          transition: none;
+        }
+      }
+
+      @media (max-width: 900px) {
+        .slide {
+          display: none;
+          padding: 24px;
+          grid-template-rows: 66px 1fr 44px;
+          overflow: auto;
+        }
+
+        .slide.active {
+          display: grid;
+        }
+
+        .split,
+        .split.reverse,
+        .grid-2,
+        .grid-3,
+        .grid-4,
+        .owasp-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .table.cols-3,
+        .table.cols-4 {
+          grid-template-columns: 1fr;
+        }
+
+        .table > div,
+        .table.cols-4 > div:nth-child(3n),
+        .table.cols-4 > div:nth-child(4n) {
+          border-right: 0;
+        }
+      }
+
+      @media print {
+        body {
+          display: block;
+          background: white;
+          overflow: visible;
+        }
+
+        .deck {
+          width: 100%;
+          height: auto;
+          overflow: visible;
+        }
+
+        .slide {
+          position: relative;
+          opacity: 1;
+          transform: none;
+          pointer-events: auto;
+          width: 100vw;
+          height: 56.25vw;
+          page-break-after: always;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="deck" aria-live="polite">
+      <section class="slide dark active">
+        <header>
+          <div class="kicker">Group 06 / KDBK / Seminar</div>
+          <div class="index">01 / 27</div>
+        </header>
+        <main class="hero">
+          <div class="stack">
+            <h1>T09 Security Testing</h1>
+            <p class="lead">Quy trình kiểm thử an ninh cho EShop bằng SAST, DAST và AI triage có kiểm chứng.</p>
+            <div class="tag-row">
+              <span class="tag">Semgrep</span>
+              <span class="tag">OWASP ZAP</span>
+              <span class="tag">OpenAI / Gemini</span>
+              <span class="tag">DAST + SAST</span>
+            </div>
+          </div>
+        </main>
+        <footer class="footer-line">
+          <span>Trương Phước Lộc / Hồ Tuấn Thanh</span>
+          <span>Lê Trung Kiên · Mai Thị Kim Duyên · Lâm Hữu Khánh · Lê Mai Hoài Bảo</span>
+        </footer>
+        <aside class="notes">Mở bài: nhóm không chỉ demo tool, mà demo cách biến cảnh báo thành bằng chứng kiểm thử.</aside>
+      </section>
+
+      <section class="slide">
+        <header>
+          <div class="kicker">Mentors & Team</div>
+          <div class="index">02 / 27</div>
+        </header>
+        <main class="split">
+          <div class="panel strong stack">
+            <h2>Giảng viên & hỗ trợ</h2>
+            <div class="list">
+              <div class="item"><span class="dot"></span><div><h3>Trương Phước Lộc</h3><p class="caption">Giảng viên chính</p></div></div>
+              <div class="item"><span class="dot"></span><div><h3>Hồ Tuấn Thanh</h3><p class="caption">Trợ giảng</p></div></div>
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="panel"><h3>Lê Trung Kiên</h3><p class="caption mono">MSSV 23127075</p></div>
+            <div class="panel"><h3>Mai Thị Kim Duyên</h3><p class="caption mono">MSSV 23127185</p></div>
+            <div class="panel"><h3>Lâm Hữu Khánh</h3><p class="caption mono">MSSV 23127205</p></div>
+            <div class="panel"><h3>Lê Mai Hoài Bảo</h3><p class="caption mono">MSSV 23127326</p></div>
+          </div>
+        </main>
+        <footer class="footer-line"><span>T09 Security Testing</span><span>Seminar Software Testing</span></footer>
+      </section>
+
+      <section class="slide">
+        <header>
+          <div class="kicker">Security Testing Workflow</div>
+          <div class="index">03 / 27</div>
+        </header>
+        <main class="workflow-slide">
+          <img class="workflow-photo" src="./image/workflow-diagram.png" alt="Workflow diagram của nhóm cho Security Testing" />
+        </main>
+        <footer class="footer-line"><span>Nguồn: submission/slide/image/workflow-diagram.png</span><span>SAST + DAST + AI Triage</span></footer>
+      </section>
+
+      <section class="slide">
+        <header><div class="kicker">Risk Frame</div><div class="index">04 / 27</div></header>
+        <main class="content">
+          <h2 class="owasp-title">OWASP Top 10 2025 dùng làm khung chọn ruleset và scan policy.</h2>
+          <div class="owasp-grid">
+            <article class="owasp-card">
+              <span class="owasp-code">A01</span>
+              <div><h3>Broken Access Control</h3><p>Kiểm soát quyền truy cập không chặt, user có thể truy cập dữ liệu hoặc chức năng ngoài quyền.</p></div>
+            </article>
+            <article class="owasp-card">
+              <span class="owasp-code">A02</span>
+              <div><h3>Security Misconfiguration</h3><p>Cấu hình server, framework, CORS, header hoặc môi trường triển khai không an toàn.</p></div>
+            </article>
+            <article class="owasp-card">
+              <span class="owasp-code">A03</span>
+              <div><h3>Software Supply Chain Failures</h3><p>Rủi ro từ thư viện, dependency, build pipeline, artifact hoặc thành phần bên thứ ba.</p></div>
+            </article>
+            <article class="owasp-card">
+              <span class="owasp-code">A04</span>
+              <div><h3>Cryptographic Failures</h3><p>Mã hóa, truyền dữ liệu, lưu secret hoặc bảo vệ dữ liệu nhạy cảm không đúng cách.</p></div>
+            </article>
+            <article class="owasp-card">
+              <span class="owasp-code">A05</span>
+              <div><h3>Injection</h3><p>Dữ liệu đầu vào bị đưa vào SQL, command, template hoặc interpreter mà không kiểm soát đúng.</p></div>
+            </article>
+            <article class="owasp-card">
+              <span class="owasp-code">A06</span>
+              <div><h3>Insecure Design</h3><p>Thiết kế nghiệp vụ hoặc kiến trúc thiếu cơ chế phòng vệ ngay từ đầu.</p></div>
+            </article>
+            <article class="owasp-card">
+              <span class="owasp-code">A07</span>
+              <div><h3>Authentication Failures</h3><p>Xác thực, token, session, reset password hoặc quản lý tài khoản có lỗi.</p></div>
+            </article>
+            <article class="owasp-card">
+              <span class="owasp-code">A08</span>
+              <div><h3>Software or Data Integrity Failures</h3><p>Không kiểm chứng tính toàn vẹn của dữ liệu, update, CI/CD hoặc code được nạp vào hệ thống.</p></div>
+            </article>
+            <article class="owasp-card">
+              <span class="owasp-code">A09</span>
+              <div><h3>Logging and Alerting Failures</h3><p>Thiếu log, monitoring hoặc cảnh báo khiến việc phát hiện sự cố bị chậm.</p></div>
+            </article>
+            <article class="owasp-card">
+              <span class="owasp-code">A10</span>
+              <div><h3>Mishandling of Exceptional Conditions</h3><p>Xử lý lỗi hoặc ngoại lệ không an toàn, làm lộ thông tin hoặc tạo trạng thái khó kiểm soát.</p></div>
+            </article>
+          </div>
+        </main>
+        <footer class="footer-line"><span>OWASP Top 10 2025 trong User_Guide.md</span><span>Ruleset + scan policy</span></footer>
+      </section>
+
+      <section class="slide dark">
+        <header><div class="kicker">SAST Branch</div><div class="index">05 / 27</div></header>
+        <main class="split">
+          <div class="stack">
+            <h2>SAST đọc source trước khi app chạy.</h2>
+            <p class="lead">Semgrep dùng rule pattern để bắt hardcoded secret, request HTTP không mã hóa, injection pattern và lỗi framework phổ biến.</p>
+          </div>
+          <div class="grid-2">
+            <div class="panel"><span class="num">01</span><h3>Input</h3><p class="caption">Mã nguồn và file cấu hình trong <code>./eshop-sut</code>.</p></div>
+            <div class="panel"><span class="num">02</span><h3>Ruleset</h3><p class="caption"><code>p/owasp-top-ten</code> là flow chính theo đề T09.</p></div>
+            <div class="panel"><span class="num">03</span><h3>Output</h3><p class="caption">JSON finding thô để giữ lại làm evidence scan.</p></div>
+            <div class="panel"><span class="num">04</span><h3>Triage</h3><p class="caption">AI hỗ trợ đọc context, tester chốt kết luận.</p></div>
+          </div>
+        </main>
+        <footer class="footer-line"><span>Semgrep CLI</span><span>Source-code evidence</span></footer>
+      </section>
+
+      <section class="slide install-slide">
+        <header><div class="kicker">Semgrep Install</div><div class="index">06 / 27</div></header>
+        <main class="split">
+          <div class="stack">
+            <h2>Cài Semgrep CLI trước khi nói tới scan.</h2>
+            <p class="lead">Phần triage dùng Python dependency riêng, còn việc quét source cần Semgrep CLI chạy được trong terminal.</p>
+            <div class="grid-2">
+              <div class="panel"><h3>Linux</h3><p class="caption mono">python3 -m pip install semgrep</p></div>
+              <div class="panel"><h3>macOS</h3><p class="caption mono">brew install semgrep</p></div>
+              <div class="panel"><h3>Windows</h3><p class="caption mono">python -m pip install semgrep</p></div>
+              <div class="panel blue"><h3>Verify</h3><p class="caption">Chạy <code>semgrep --version</code> trước khi scan.</p></div>
+            </div>
+          </div>
+          <div class="codebox"># Tạo môi trường cho script triage
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r src/semgrep/requirements.txt
+
+# Cài và kiểm tra Semgrep CLI
+python3 -m pip install semgrep
+semgrep --version</div>
+        </main>
+        <footer class="footer-line"><span>User_Guide.md section 3</span><span>CLI install + triage dependency</span></footer>
+      </section>
+
+      <section class="slide">
+        <header><div class="kicker">Semgrep Setup</div><div class="index">07 / 27</div></header>
+        <main class="split reverse">
+          <div class="codebox">python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r src/semgrep/requirements.txt
+
+# source mặc định
+./eshop-sut</div>
+          <div class="stack">
+            <h2>Scan đúng source root, loại bỏ dependency và build output.</h2>
+            <div class="list">
+              <div class="item"><span class="dot"></span><div><h3>Chạy từ root repo</h3><p class="caption"><code>Seminar-SoftwareTesting</code> là working directory chuẩn.</p></div></div>
+              <div class="item"><span class="dot"></span><div><h3>Source khác vị trí</h3><p class="caption">Đặt <code>SOURCE_ROOT</code> trỏ tới source EShop thật.</p></div></div>
+              <div class="item"><span class="dot"></span><div><h3>Không quét nhiễu</h3><p class="caption">Exclude <code>node_modules</code>, <code>dist</code>, <code>build</code>, <code>.next</code>.</p></div></div>
+            </div>
+          </div>
+        </main>
+        <footer class="footer-line"><span>Setup dài được tách khỏi slide scan</span><span>Giảm false noise</span></footer>
+      </section>
+
+      <section class="slide">
+        <header><div class="kicker">Main Semgrep Scan</div><div class="index">08 / 27</div></header>
+        <main class="content">
+          <h2>Lệnh chính tạo evidence gốc theo OWASP Top 10.</h2>
+          <div class="codebox">semgrep scan --config "p/owasp-top-ten" \
+  --exclude node_modules --exclude dist --exclude build --exclude .next \
+  --json -o src/semgrep/output/semgrep_results.json ./eshop-sut</div>
+          <div class="grid-3">
+            <div class="panel"><h3>File</h3><p class="caption"><code>src/semgrep/output/semgrep_results.json</code></p></div>
+            <div class="panel"><h3>Đọc nhanh</h3><p class="caption">File, line, rule ID, severity, CWE và OWASP mapping.</p></div>
+            <div class="panel"><h3>Nguyên tắc</h3><p class="caption">Giữ JSON gốc để đối chiếu với triage report.</p></div>
+          </div>
+        </main>
+        <footer class="footer-line"><span>Evidence không chỉnh sửa</span><span>Semgrep results JSON</span></footer>
+      </section>
+
+      <section class="slide">
+        <header><div class="kicker">Extended Semgrep Scan</div><div class="index">09 / 27</div></header>
+        <main class="split">
+          <div class="stack">
+            <h2>Scan mở rộng tăng coverage, không thay thế flow chính.</h2>
+            <p class="lead">Sau ruleset bắt buộc, nhóm có thể quét thêm theo công nghệ của EShop để phân tích sâu hơn.</p>
+          </div>
+          <div class="grid-2">
+            <div class="panel"><h3><code>p/nodejs</code></h3><p class="caption">Backend Node.js và Express-like patterns.</p></div>
+            <div class="panel"><h3><code>p/javascript</code></h3><p class="caption">JS security rules phổ biến.</p></div>
+            <div class="panel"><h3><code>p/react</code></h3><p class="caption">Frontend React và request/browser patterns.</p></div>
+            <div class="panel"><h3>Custom rules</h3><p class="caption"><code>src/semgrep/rules/eshop-security.yml</code></p></div>
+          </div>
+        </main>
+        <footer class="footer-line"><span>Output: semgrep_results_extended.json</span><span>Coverage analysis</span></footer>
+      </section>
+
+      <section class="slide">
+        <header><div class="kicker">AI Provider</div><div class="index">10 / 27</div></header>
+        <main class="split reverse">
+          <div class="codebox">AI_PROVIDER=openai-compatible
+AI_MODEL=google/gemini-2.5-flash-lite
+AI_MAX_TOKENS=1800
+OPENROUTER_API_KEY=sk-or-v1-...
+OPENROUTER_BASE_URL=https://openrouter.ai/api/v1</div>
+          <div class="stack">
+            <h2>AI triage cần cấu hình rõ, không phải magic report.</h2>
+            <div class="grid-2">
+              <div class="panel"><h3>Không commit key</h3><p class="caption"><code>src/semgrep/.env</code> chứa API key thật.</p></div>
+              <div class="panel"><h3>Khi hết credit</h3><p class="caption">Giảm <code>AI_MAX_TOKENS</code> hoặc chạy <code>--offline</code>.</p></div>
+            </div>
+          </div>
+        </main>
+        <footer class="footer-line"><span>Semgrep AI provider</span><span>OpenAI-compatible / offline mode</span></footer>
+      </section>
+
+      <section class="slide dark">
+        <header><div class="kicker">Semgrep Triage</div><div class="index">11 / 27</div></header>
+        <main class="content">
+          <h2>Từ JSON finding thô sang report kiểm chứng được.</h2>
+          <div class="grid-4">
+            <div class="panel"><span class="num">01</span><h3>Input</h3><p class="caption"><code>semgrep_results.json</code></p></div>
+            <div class="panel"><span class="num">02</span><h3>Context</h3><p class="caption">Script lấy source context từ <code>--source-root</code>.</p></div>
+            <div class="panel"><span class="num">03</span><h3>AI Triage</h3><p class="caption"><code>semgrep_ai_triage.py</code> phân tích từng finding.</p></div>
+            <div class="panel"><span class="num">04</span><h3>Output</h3><p class="caption">Report, test cases và folder <code>findings/</code>.</p></div>
+          </div>
+          <div class="codebox">python src/semgrep/semgrep_ai_triage.py \
+  src/semgrep/output/semgrep_results.json \
+  --source-root eshop-sut \
+  --output-dir src/semgrep/output</div>
+        </main>
+        <footer class="footer-line"><span>True Positive / False Positive / Needs Human Review</span><span>AI hỗ trợ, tester quyết định</span></footer>
+      </section>
+
+      <section class="slide">
+        <header><div class="kicker">Read Semgrep Report</div><div class="index">12 / 27</div></header>
+        <main class="split">
+          <div class="panel lime stack">
+            <div class="big-number">12</div>
+            <h3>findings hiện có</h3>
+            <p>Hardcoded JWT secret trong <code>backend/server.js</code> và nhiều HTTP request không mã hóa trong <code>frontend-mobile/App.js</code>.</p>
+          </div>
+          <div class="stack">
+            <h2>Đừng đọc nhãn AI như kết luận cuối.</h2>
+            <div class="list">
+              <div class="item"><span class="dot"></span><div><h3>Code tự viết hay dependency?</h3><p class="caption">Loại bỏ build output và thư viện ngoài scope.</p></div></div>
+              <div class="item"><span class="dot"></span><div><h3>Dữ liệu có tới sink nguy hiểm?</h3><p class="caption">Finding chỉ có giá trị khi đường đi runtime hợp lý.</p></div></div>
+              <div class="item"><span class="dot"></span><div><h3>Secret hoặc URL có dùng thật?</h3><p class="caption">Phân biệt production, local lab, sample và test helper.</p></div></div>
+            </div>
+          </div>
+        </main>
+        <footer class="footer-line"><span>src/semgrep/output/semgrep_triage_report.md</span><span>Manual verification checklist</span></footer>
+      </section>
+
+      <section class="slide">
+        <header><div class="kicker">Finding Sample</div><div class="index">13 / 27</div></header>
+        <main class="split reverse">
+          <div class="panel strong stack">
+            <h3>SEMGREP-001</h3>
+            <p class="caption">Rule: <code>javascript.jsonwebtoken.security.jwt-hardcode.hardcoded-jwt-secret</code></p>
+            <p class="caption">File: <code>eshop-sut/backend/server.js:51</code></p>
+            <p class="caption">CWE-798 / OWASP A07 Authentication Failures</p>
+          </div>
+          <div class="stack">
+            <h2>Hardcoded JWT secret là lỗi source-code có impact rõ.</h2>
+            <div class="grid-2">
+              <div class="panel"><h3>Vì sao nguy hiểm?</h3><p class="caption">Nếu secret bị lộ, attacker có thể tự ký JWT hợp lệ.</p></div>
+              <div class="panel"><h3>Ảnh hưởng demo</h3><p class="caption">Endpoint cần auth có thể bị thử bằng forged token.</p></div>
+            </div>
+          </div>
+        </main>
+        <footer class="footer-line"><span>Evidence: backend/server.js</span><span>Authentication Failures</span></footer>
+      </section>
+
+      <section class="slide">
+        <header><div class="kicker">Semgrep PoC</div><div class="index">14 / 27</div></header>
+        <main class="content">
+          <h2>Finding chỉ có giá trị seminar khi có bước kiểm chứng.</h2>
+          <div class="codebox">GET http://localhost:3000/api/users/me
+Authorization: Bearer &lt;forged_token&gt;
+
+# PoC helper
+node src/semgrep/exploit.js</div>
+          <div class="grid-3">
+            <div class="panel"><h3>TC-SEMGREP-001</h3><p class="caption">Kiểm tra backend có chấp nhận JWT giả hay không.</p></div>
+            <div class="panel"><h3>Nếu 200 OK</h3><p class="caption">Finding được xác nhận ở runtime.</p></div>
+            <div class="panel"><h3>Nếu 401/403</h3><p class="caption">Ghi nhận không tái lập được hoặc đã bị chặn.</p></div>
+          </div>
+        </main>
+        <footer class="footer-line"><span>src/semgrep/output/semgrep_test_cases.md</span><span>Source finding to runtime proof</span></footer>
+      </section>
+
+      <section class="slide dark">
+        <header><div class="kicker">DAST Branch</div><div class="index">15 / 27</div></header>
+        <main class="split">
+          <div class="stack">
+            <h2>DAST kiểm thử ứng dụng đang chạy thật.</h2>
+            <p class="lead">ZAP gửi request HTTP, crawl route, chạy passive scan và có thể active scan bằng payload kiểm thử.</p>
+          </div>
+          <div class="grid-3">
+            <div class="panel"><h3>Backend</h3><p class="caption mono">localhost:3000</p></div>
+            <div class="panel"><h3>User FE</h3><p class="caption mono">localhost:5173</p></div>
+            <div class="panel"><h3>Admin FE</h3><p class="caption mono">localhost:5174</p></div>
+          </div>
+        </main>
+        <footer class="footer-line"><span>OWASP ZAP GUI hoặc CLI</span><span>Runtime request/response evidence</span></footer>
+      </section>
+
+      <section class="slide install-slide">
+        <header><div class="kicker">ZAP Install</div><div class="index">16 / 27</div></header>
+        <main class="split">
+          <div class="stack">
+            <h2>Cài ZAP gồm GUI, Python client và daemon cho CLI.</h2>
+            <p class="lead">GUI dùng để quan sát request/response và cấu hình auth; CLI flow cần daemon tại <code>localhost:8090</code>.</p>
+            <div class="grid-2">
+              <div class="panel"><h3>Windows</h3><p class="caption mono">winget install --id=ZAP.ZAP -e</p></div>
+              <div class="panel"><h3>macOS</h3><p class="caption mono">brew install --cask zap</p></div>
+              <div class="panel"><h3>Linux</h3><p class="caption mono">flatpak install flathub org.zaproxy.ZAP</p></div>
+              <div class="panel blue"><h3>Java</h3><p class="caption">Cần Java 17+ nếu bản cài không bundle Java.</p></div>
+            </div>
+          </div>
+          <div class="codebox"># Dependency cho script CLI
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install python-owasp-zap-v2.4
+
+# Chạy ZAP daemon bằng Docker
+docker run --rm -d --name eshop-zap --network host \
+  -v $(pwd):$(pwd) \
+  ghcr.io/zaproxy/zaproxy:stable zap.sh -daemon \
+  -port 8090 -host 0.0.0.0 -config api.disablekey=true</div>
+        </main>
+        <footer class="footer-line"><span>User_Guide.md section 6</span><span>GUI install + CLI daemon</span></footer>
+      </section>
+
+      <section class="slide env-slide">
+        <header><div class="kicker">ZAP Setup</div><div class="index">17 / 27</div></header>
+        <main class="split reverse">
+          <div class="codebox">ZAP_TARGET=http://localhost:3000
+ZAP_URL=http://localhost:8090
+ZAP_AUTH_ROLE=none
+ZAP_MAX_URLS=300
+ZAP_REPORT_FORMAT=json
+ZAP_REPORT_FILE=src/zap/output/backend_basic.json
+
+# Credential test cho authenticated scan
+ZAP_USER_EMAIL=test@eshop.com
+ZAP_USER_PASSWORD=Test1234!
+ZAP_ADMIN_EMAIL=admin@eshop.com
+ZAP_ADMIN_PASSWORD=Admin123!</div>
+          <div class="stack">
+            <h2>Setup ZAP là phần dễ làm sai nhất khi demo.</h2>
+            <div class="list">
+              <div class="item"><span class="dot"></span><div><h3>Daemon</h3><p class="caption">CLI cần ZAP daemon tại <code>localhost:8090</code>, có thể chạy Docker.</p></div></div>
+              <div class="item"><span class="dot"></span><div><h3>Scope</h3><p class="caption">Giới hạn target local <code>3000</code>, <code>5173</code>, <code>5174</code>.</p></div></div>
+              <div class="item"><span class="dot"></span><div><h3>User account</h3><p class="caption"><code>test@eshop.com</code> / <code>Test1234!</code></p></div></div>
+              <div class="item"><span class="dot"></span><div><h3>Admin account</h3><p class="caption"><code>admin@eshop.com</code> / <code>Admin123!</code></p></div></div>
+            </div>
+          </div>
+        </main>
+        <footer class="footer-line"><span>src/zap/.env</span><span>Không commit credential thật</span></footer>
+      </section>
+
+      <section class="slide">
+        <header><div class="kicker">ZAP GUI Flow</div><div class="index">18 / 27</div></header>
+        <main class="content">
+          <h2>GUI dùng để nhìn request/response và cấu hình auth thủ công.</h2>
+          <div class="grid-4">
+            <div class="panel"><span class="num">01</span><h3>Public scan</h3><p class="caption">Quick Start, Automated Scan, nhập target, Attack.</p></div>
+            <div class="panel"><span class="num">02</span><h3>Proxy browser</h3><p class="caption">Firefox qua <code>localhost:8080</code> để bắt traffic thật.</p></div>
+            <div class="panel"><span class="num">03</span><h3>Auth context</h3><p class="caption">Flag <code>POST /api/login</code> làm JSON login request.</p></div>
+            <div class="panel"><span class="num">04</span><h3>Forced user</h3><p class="caption">Chạy Spider/AJAX Spider sau khi context đúng.</p></div>
+          </div>
+        </main>
+        <footer class="footer-line"><span>Manual Explore + AJAX Spider cho SPA</span><span>Chỉ active scan khi scope đúng</span></footer>
+      </section>
+
+      <section class="slide">
+        <header><div class="kicker">ZAP CLI Public</div><div class="index">19 / 27</div></header>
+        <main class="content">
+          <h2>CLI public scan tạo JSON để pipeline xử lý tiếp.</h2>
+          <div class="codebox">python src/zap/scan_zap.py \
+  --target http://localhost:3000 \
+  --report-format json \
+  --output-file src/zap/output/backend_basic.json
+
+# Frontend SPA: thêm --ajax-spider</div>
+          <div class="grid-3">
+            <div class="panel"><h3>Backend public</h3><p class="caption"><code>backend_basic.json</code></p></div>
+            <div class="panel"><h3>Frontend public</h3><p class="caption">Dùng AJAX Spider để khám phá route sau JS.</p></div>
+            <div class="panel"><h3>HTML khi đọc tay</h3><p class="caption">JSON khi đưa vào AI triage.</p></div>
+          </div>
+        </main>
+        <footer class="footer-line"><span>src/zap/scan_zap.py</span><span>Public runtime scan</span></footer>
+      </section>
+
+      <section class="slide">
+        <header><div class="kicker">ZAP CLI Auth</div><div class="index">20 / 27</div></header>
+        <main class="split reverse">
+          <div class="codebox">python src/zap/scan_zap.py \
+  --target http://localhost:5173 \
+  --auth-role user \
+  --forced-user \
+  --ajax-spider \
+  --report-format json \
+  --output-file src/zap/output/frontend_user_basic.json</div>
+          <div class="stack">
+            <h2>Authenticated scan phải tách role và ngân sách URL.</h2>
+            <div class="grid-2">
+              <div class="panel"><h3>User</h3><p class="caption"><code>frontend_user_basic.json</code>, route user sau login.</p></div>
+              <div class="panel"><h3>Admin</h3><p class="caption"><code>frontend_admin_basic.json</code>, target <code>5174</code>.</p></div>
+              <div class="panel"><h3>Backend API</h3><p class="caption">Có thể scan <code>3000</code> với <code>--auth-role user</code>.</p></div>
+              <div class="panel"><h3>401/403</h3><p class="caption">Kiểm tra credential, login endpoint và forced user.</p></div>
+            </div>
+          </div>
+        </main>
+        <footer class="footer-line"><span>Role-based evidence</span><span>Forced User Mode</span></footer>
+      </section>
+
+      <section class="slide">
+        <header><div class="kicker">Read ZAP Output</div><div class="index">21 / 27</div></header>
+        <main class="content">
+          <h2>Report chỉ có giá trị khi đúng target, đúng session và đúng scope.</h2>
+          <div class="grid-3">
+            <div class="panel"><h3>Backend</h3><p class="caption mono">src/zap/output/backend_basic.json</p></div>
+            <div class="panel"><h3>User FE</h3><p class="caption mono">src/zap/output/frontend_user_basic.json</p></div>
+            <div class="panel"><h3>Admin FE</h3><p class="caption mono">src/zap/output/frontend_admin_basic.json</p></div>
+          </div>
+          <div class="table cols-3">
+            <div class="head">Kiểm tra</div><div class="head">Câu hỏi</div><div class="head">Lý do</div>
+            <div>Target</div><div>Alert có thuộc EShop local không?</div><div>Tránh lẫn backend, frontend hoặc host ngoài scope.</div>
+            <div>Auth</div><div>Endpoint public hay cần session?</div><div>Impact khác nhau giữa guest, user và admin.</div>
+            <div>Evidence</div><div>Request/response đủ để kết luận chưa?</div><div>Local HTTP/dev server có thể tạo noise.</div>
+          </div>
+        </main>
+        <footer class="footer-line"><span>Clear session/history nếu report bị lẫn</span><span>Scope management</span></footer>
+      </section>
+
+      <section class="slide dark">
+        <header><div class="kicker">ZAP AI Triage</div><div class="index">22 / 27</div></header>
+        <main class="content">
+          <h2>Gom nhiều JSON alert runtime thành Markdown report và testcase.</h2>
+          <div class="codebox">python src/zap/zap_ai_triage.py \
+  src/zap/output/backend_basic.json \
+  src/zap/output/frontend_user_basic.json \
+  src/zap/output/frontend_admin_basic.json \
+  --target-prefix http://localhost:3000 \
+  --target-prefix http://localhost:5173 \
+  --target-prefix http://localhost:5174</div>
+          <div class="grid-3">
+            <div class="panel"><h3>Report</h3><p class="caption"><code>zap_triage_report.md</code></p></div>
+            <div class="panel"><h3>Test cases</h3><p class="caption"><code>zap_test_cases.md</code></p></div>
+            <div class="panel"><h3>Per alert</h3><p class="caption"><code>alerts/*_prompt.md</code> và <code>*_ai_output.md</code></p></div>
+          </div>
+        </main>
+        <footer class="footer-line"><span>OpenAI nếu có key, OpenRouter nếu cấu hình, offline nếu cần</span><span>Runtime triage</span></footer>
+      </section>
+
+      <section class="slide">
+        <header><div class="kicker">ZAP Alert Sample</div><div class="index">23 / 27</div></header>
+        <main class="split">
+          <div class="panel warn stack">
+            <h3>CSP: Failure to Define Directive with No Fallback</h3>
+            <p class="caption">Testcase trong report: <code>TC-ZAP-130</code> đến <code>TC-ZAP-134</code>.</p>
+            <p class="caption">Evidence: <code>Content-Security-Policy: default-src 'none'</code></p>
+          </div>
+          <div class="stack">
+            <h2>CSP alert là ví dụ tốt cho evidence runtime.</h2>
+            <div class="grid-2">
+              <div class="panel"><h3>Replay request</h3><p class="caption">Gửi lại request ZAP ghi nhận và xem response header hiện tại.</p></div>
+              <div class="panel"><h3>Khuyến nghị</h3><p class="caption">Bổ sung directive phù hợp: <code>script-src</code>, <code>style-src</code>, <code>img-src</code>, <code>connect-src</code>.</p></div>
+            </div>
+          </div>
+        </main>
+        <footer class="footer-line"><span>src/zap/output/markdown/zap_test_cases.md</span><span>Header-level evidence</span></footer>
+      </section>
+
+      <section class="slide">
+        <header><div class="kicker">Responsibility Boundary</div><div class="index">24 / 27</div></header>
+        <main class="content">
+          <h2>Tool và AI không thay thế trách nhiệm kỹ thuật của từng vai trò.</h2>
+          <div class="table cols-3">
+            <div class="head">Vai trò</div><div class="head">Output</div><div class="head">Trách nhiệm chính</div>
+            <div>Tester</div><div>Finding, testcase, evidence</div><div>Chạy tool, triage, tái hiện lỗi và phân loại trạng thái.</div>
+            <div>Developer</div><div>Patch, unit/integration test</div><div>Xác định root cause, sửa code/config, chống tái diễn.</div>
+            <div>SOC</div><div>Log, alert, incident note</div><div>Theo dõi production và xử lý dấu hiệu khai thác thật.</div>
+          </div>
+        </main>
+        <footer class="footer-line"><span>Seminar tập trung vào trách nhiệm tester</span><span>Evidence before conclusion</span></footer>
+      </section>
+
+      <section class="slide">
+        <header><div class="kicker">Troubleshooting</div><div class="index">25 / 27</div></header>
+        <main class="content">
+          <h2>Các lỗi demo thường gặp đều liên quan tới môi trường, key hoặc scope.</h2>
+          <div class="grid-3">
+            <div class="panel"><h3>Python package</h3><p class="caption">Dùng <code>.venv</code>, tránh cài global vào system Python.</p></div>
+            <div class="panel"><h3>Sai source root</h3><p class="caption">Kiểm tra <code>./eshop-sut</code> hoặc đặt <code>SOURCE_ROOT</code>.</p></div>
+            <div class="panel"><h3>OpenRouter 402</h3><p class="caption">Hết credit, request quá tốn token, hoặc cần chạy <code>--offline</code>.</p></div>
+            <div class="panel"><h3>ZAP daemon</h3><p class="caption">Kiểm tra Docker, image ZAP, hoặc daemon <code>localhost:8090</code>.</p></div>
+            <div class="panel"><h3>Auth 401/403</h3><p class="caption">Kiểm tra credential, <code>/api/login</code>, <code>/api/users/me</code>.</p></div>
+            <div class="panel"><h3>Report lẫn target</h3><p class="caption">Clear session/history hoặc tách output theo target.</p></div>
+          </div>
+        </main>
+        <footer class="footer-line"><span>Chuẩn bị để demo không bị chặn bởi lỗi môi trường</span><span>User_Guide.md troubleshooting</span></footer>
+      </section>
+
+      <section class="slide dark">
+        <header><div class="kicker">Conclusion</div><div class="index">26 / 27</div></header>
+        <main class="quote-slide">
+          <div class="quote-mark">“</div>
+          <h2 class="quote-text">Evidence đến từ tool, nhưng kết luận phải đến từ kiểm chứng.</h2>
+          <p class="quote-note">SAST chỉ ra rủi ro trong source code. DAST xác nhận hành vi runtime. AI giúp tăng tốc đọc report, nhưng tester vẫn chịu trách nhiệm xác nhận bằng evidence.</p>
+        </main>
+        <footer class="footer-line"><span>SAST + DAST + AI Triage</span><span>Evidence before conclusion</span></footer>
+      </section>
+
+      <section class="slide dark">
+        <header><div class="kicker">Thank You</div><div class="index">27 / 27</div></header>
+        <main class="thanks-slide">
+          <h1 class="thanks-title">Cảm ơn mọi người đã theo dõi</h1>
+          <p class="lead">Nhóm 06 / KDBK</p>
+          <div class="qna-badge">Q&A</div>
+        </main>
+        <footer class="footer-line"><span>T09 Security Testing</span><span>Seminar Software Testing</span></footer>
+      </section>
+    </div>
+
+    <script>
+      const slides = Array.from(document.querySelectorAll(".slide"));
+      let current = 0;
+
+      function showSlide(index) {
+        current = Math.max(0, Math.min(index, slides.length - 1));
+        slides.forEach((slide, i) => slide.classList.toggle("active", i === current));
+        const hash = `#${String(current + 1).padStart(2, "0")}`;
+        if (location.hash !== hash) history.replaceState(null, "", hash);
+      }
+
+      window.addEventListener("keydown", (event) => {
+        if (["ArrowRight", "PageDown", " "].includes(event.key)) showSlide(current + 1);
+        if (["ArrowLeft", "PageUp", "Backspace"].includes(event.key)) showSlide(current - 1);
+        if (event.key === "Home") showSlide(0);
+        if (event.key === "End") showSlide(slides.length - 1);
+      });
+
+      window.addEventListener("hashchange", () => {
+        const next = Number.parseInt(location.hash.replace("#", ""), 10);
+        if (Number.isFinite(next)) showSlide(next - 1);
+      });
+
+      const fromHash = Number.parseInt(location.hash.replace("#", ""), 10);
+      if (Number.isFinite(fromHash)) showSlide(fromHash - 1);
+    </script>
+  </body>
+</html>
