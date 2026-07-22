@@ -83,6 +83,7 @@ Hoạt động cốt lõi của ZAP tương tự như một proxy server, thư�
 - **Passive Scan:** Quét bị động, hoàn toàn không can thiệp vào traffic (không chỉnh sửa gói tin và không gửi các request tấn công tới server). Mục đích chính là tìm ra các lỗ hổng cấu hình hoặc rò rỉ thông tin (ví dụ: thiếu HTTP Security Headers, lộ thông tin nhạy cảm qua response header).
 - **Active Scan:** Quét chủ động, tự tạo và gửi các request chứa payload độc hại đến server để dò tìm các lỗ hổng như SQL Injection, XSS, CSRF...
 - **Baseline Scan:** Là kịch bản kiểm thử tự động hóa đóng gói sẵn (automation script), thường được thực thi thông qua Docker hoặc CLI. Script này kết hợp chạy Spider nhanh và Passive Scan để đánh giá nhanh bảo mật.
+- **Scan Budget / Max URLs:** Giới hạn số URL trước khi chạy Active Scan. Với frontend SPA, AJAX Spider có thể tạo rất nhiều URL từ route động, asset dev server hoặc state lặp; nếu vượt ngân sách, nên bỏ qua Active Scan trên frontend và chuyển sang quét backend/API có scope rõ hơn.
 - **Fuzzing:** Kỹ thuật thay thế một hoặc nhiều tham số trong gói tin request bằng danh sách lớn các dữ liệu thử nghiệm (Ví dụ: Thay thế tham số email bằng danh sách 1 triệu email hoặc chuỗi ký tự đặc biệt để kiểm tra tính ổn định/lỗi của hệ thống).
 - **Report:** Tự động tạo báo cáo chi tiết về các lỗ hổng bảo mật được tìm thấy. Hỗ trợ xuất ra nhiều định dạng khác nhau như: HTML, XML, JSON, PDF...
 

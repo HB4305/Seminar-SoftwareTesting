@@ -34,6 +34,7 @@ Ví dụ các biến quan trọng:
 ZAP_TARGET=http://localhost:3000
 ZAP_URL=http://localhost:8090
 ZAP_AUTH_ROLE=none
+ZAP_MAX_URLS=300
 
 OPENAI_API_KEY=your_openai_key
 OPENAI_MODEL=gpt-4o-mini
@@ -62,6 +63,7 @@ python3 scan_zap.py \
   --auth-role user \
   --forced-user \
   --ajax-spider \
+  --max-urls 300 \
   --report-format json \
   --output-file output/frontend_user_basic.json
 ```
@@ -74,9 +76,27 @@ python3 scan_zap.py \
   --auth-role admin \
   --forced-user \
   --ajax-spider \
+  --max-urls 300 \
   --report-format json \
   --output-file output/frontend_admin_basic.json
 ```
+
+### Giới hạn URL khi scan frontend
+
+Frontend React/SPA có thể làm AJAX Spider ghi nhận rất nhiều URL, nhất là các route dev server, asset Vite hoặc request lặp theo state. Dùng `--max-urls` để đặt ngân sách trước active scan:
+
+```bash
+python3 scan_zap.py \
+  --target http://localhost:5173 \
+  --auth-role user \
+  --forced-user \
+  --ajax-spider \
+  --max-urls 300 \
+  --report-format json \
+  --output-file output/frontend_user_basic.json
+```
+
+Nếu số URL đã crawl vượt giới hạn, script vẫn giữ kết quả spider/passive scan và ghi report, nhưng bỏ qua active scan để tránh quá tải RAM. Khi cần active scan sâu, ưu tiên scan backend/API `http://localhost:3000` hoặc giảm scope frontend trước.
 
 ## 4. Chạy AI triage
 
