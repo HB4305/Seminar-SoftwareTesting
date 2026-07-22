@@ -116,26 +116,26 @@ A task should be done by only 1-2 students. Duplicate tasks are not recommended.
 | 58 |  |  |  |  |  |
 | 59 |  |  |  |  |  |
 | 60 |  |  |  |  |  |
-| 61 |  |  |  |  |  |
-| 62 |  |  |  |  |  |
-| 63 |  |  |  |  |  |
-| 64 |  |  |  |  |  |
-| 65 |  |  |  |  |  |
-| 66 |  |  |  |  |  |
-| 67 |  |  |  |  |  |
-| 68 |  |  |  |  |  |
-| 69 |  |  |  |  |  |
-| 70 |  |  |  |  |  |
-| 71 |  |  |  |  |  |
-| 72 |  |  |  |  |  |
-| 73 |  |  |  |  |  |
-| 74 |  |  |  |  |  |
-| 75 |  |  |  |  |  |
-| 76 |  |  |  |  |  |
-| 77 |  |  |  |  |  |
-| 78 |  |  |  |  |  |
-| 79 |  |  |  |  |  |
-| 80 |  |  |  |  |  |
+| 61 |  | Lê Mai Hoài Bảo | Initial survey of Semgrep, OWASP ZAP, Burp Suite, and Gemini API tools to propose direction for the security testing seminar. | 3 | ![61-1](./evidence/lemaihoaibao/61-1.png) ![61-2](./evidence/lemaihoaibao/61-2.png) |
+| 62 |  | Lê Mai Hoài Bảo | Construct security testing workflow documentation combining Semgrep SAST, ZAP DAST, and AI triage. | 3 | ![62](./evidence/lemaihoaibao/62.png) |
+| 63 |  | Lê Mai Hoài Bảo | Research and summarize the Semgrep/SAST track for the seminar and share with the team. | 3 | ![63](./evidence/lemaihoaibao/63.png) |
+| 64 |  | Lê Mai Hoài Bảo | Research OWASP Top 10 categories 7, 8, 9, and 10 as assigned in week W04. | 3 | ![64](./evidence/lemaihoaibao/64.png) |
+| 65 |  | Lê Mai Hoài Bảo | Create Track A Semgrep template and add image/resource evidence for Semgrep scanning. | 3 | ![65](./evidence/lemaihoaibao/65.png) |
+| 66 |  | Lê Mai Hoài Bảo | Complete phase 1 content for Track A Semgrep in the report template. | 3 | ![66](./evidence/lemaihoaibao/66.png) |
+| 67 |  | Lê Mai Hoài Bảo | Install, test run Semgrep, and document scan/output instructions for the EShop project. | 3 | ![67](./evidence/lemaihoaibao/67.png) |
+| 68 |  | Lê Mai Hoài Bảo | Build Semgrep AI Triage flow and sample report for `hardcoded-jwt-secret` finding. | 3 | ![68-1](./evidence/lemaihoaibao/68-1.png) ![68-2](./evidence/lemaihoaibao/68-2.png) |
+| 69 |  | Lê Mai Hoài Bảo | Fix Gemini integration for `semgrep_ai_triage.py`, migrate to new SDK, and handle error/retry on API overload. | 3 | ![69-1](./evidence/lemaihoaibao/69-1.png) ![69-2](./evidence/lemaihoaibao/69-2.png) ![69-3](./evidence/lemaihoaibao/69-3.png) ![69-4](./evidence/lemaihoaibao/69-4.png) |
+| 70 |  | Lê Mai Hoài Bảo | Fix Semgrep Linux installation guide and update Track A documentation for proper execution environments. | 3 | ![70](./evidence/lemaihoaibao/70.png) |
+| 71 |  | Lê Mai Hoài Bảo | Update Semgrep AI Triage documentation to support OpenAI-compatible provider/OpenRouter. | 3 | ![71](./evidence/lemaihoaibao/71.png) |
+| 72 |  | Lê Mai Hoài Bảo | Add `.env.example` configuration for OpenRouter/Gemini and standardize environment variables for API key/base URL. | 3 | ![72-1](./evidence/lemaihoaibao/72-1.png) ![72-2](./evidence/lemaihoaibao/72-2.png) ![72-3](./evidence/lemaihoaibao/72-3.png) |
+| 73 |  | Lê Mai Hoài Bảo | Upgrade Semgrep AI triage script to process all findings in JSON instead of a single finding. | 3 | ![73-1](./evidence/lemaihoaibao/73-1.png) ![73-2](./evidence/lemaihoaibao/73-2.png) |
+| 74 |  | Lê Mai Hoài Bảo | Write unit tests for OpenRouter configuration and multi-finding processing in Semgrep AI triage. | 3 | ![74-1](./evidence/lemaihoaibao/74-1.png) ![74-2](./evidence/lemaihoaibao/74-2.png) ![74-3](./evidence/lemaihoaibao/74-3.png) |
+| 75 |  | Lê Mai Hoài Bảo | Reorganize Semgrep Track structure: docs in `docs/semgrep/`, scripts/runtime in `src/semgrep/`, pipeline runnable from root. | 3 | ![75](./evidence/lemaihoaibao/75.png) |
+| 76 |  | Lê Mai Hoài Bảo | Retest Semgrep offline triage workflow, confirming output handles all 12 findings without live API dependency. | 3 | ![76](./evidence/lemaihoaibao/76.png) |
+| 77 |  | Lê Mai Hoài Bảo | Install and perform basic local execution for ZAP Track to understand cross-DAST scan flow with ZAP team. | 3 | ![77](./evidence/lemaihoaibao/77.png) |
+| 78 |  | Lê Mai Hoài Bảo | Update Semgrep section in User Guide: EShop source path, scanning methods, `.semgrepignore`, custom rules, and root execution guide. | 3 | ![78-1](./evidence/lemaihoaibao/78-1.png) ![78-2](./evidence/lemaihoaibao/78-2.png) ![78-3](./evidence/lemaihoaibao/78-3.png) |
+| 79 |  | Lê Mai Hoài Bảo | Review and complete AI audit/disclosure/reflective statement for the group, double-checking assignment requirements. | 3 | ![79-1](./evidence/lemaihoaibao/79-1.png) ![79-2](./evidence/lemaihoaibao/79-2.png) ![79-3](./evidence/lemaihoaibao/79-3.png) |
+| 80 |  | Lê Mai Hoài Bảo | Create project contribution template and final documentation checklist for group submission tracking. | 3 | ![80-1](./evidence/lemaihoaibao/80-1.png) ![80-2](./evidence/lemaihoaibao/80-2.png) |
 | 81 |  |  |  |  |  |
 | 82 |  |  |  |  |  |
 | 83 |  |  |  |  |  |
