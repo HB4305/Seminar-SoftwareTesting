@@ -24,8 +24,8 @@ python -m pip install -r src/semgrep/requirements.txt
 
 Cài Semgrep CLI nếu máy chưa có:
 
-```powershell
-python -m pip install semgrep
+```bash
+python3 -m pip install semgrep
 ```
 
 Kiểm tra Semgrep:

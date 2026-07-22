@@ -17,17 +17,17 @@
   ```bash
   sudo apt update
   sudo apt install python3-pip -y
-  python3 -m pip install --user semgrep
+  python3 -m pip install semgrep
   ```
 - **Fedora:**
   ```bash
   sudo dnf install python3-pip -y
-  python3 -m pip install --user semgrep
+  python3 -m pip install semgrep
   ```
 - **Arch Linux:**
   ```bash
   sudo pacman -S python-pip
-  python3 -m pip install --user semgrep
+  python3 -m pip install semgrep
   ```
 - **Nếu terminal chưa nhận lệnh `semgrep`:**
   ```bash
@@ -41,7 +41,7 @@ Có 3 cách tiếp cận chính tuỳ thuộc vào môi trường phát triển 
 *Yêu cầu máy đã cài sẵn Python 3.8+ và pip.*
 - **Cách cài đặt:**
   ```powershell
-  pip install semgrep
+  python3 -m pip install semgrep
   ```
 - **Cấu hình bổ sung (Quan trọng):** Do Windows sử dụng encoding mặc định là CP1252, khi chạy xuất JSON có tiếng Việt sẽ bị lỗi `UnicodeEncodeError`. Cần khai báo biến môi trường UTF-8 trước khi chạy lệnh:
   ```powershell
@@ -54,7 +54,7 @@ Nếu bạn dùng WSL, hãy mở terminal Linux (ví dụ Ubuntu WSL) và chạy
 ```bash
 sudo apt update
 sudo apt install python3-pip -y
-python3 -m pip install --user semgrep
+python3 -m pip install semgrep
 ```
 
 ##### Cách 3: Chạy qua Docker
@@ -361,7 +361,7 @@ Yêu cầu:
 ### Thông tin môi trường
 - **OS:** Windows (PowerShell)
 - **Python:** 3.12.7 (Anaconda)
-- **Semgrep:** v1.168.0 (cài qua `pip install semgrep`)
+- **Semgrep:** v1.168.0 (cài qua `python3 -m pip install semgrep`)
 - **Config:** `p/owasp-top-ten` (Community, 560 rules tổng)
 - **Target:** `EShop/eshop-sut/backend/` (6 files: `server.js`, `database.js`, `test_profile.js`, `package.json`, `package-lock.json`, `database.sqlite`)
 
@@ -369,7 +369,7 @@ Yêu cầu:
 
 | Metric | Giá trị | Ghi chú |
 | :--- | :--- | :--- |
-| **Thời gian cài đặt (Setup time)** | ~3 phút | `pip install semgrep`, download ~57 MB wheel |
+| **Thời gian cài đặt (Setup time)** | ~3 phút | `python3 -m pip install semgrep`, download ~57 MB wheel |
 | **Thời gian scan tổng (Total scan time)** | ~4.25 giây | Config download (~1.06s) + Core scan (~3.17s) |
 | **Thời gian scan thuần (Core time)** | ~3.17 giây | Thời gian Semgrep engine phân tích code |
 | **Số lượng files scanned** | 6 | Chỉ scan files tracked by git |
