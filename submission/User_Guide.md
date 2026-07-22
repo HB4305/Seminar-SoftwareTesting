@@ -601,7 +601,6 @@ Frontend user public, có AJAX Spider để khám phá route SPA:
 python src/zap/scan_zap.py \
   --target http://localhost:5173 \
   --ajax-spider \
-  --max-urls 300 \
   --report-format json \
   --output-file src/zap/output/frontend_public_basic.json
 ```
@@ -620,7 +619,6 @@ python src/zap/scan_zap.py \
   --auth-role user \
   --forced-user \
   --ajax-spider \
-  --max-urls 300 \
   --report-format json \
   --output-file src/zap/output/frontend_user_basic.json
 ```
@@ -633,7 +631,6 @@ python src/zap/scan_zap.py \
   --auth-role admin \
   --forced-user \
   --ajax-spider \
-  --max-urls 300 \
   --report-format json \
   --output-file src/zap/output/frontend_admin_basic.json
 ```

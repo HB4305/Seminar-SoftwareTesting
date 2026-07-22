@@ -1,8 +1,8 @@
 {
     "@programName": "ZAP",
     "@version": "2.17.0",
-    "@generated": "Wed, 22 Jul 2026 08:58:10",
-	"created": "2026-07-22T08:58:10.537471306Z",
+    "@generated": "Wed, 22 Jul 2026 09:01:20",
+	"created": "2026-07-22T09:01:20.571114139Z",
 	"insights":[
 		{
 			"level": "Low",
@@ -18,7 +18,7 @@
 			"site": "",
 			"key": "insight.log.warn",
 			"description": "ZAP warnings logged - see the zap.log file for details",
-			"statistic": "75"
+			"statistic": "79"
 		},
 		{
 			"level": "Low",
@@ -26,7 +26,7 @@
 			"site": "http://localhost:3000",
 			"key": "insight.code.4xx",
 			"description": "Percentage of responses with status code 4xx",
-			"statistic": "60"
+			"statistic": "64"
 		},
 		{
 			"level": "Info",
@@ -42,7 +42,7 @@
 			"site": "http://localhost:3000",
 			"key": "insight.code.2xx",
 			"description": "Percentage of responses with status code 2xx",
-			"statistic": "24"
+			"statistic": "22"
 		},
 		{
 			"level": "Info",
@@ -50,7 +50,7 @@
 			"site": "http://localhost:3000",
 			"key": "insight.code.3xx",
 			"description": "Percentage of responses with status code 3xx",
-			"statistic": "14"
+			"statistic": "9"
 		},
 		{
 			"level": "Info",
@@ -58,7 +58,7 @@
 			"site": "http://localhost:3000",
 			"key": "insight.code.5xx",
 			"description": "Percentage of responses with status code 5xx",
-			"statistic": "1"
+			"statistic": "2"
 		},
 		{
 			"level": "Info",
@@ -66,7 +66,7 @@
 			"site": "http://localhost:3000",
 			"key": "insight.endpoint.ctype.application/json",
 			"description": "Percentage of endpoints with content type application/json",
-			"statistic": "46"
+			"statistic": "44"
 		},
 		{
 			"level": "Info",
@@ -74,7 +74,7 @@
 			"site": "http://localhost:3000",
 			"key": "insight.endpoint.ctype.text/html",
 			"description": "Percentage of endpoints with content type text/html",
-			"statistic": "42"
+			"statistic": "44"
 		},
 		{
 			"level": "Info",
@@ -90,7 +90,7 @@
 			"site": "http://localhost:3000",
 			"key": "insight.endpoint.method.GET",
 			"description": "Percentage of endpoints with method GET",
-			"statistic": "85"
+			"statistic": "86"
 		},
 		{
 			"level": "Info",
@@ -98,7 +98,7 @@
 			"site": "http://localhost:3000",
 			"key": "insight.endpoint.method.OPTIONS",
 			"description": "Percentage of endpoints with method OPTIONS",
-			"statistic": "7"
+			"statistic": "6"
 		},
 		{
 			"level": "Info",
@@ -106,7 +106,7 @@
 			"site": "http://localhost:3000",
 			"key": "insight.endpoint.method.POST",
 			"description": "Percentage of endpoints with method POST",
-			"statistic": "7"
+			"statistic": "6"
 		},
 		{
 			"level": "Info",
@@ -114,7 +114,7 @@
 			"site": "http://localhost:3000",
 			"key": "insight.endpoint.total",
 			"description": "Count of total endpoints",
-			"statistic": "28"
+			"statistic": "29"
 		},
 		{
 			"level": "Info",
@@ -130,7 +130,7 @@
 			"site": "http://localhost:5173",
 			"key": "insight.code.2xx",
 			"description": "Percentage of responses with status code 2xx",
-			"statistic": "30"
+			"statistic": "31"
 		},
 		{
 			"level": "Info",
@@ -250,7 +250,7 @@
 			"site": "http://localhost:5174",
 			"key": "insight.endpoint.ctype.image/svg+xml",
 			"description": "Percentage of endpoints with content type image/svg+xml",
-			"statistic": "5"
+			"statistic": "4"
 		},
 		{
 			"level": "Info",
@@ -258,7 +258,7 @@
 			"site": "http://localhost:5174",
 			"key": "insight.endpoint.ctype.text/html",
 			"description": "Percentage of endpoints with content type text/html",
-			"statistic": "17"
+			"statistic": "36"
 		},
 		{
 			"level": "Info",
@@ -266,7 +266,7 @@
 			"site": "http://localhost:5174",
 			"key": "insight.endpoint.ctype.text/javascript",
 			"description": "Percentage of endpoints with content type text/javascript",
-			"statistic": "70"
+			"statistic": "52"
 		},
 		{
 			"level": "Info",
@@ -282,7 +282,7 @@
 			"site": "http://localhost:5174",
 			"key": "insight.endpoint.total",
 			"description": "Count of total endpoints",
-			"statistic": "17"
+			"statistic": "25"
 		},
 		{
 			"level": "Info",
@@ -330,7 +330,7 @@
 			"site": "https://content-signature-2.cdn.mozilla.net",
 			"key": "insight.response.slow",
 			"description": "Percentage of slow responses",
-			"statistic": "87"
+			"statistic": "81"
 		},
 		{
 			"level": "Info",
@@ -523,6 +523,20 @@
                             "response-body": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <script type=\"module\">import { injectIntoGlobalHook } from \"/@react-refresh\";\ninjectIntoGlobalHook(window);\nwindow.$RefreshReg$ = () => {};\nwindow.$RefreshSig$ = () => (type) => type;</script>\n\n    <script type=\"module\" src=\"/@vite/client\"></script>\n\n    <meta charset=\"UTF-8\" />\n    <link rel=\"icon\" type=\"image/svg+xml\" href=\"/favicon.svg\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>frontend-admin</title>\n  </head>\n  <body>\n    <div id=\"root\"></div>\n    <script type=\"module\" src=\"/src/main.jsx\"></script>\n  </body>\n</html>\n"
                         },
                         {
+                            "id": "3899",
+                            "uri": "http://localhost:5174/?token=-LYBc--RLYE6",
+                            "nodeName": "http:\/\/localhost:5174\/ (token)",
+                            "method": "GET",
+                            "param": "",
+                            "attack": "",
+                            "evidence": "",
+                            "otherinfo": "",
+                            "request-header": "GET http://localhost:5174/?token=-LYBc--RLYE6 HTTP/1.1\r\nhost: localhost:5174\r\nuser-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36\r\npragma: no-cache\r\ncache-control: no-cache\r\nAuthorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Miwicm9sZSI6InVzZXIiLCJpYXQiOjE3ODQ3MTA3ODd9.ByQ-OJ-yMmC7gH4gxrWMq-gbX2VSicTq4um0tZn9uu0\r\n\r\n",
+                            "request-body": "",
+                            "response-header": "HTTP/1.1 200 OK\r\nVary: Origin\r\nContent-Type: text/html\r\nCache-Control: no-cache\r\nEtag: W/\"26d-agW9xlowi0nphzA/owMyYa5L7Rc\"\r\nDate: Wed, 22 Jul 2026 08:59:50 GMT\r\nConnection: keep-alive\r\nKeep-Alive: timeout=5\r\nContent-Length: 621\r\n\r\n",
+                            "response-body": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <script type=\"module\">import { injectIntoGlobalHook } from \"/@react-refresh\";\ninjectIntoGlobalHook(window);\nwindow.$RefreshReg$ = () => {};\nwindow.$RefreshSig$ = () => (type) => type;</script>\n\n    <script type=\"module\" src=\"/@vite/client\"></script>\n\n    <meta charset=\"UTF-8\" />\n    <link rel=\"icon\" type=\"image/svg+xml\" href=\"/favicon.svg\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>frontend-admin</title>\n  </head>\n  <body>\n    <div id=\"root\"></div>\n    <script type=\"module\" src=\"/src/main.jsx\"></script>\n  </body>\n</html>\n"
+                        },
+                        {
                             "id": "3626",
                             "uri": "http://localhost:5174/robots.txt",
                             "nodeName": "http:\/\/localhost:5174\/robots.txt",
@@ -551,7 +565,7 @@
                             "response-body": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <script type=\"module\">import { injectIntoGlobalHook } from \"/@react-refresh\";\ninjectIntoGlobalHook(window);\nwindow.$RefreshReg$ = () => {};\nwindow.$RefreshSig$ = () => (type) => type;</script>\n\n    <script type=\"module\" src=\"/@vite/client\"></script>\n\n    <meta charset=\"UTF-8\" />\n    <link rel=\"icon\" type=\"image/svg+xml\" href=\"/favicon.svg\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>frontend-admin</title>\n  </head>\n  <body>\n    <div id=\"root\"></div>\n    <script type=\"module\" src=\"/src/main.jsx\"></script>\n  </body>\n</html>\n"
                         }
                     ],
-                    "count": "4",
+                    "count": "5",
                     "systemic": true,
                     "solution": "<p>Ensure that your web server, application server, load balancer, etc. is configured to set the Content-Security-Policy header.</p>",
                     "otherinfo": "",
@@ -629,6 +643,20 @@
                             "response-body": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <script type=\"module\">import { injectIntoGlobalHook } from \"/@react-refresh\";\ninjectIntoGlobalHook(window);\nwindow.$RefreshReg$ = () => {};\nwindow.$RefreshSig$ = () => (type) => type;</script>\n\n    <script type=\"module\" src=\"/@vite/client\"></script>\n\n    <meta charset=\"UTF-8\" />\n    <link rel=\"icon\" type=\"image/svg+xml\" href=\"/favicon.svg\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>frontend-admin</title>\n  </head>\n  <body>\n    <div id=\"root\"></div>\n    <script type=\"module\" src=\"/src/main.jsx\"></script>\n  </body>\n</html>\n"
                         },
                         {
+                            "id": "3892",
+                            "uri": "http://localhost:5174/?token=-LYBc--RLYE6",
+                            "nodeName": "http:\/\/localhost:5174\/ (token)",
+                            "method": "GET",
+                            "param": "x-frame-options",
+                            "attack": "",
+                            "evidence": "",
+                            "otherinfo": "",
+                            "request-header": "GET http://localhost:5174/?token=-LYBc--RLYE6 HTTP/1.1\r\nhost: localhost:5174\r\nuser-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36\r\npragma: no-cache\r\ncache-control: no-cache\r\nAuthorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Miwicm9sZSI6InVzZXIiLCJpYXQiOjE3ODQ3MTA3ODd9.ByQ-OJ-yMmC7gH4gxrWMq-gbX2VSicTq4um0tZn9uu0\r\n\r\n",
+                            "request-body": "",
+                            "response-header": "HTTP/1.1 200 OK\r\nVary: Origin\r\nContent-Type: text/html\r\nCache-Control: no-cache\r\nEtag: W/\"26d-agW9xlowi0nphzA/owMyYa5L7Rc\"\r\nDate: Wed, 22 Jul 2026 08:59:50 GMT\r\nConnection: keep-alive\r\nKeep-Alive: timeout=5\r\nContent-Length: 621\r\n\r\n",
+                            "response-body": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <script type=\"module\">import { injectIntoGlobalHook } from \"/@react-refresh\";\ninjectIntoGlobalHook(window);\nwindow.$RefreshReg$ = () => {};\nwindow.$RefreshSig$ = () => (type) => type;</script>\n\n    <script type=\"module\" src=\"/@vite/client\"></script>\n\n    <meta charset=\"UTF-8\" />\n    <link rel=\"icon\" type=\"image/svg+xml\" href=\"/favicon.svg\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>frontend-admin</title>\n  </head>\n  <body>\n    <div id=\"root\"></div>\n    <script type=\"module\" src=\"/src/main.jsx\"></script>\n  </body>\n</html>\n"
+                        },
+                        {
                             "id": "3620",
                             "uri": "http://localhost:5174/robots.txt",
                             "nodeName": "http:\/\/localhost:5174\/robots.txt",
@@ -657,7 +685,7 @@
                             "response-body": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <script type=\"module\">import { injectIntoGlobalHook } from \"/@react-refresh\";\ninjectIntoGlobalHook(window);\nwindow.$RefreshReg$ = () => {};\nwindow.$RefreshSig$ = () => (type) => type;</script>\n\n    <script type=\"module\" src=\"/@vite/client\"></script>\n\n    <meta charset=\"UTF-8\" />\n    <link rel=\"icon\" type=\"image/svg+xml\" href=\"/favicon.svg\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>frontend-admin</title>\n  </head>\n  <body>\n    <div id=\"root\"></div>\n    <script type=\"module\" src=\"/src/main.jsx\"></script>\n  </body>\n</html>\n"
                         }
                     ],
-                    "count": "4",
+                    "count": "5",
                     "systemic": true,
                     "solution": "<p>Modern Web browsers support the Content-Security-Policy and X-Frame-Options HTTP headers. Ensure one of them is set on all web pages returned by your site/app.</p><p>If you expect the page to be framed only by pages on your server (e.g. it's part of a FRAMESET) then you'll want to use SAMEORIGIN, otherwise if you never expect the page to be framed, you should use DENY. Alternatively consider implementing Content Security Policy's \"frame-ancestors\" directive.</p>",
                     "otherinfo": "",
@@ -1089,6 +1117,20 @@
                             "response-body": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <script type=\"module\">import { injectIntoGlobalHook } from \"/@react-refresh\";\ninjectIntoGlobalHook(window);\nwindow.$RefreshReg$ = () => {};\nwindow.$RefreshSig$ = () => (type) => type;</script>\n\n    <script type=\"module\" src=\"/@vite/client\"></script>\n\n    <meta charset=\"UTF-8\" />\n    <link rel=\"icon\" type=\"image/svg+xml\" href=\"/favicon.svg\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>frontend-admin</title>\n  </head>\n  <body>\n    <div id=\"root\"></div>\n    <script type=\"module\" src=\"/src/main.jsx\"></script>\n  </body>\n</html>\n"
                         },
                         {
+                            "id": "3908",
+                            "uri": "http://localhost:5174/@vite",
+                            "nodeName": "http:\/\/localhost:5174\/@vite",
+                            "method": "GET",
+                            "param": "",
+                            "attack": "",
+                            "evidence": "<script type=\"module\">import { injectIntoGlobalHook } from \"/@react-refresh\";\ninjectIntoGlobalHook(window);\nwindow.$RefreshReg$ = () => {};\nwindow.$RefreshSig$ = () => (type) => type;</script>",
+                            "otherinfo": "No links have been found while there are scripts, which is an indication that this is a modern web application.",
+                            "request-header": "GET http://localhost:5174/@vite HTTP/1.1\r\nhost: localhost:5174\r\nuser-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36\r\npragma: no-cache\r\ncache-control: no-cache\r\nAuthorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Miwicm9sZSI6InVzZXIiLCJpYXQiOjE3ODQ3MTA3ODd9.ByQ-OJ-yMmC7gH4gxrWMq-gbX2VSicTq4um0tZn9uu0\r\n\r\n",
+                            "request-body": "",
+                            "response-header": "HTTP/1.1 200 OK\r\nVary: Origin\r\nContent-Type: text/html\r\nCache-Control: no-cache\r\nEtag: W/\"26d-agW9xlowi0nphzA/owMyYa5L7Rc\"\r\nDate: Wed, 22 Jul 2026 08:59:50 GMT\r\nConnection: keep-alive\r\nKeep-Alive: timeout=5\r\nContent-Length: 621\r\n\r\n",
+                            "response-body": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <script type=\"module\">import { injectIntoGlobalHook } from \"/@react-refresh\";\ninjectIntoGlobalHook(window);\nwindow.$RefreshReg$ = () => {};\nwindow.$RefreshSig$ = () => (type) => type;</script>\n\n    <script type=\"module\" src=\"/@vite/client\"></script>\n\n    <meta charset=\"UTF-8\" />\n    <link rel=\"icon\" type=\"image/svg+xml\" href=\"/favicon.svg\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>frontend-admin</title>\n  </head>\n  <body>\n    <div id=\"root\"></div>\n    <script type=\"module\" src=\"/src/main.jsx\"></script>\n  </body>\n</html>\n"
+                        },
+                        {
                             "id": "3633",
                             "uri": "http://localhost:5174/robots.txt",
                             "nodeName": "http:\/\/localhost:5174\/robots.txt",
@@ -1117,7 +1159,7 @@
                             "response-body": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <script type=\"module\">import { injectIntoGlobalHook } from \"/@react-refresh\";\ninjectIntoGlobalHook(window);\nwindow.$RefreshReg$ = () => {};\nwindow.$RefreshSig$ = () => (type) => type;</script>\n\n    <script type=\"module\" src=\"/@vite/client\"></script>\n\n    <meta charset=\"UTF-8\" />\n    <link rel=\"icon\" type=\"image/svg+xml\" href=\"/favicon.svg\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>frontend-admin</title>\n  </head>\n  <body>\n    <div id=\"root\"></div>\n    <script type=\"module\" src=\"/src/main.jsx\"></script>\n  </body>\n</html>\n"
                         }
                     ],
-                    "count": "4",
+                    "count": "5",
                     "systemic": true,
                     "solution": "<p>This is an informational alert and so no changes are required.</p>",
                     "otherinfo": "<p>No links have been found while there are scripts, which is an indication that this is a modern web application.</p>",
@@ -1150,15 +1192,15 @@
                 ,
                 "stats.code.304": 7
                 ,
-                "stats.code.404": 134
+                "stats.code.404": 135
                 ,
-                "stats.tag.Form": 182
+                "stats.tag.Form": 183
                 ,
                 "stats.code.504": 378
                 ,
                 "stats.code.405": 2
                 ,
-                "stats.code.200": 2041
+                "stats.code.200": 2066
                 ,
                 "stats.code.101": 61
                 ,
@@ -1166,35 +1208,35 @@
                 ,
                 "stats.responseTime.128": 4
                 ,
-                "stats.tag.Script": 698
+                "stats.tag.Script": 710
                 ,
                 "stats.responseTime.64": 101
                 ,
-                "stats.responseTime.2": 483
+                "stats.responseTime.2": 486
                 ,
                 "stats.websockets.close": 2
                 ,
-                "stats.responseTime.4": 673
+                "stats.responseTime.4": 677
                 ,
                 "stats.websockets.count.incoming": 4
                 ,
-                "stats.responseTime.8": 581
+                "stats.responseTime.8": 595
                 ,
-                "stats.auth.state.noindicator": 2762
+                "stats.auth.state.noindicator": 2787
                 ,
-                "stats.responseTime.16": 361
+                "stats.responseTime.16": 365
                 ,
                 "stats.websockets.open": 2
                 ,
                 "stats.websockets.bytes.outgoing": 4
                 ,
-                "stats.responseTime.0": 81
+                "stats.responseTime.0": 82
                 ,
                 "stats.responseTime.32": 530
                 ,
-                "stats.contentType.image\/svg+xml": 34
+                "stats.contentType.image\/svg+xml": 35
                 ,
-                "stats.contentType.text\/html": 714
+                "stats.contentType.text\/html": 725
                 ,
                 "stats.contentType.text\/css": 3
                 ,
@@ -1206,7 +1248,7 @@
                 ,
                 "stats.responseTime.512": 7
                 ,
-                "stats.contentType.text\/javascript": 1489
+                "stats.contentType.text\/javascript": 1502
                 ,
                 "stats.websockets.count.outgoing": 2
                 ,
@@ -1214,7 +1256,7 @@
                 ,
                 "stats.websockets.opcode.text": 2
                 ,
-                "stats.tag.Comment": 1191
+                "stats.tag.Comment": 1201
                 
             }
         },
@@ -1584,15 +1626,15 @@
                 }
             ],
             "statistics":{ 
-                "stats.responseTime.256": 6
+                "stats.responseTime.256": 7
                 ,
-                "stats.responseTime.512": 1
+                "stats.responseTime.512": 2
                 ,
-                "stats.responseTime.128": 1
+                "stats.responseTime.128": 2
                 ,
-                "stats.contentType.binary\/octet-stream": 8
+                "stats.contentType.binary\/octet-stream": 11
                 ,
-                "stats.code.200": 8
+                "stats.code.200": 11
                 
             }
         },
@@ -2426,15 +2468,15 @@
                 ,
                 "stats.code.304": 4956
                 ,
-                "stats.code.404": 130
+                "stats.code.404": 131
                 ,
-                "stats.tag.Form": 382
+                "stats.tag.Form": 384
                 ,
                 "stats.code.504": 434
                 ,
                 "stats.code.405": 2
                 ,
-                "stats.code.200": 2706
+                "stats.code.200": 2745
                 ,
                 "stats.code.101": 332
                 ,
@@ -2442,47 +2484,47 @@
                 ,
                 "stats.responseTime.32768": 6
                 ,
-                "stats.tag.Script": 1039
+                "stats.tag.Script": 1055
                 ,
-                "stats.responseTime.128": 100
+                "stats.responseTime.128": 105
                 ,
-                "stats.responseTime.64": 298
+                "stats.responseTime.64": 310
                 ,
-                "stats.responseTime.2": 3437
+                "stats.responseTime.2": 3442
                 ,
                 "stats.websockets.close": 306
                 ,
-                "stats.responseTime.4": 1485
+                "stats.responseTime.4": 1487
                 ,
                 "stats.websockets.count.incoming": 559
                 ,
-                "stats.responseTime.8": 863
+                "stats.responseTime.8": 871
                 ,
-                "stats.auth.state.noindicator": 8705
+                "stats.auth.state.noindicator": 8744
                 ,
-                "stats.responseTime.16": 504
+                "stats.responseTime.16": 505
                 ,
                 "stats.websockets.open": 308
                 ,
                 "stats.websockets.bytes.outgoing": 612
                 ,
-                "stats.responseTime.0": 1506
+                "stats.responseTime.0": 1508
                 ,
-                "stats.responseTime.32": 508
+                "stats.responseTime.32": 510
                 ,
-                "stats.contentType.image\/svg+xml": 40
+                "stats.contentType.image\/svg+xml": 41
                 ,
-                "stats.contentType.text\/html": 871
+                "stats.contentType.text\/html": 885
                 ,
                 "stats.contentType.text\/css": 3
                 ,
-                "stats.responseTime.256": 39
+                "stats.responseTime.256": 42
                 ,
                 "stats.websockets.opcode.close": 608
                 ,
                 "stats.responseTime.512": 12
                 ,
-                "stats.contentType.text\/javascript": 1991
+                "stats.contentType.text\/javascript": 2015
                 ,
                 "stats.websockets.count.outgoing": 306
                 ,
@@ -2492,7 +2534,7 @@
                 ,
                 "stats.websockets.opcode.text": 257
                 ,
-                "stats.tag.Comment": 1867
+                "stats.tag.Comment": 1889
                 
             }
         },
@@ -2798,13 +2840,13 @@
                 }
             ],
             "statistics":{ 
-                "stats.responseTime.1024": 4
+                "stats.responseTime.1024": 5
                 ,
-                "stats.contentType.application\/octet-stream": 4
+                "stats.contentType.application\/octet-stream": 5
                 ,
-                "stats.code.200": 4
+                "stats.code.200": 5
                 ,
-                "stats.tag.Comment": 4
+                "stats.tag.Comment": 5
                 
             }
         },
@@ -2814,6 +2856,110 @@
             "@port": "3000",
             "@ssl": "false",
             "alerts": [ 
+                {
+                    "pluginid": "40018",
+                    "alertRef": "40018",
+                    "alert": "SQL Injection",
+                    "name": "SQL Injection",
+                    "riskcode": "3",
+                    "confidence": "1",
+                    "riskdesc": "High (Low)",
+                    "desc": "<p>SQL injection may be possible.</p>",
+                    "instances":[ 
+                        {
+                            "id": "4136",
+                            "uri": "http://localhost:3000/api/products?search=%27",
+                            "nodeName": "http:\/\/localhost:3000\/api\/products (search)",
+                            "method": "GET",
+                            "param": "search",
+                            "attack": "'",
+                            "evidence": "HTTP/1.1 500 Internal Server Error",
+                            "otherinfo": "",
+                            "request-header": "GET http://localhost:3000/api/products?search=%27 HTTP/1.1\r\nhost: localhost:3000\r\nuser-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36\r\npragma: no-cache\r\ncache-control: no-cache\r\nAuthorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Miwicm9sZSI6InVzZXIiLCJpYXQiOjE3ODQ3MTA3ODd9.ByQ-OJ-yMmC7gH4gxrWMq-gbX2VSicTq4um0tZn9uu0\r\n\r\n",
+                            "request-body": "",
+                            "response-header": "HTTP/1.1 500 Internal Server Error\r\nX-Powered-By: Express\r\nAccess-Control-Allow-Origin: *\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: 67\r\nETag: W/\"43-b+TL8gr3oqIRinaihZWcjCMnBQY\"\r\nDate: Wed, 22 Jul 2026 09:00:25 GMT\r\nConnection: keep-alive\r\nKeep-Alive: timeout=5\r\n\r\n",
+                            "response-body": "<h1>Database Error</h1><p>SQLITE_ERROR: unrecognized token: \"'\"</p>"
+                        }
+                    ],
+                    "count": "1",
+                    "systemic": false,
+                    "solution": "<p>Do not trust client side input, even if there is client side validation in place.</p><p>In general, type check all data on the server side.</p><p>If the application uses JDBC, use PreparedStatement or CallableStatement, with parameters passed by '?'</p><p>If the application uses ASP, use ADO Command Objects with strong type checking and parameterized queries.</p><p>If database Stored Procedures can be used, use them.</p><p>Do *not* concatenate strings into queries in the stored procedure, or use 'exec', 'exec immediate', or equivalent functionality!</p><p>Do not create dynamic SQL queries using simple string concatenation.</p><p>Escape all data received from the client.</p><p>Apply an 'allow list' of allowed characters, or a 'deny list' of disallowed characters in user input.</p><p>Apply the principle of least privilege by using the least privileged database user possible.</p><p>In particular, avoid using the 'sa' or 'db-owner' database users. This does not eliminate SQL injection, but minimizes its impact.</p><p>Grant the minimum database access that is necessary for the application.</p>",
+                    "otherinfo": "",
+                    "reference": "<p>https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html</p>",
+                    "cweid": "89",
+                    "wascid": "19",
+                    "sourceid": "17180",
+                    "tags":[ 
+                        {
+                            "tag": "POLICY_SEQUENCE",
+                            "link": ""
+                        },
+                        {
+                            "tag": "OWASP_2021_A03",
+                            "link": "https:\/\/owasp.org\/Top10\/A03_2021-Injection\/"
+                        },
+                        {
+                            "tag": "PCI_DSS",
+                            "link": "https:\/\/www.zaproxy.org\/docs\/desktop\/addons\/common-library\/alerttags\/#compliance"
+                        },
+                        {
+                            "tag": "CWE-89",
+                            "link": "https:\/\/cwe.mitre.org\/data\/definitions\/89.html"
+                        },
+                        {
+                            "tag": "POLICY_QA_CICD",
+                            "link": ""
+                        },
+                        {
+                            "tag": "POLICY_DEV_CICD",
+                            "link": ""
+                        },
+                        {
+                            "tag": "OWASP_2025_A05",
+                            "link": "https:\/\/owasp.org\/Top10\/2025\/A05_2025-Injection\/"
+                        },
+                        {
+                            "tag": "WSTG-v42-INPV-05",
+                            "link": "https:\/\/owasp.org\/www-project-web-security-testing-guide\/v42\/4-Web_Application_Security_Testing\/07-Input_Validation_Testing\/05-Testing_for_SQL_Injection"
+                        },
+                        {
+                            "tag": "POLICY_API",
+                            "link": ""
+                        },
+                        {
+                            "tag": "POLICY_DEV_FULL",
+                            "link": ""
+                        },
+                        {
+                            "tag": "POLICY_QA_STD",
+                            "link": ""
+                        },
+                        {
+                            "tag": "POLICY_QA_FULL",
+                            "link": ""
+                        },
+                        {
+                            "tag": "POLICY_PENTEST",
+                            "link": ""
+                        },
+                        {
+                            "tag": "HIPAA",
+                            "link": "https:\/\/www.zaproxy.org\/docs\/desktop\/addons\/common-library\/alerttags\/#compliance"
+                        },
+                        {
+                            "tag": "OWASP_2017_A01",
+                            "link": "https:\/\/owasp.org\/www-project-top-ten\/2017\/A1_2017-Injection.html"
+                        },
+                        {
+                            "tag": "API_2023_API10",
+                            "link": "https:\/\/owasp.org\/API-Security\/editions\/2023\/en\/0xaa-unsafe-consumption-of-apis\/"
+                        },
+                        {
+                            "tag": "POLICY_DEV_STD",
+                            "link": ""
+                        }
+                    ]
+                },
                 {
                     "pluginid": "10055",
                     "alertRef": "10055-13",
@@ -3452,45 +3598,49 @@
                 }
             ],
             "statistics":{ 
-                "stats.responseTime.16": 41
+                "stats.responseTime.16": 74
                 ,
-                "stats.contentType.application\/json; charset=utf-8": 1530
+                "stats.contentType.application\/json; charset=utf-8": 2369
                 ,
-                "stats.tag.JSON": 1530
+                "stats.tag.JSON": 2369
                 ,
-                "stats.responseTime.0": 150
+                "stats.responseTime.0": 316
                 ,
-                "stats.responseTime.32": 24
+                "stats.responseTime.32": 40
                 ,
-                "stats.code.204": 54
+                "stats.code.204": 58
                 ,
-                "stats.code.403": 462
+                "stats.code.403": 666
                 ,
                 "stats.code.304": 358
                 ,
-                "stats.code.404": 504
+                "stats.code.404": 965
                 ,
-                "stats.code.200": 557
+                "stats.code.200": 776
                 ,
-                "stats.auth.sessiontoken.token": 8
+                "stats.auth.sessiontoken.token": 9
                 ,
-                "stats.code.400": 4
+                "stats.code.400": 6
                 ,
-                "stats.code.401": 509
+                "stats.code.401": 709
                 ,
-                "stats.code.500": 12
+                "stats.code.500": 100
                 ,
-                "stats.contentType.text\/html; charset=utf-8": 514
+                "stats.contentType.text\/html; charset=utf-8": 847
                 ,
-                "stats.responseTime.2": 823
+                "stats.responseTime.128": 1
                 ,
-                "stats.responseTime.64": 6
+                "stats.tag.Script": 1
                 ,
-                "stats.responseTime.4": 1199
+                "stats.responseTime.2": 1293
                 ,
-                "stats.responseTime.8": 217
+                "stats.responseTime.64": 19
                 ,
-                "stats.auth.state.noindicator": 2394
+                "stats.responseTime.4": 1546
+                ,
+                "stats.responseTime.8": 349
+                ,
+                "stats.auth.state.noindicator": 3554
                 
             }
         }
@@ -3498,87 +3648,93 @@
     "sequences":[
     ],
     "statistics":{ 
-        "stats.ascan.90035.started": 4
+        "stats.ascan.90035.started": 5
         ,
         "stats.log.warn.org.openqa.selenium.remote.http.WebSocket.IOException(SocketTube.java:159)": 1
         ,
-        "stats.pscan.10027.time": 208684
+        "stats.pscan.10027.time": 219727
         ,
-        "stats.ascan.40035.started": 4
+        "stats.ascan.40035.started": 5
         ,
-        "stats.ascan.40027.time": 12921
+        "stats.ascan.40027.time": 13087
         ,
-        "stats.ascan.20017.urls": 6
+        "stats.ascan.20017.urls": 16
         ,
-        "stats.pscan.10037.alerts": 1011
+        "stats.pscan.10037.alerts": 1041
         ,
-        "stats.pscan.10035.alerts": 12
+        "stats.pscan.10035.alerts": 16
         ,
-        "stats.pscan.90022.time": 4779
+        "stats.api.call.json.ascan.action.enableScanners": 1
         ,
-        "stats.ascan.40027.urls": 190
+        "stats.pscan.90022.time": 4902
         ,
-        "stats.ascan.20017.time": 152
+        "stats.ascan.40027.urls": 230
         ,
-        "stats.pscan.10112.time": 363
+        "stats.ascan.20017.time": 169
         ,
-        "stats.ascan.40026.started": 4
+        "stats.pscan.10112.time": 369
+        ,
+        "stats.ascan.40026.started": 5
         ,
         "stats.log.error.org.zaproxy.zap.extension.selenium.ExtensionSelenium.JavascriptException(ErrorCodec.java:169)": 1
         ,
         "stats.pscan.10042.time": 6
         ,
-        "stats.ascan.40044.time": 80207
+        "stats.ascan.40044.time": 80296
         ,
-        "stats.ascan.10058.started": 4
+        "stats.ascan.10058.started": 5
+        ,
+        "stats.api.error.json.ascan.action.removeScanPolicy": 1
         ,
         "stats.pscan.10056.time": 7
         ,
-        "stats.ascan.90017.urls": 144
+        "stats.ascan.90017.urls": 172
         ,
-        "stats.ascan.40029.started": 4
+        "stats.ascan.40029.started": 5
         ,
         "stats.pscan.10061.time": 15
         ,
-        "stats.ascan.10106.started": 4
+        "stats.ascan.10106.started": 5
         ,
         "stats.log.warn.org.zaproxy.addon.pscan.internal.scanner.PassiveScanTask": 7
         ,
-        "stats.spider.url.found": 103
+        "stats.spider.url.found": 195
         ,
-        "stats.pscan.10109.time": 209
+        "stats.pscan.10109.time": 417
         ,
-        "stats.ascan.40008.time": 786
+        "stats.ascan.40008.time": 829
         ,
-        "stats.ascan.90029.started": 4
+        "stats.ascan.90029.started": 5
         ,
-        "stats.ascan.40044.started": 4
+        "stats.ascan.40044.started": 5
         ,
-        "stats.ascan.20015.time": 20
+        "stats.ascan.20015.time": 23
         ,
-        "stats.ascan.20015.urls": 6
+        "stats.ascan.20015.urls": 9
         ,
-        "stats.ascan.40003.started": 4
+        "stats.ascan.40003.started": 5
         ,
-        "stats.ascan.40032.started": 4
+        "stats.ascan.40032.started": 5
         ,
-        "stats.reports.generated.traditional-json-plus": 3
+        "stats.api.call.json.ascan.action.removeScanPolicy": 1
         ,
-        "stats.ascan.40017.started": 4
+        "stats.reports.generated.traditional-json-plus": 4
         ,
-        "stats.selenium.launch.2.firefox-headless": 56
+        "stats.ascan.40017.started": 5
         ,
-        "stats.ascan.20017.started": 4
+        "stats.selenium.launch.2.firefox-headless": 85
+        ,
+        "stats.ascan.20017.started": 5
         ,
         "stats.websockets.pscan.WS.ScriptPassiveScan": 18789
         ,
-        "stats.ascan.0.started": 4
+        "stats.ascan.0.started": 5
         ,
-        "stats.ascan.40008.urls": 97
+        "stats.ascan.40008.urls": 107
         ,
-        "stats.ascan.90034.time": 520606
+        "stats.ascan.90034.time": 520664
         ,
-        "stats.pscan.90003.time": 1937
+        "stats.pscan.90003.time": 2093
         ,
         "stats.script.error.Graal.js.active": 2
         ,
@@ -3586,505 +3742,517 @@
         ,
         "stats.ascan.started.policy.dock-default": 4
         ,
-        "stats.pscan.10023.time": 122
+        "stats.pscan.10023.time": 130
         ,
-        "stats.ascan.90023.started": 4
+        "stats.ascan.90023.started": 5
         ,
-        "stats.ascan.90034.urls": 26
+        "stats.ascan.90034.urls": 39
         ,
         "stats.pscan.10029.time": 2
         ,
-        "stats.ascan.90017.started": 4
+        "stats.ascan.90017.started": 5
         ,
-        "stats.ascan.10047.time": 77
+        "stats.ascan.10047.time": 83
         ,
-        "stats.log.warn.org.zaproxy.addon.spider.UrlCanonicalizer": 1
+        "stats.log.warn.org.zaproxy.addon.spider.UrlCanonicalizer": 3
         ,
         "stats.api.call.json.context.action.newContext": 1
         ,
-        "stats.pscan.10017.time": 10
+        "stats.pscan.10017.time": 11
         ,
-        "stats.ascan.40014.started": 4
+        "stats.ascan.40014.started": 5
         ,
-        "stats.ascan.10047.started": 4
+        "stats.ascan.10047.started": 5
         ,
         "stats.pscan.10011.time": 4
         ,
-        "stats.ascan.40034.urls": 24
+        "stats.ascan.40034.urls": 29
         ,
-        "stats.pscan.10112.alerts": 8
+        "stats.pscan.10112.alerts": 9
         ,
-        "stats.pscan.10030.time": 113
+        "stats.pscan.10030.time": 118
         ,
-        "domxss.scan.count": 88
+        "domxss.scan.count": 118
         ,
-        "stats.ascan.40034.time": 40060
+        "stats.ascan.40034.time": 40075
         ,
-        "stats.api.call.json.replacer.action.addRule": 4
+        "stats.api.call.json.replacer.action.addRule": 5
         ,
-        "stats.api.call.json.users.action.setUserEnabled": 4
+        "stats.api.call.json.users.action.setUserEnabled": 5
         ,
         "stats.pscan.10039.time": 16
         ,
         "stats.pscan.10052.time": 21
         ,
-        "stats.api.call.json.core.view.version": 12
+        "stats.api.call.json.core.view.version": 13
         ,
-        "stats.ascan.90026.started": 4
+        "stats.ascan.90026.started": 5
         ,
         "stats.pscan.10105.time": 65
         ,
-        "stats.ascan.90037.time": 1402
+        "stats.ascan.90037.time": 1607
         ,
-        "stats.pscan.10035.time": 197
+        "stats.pscan.10035.time": 211
         ,
-        "stats.ascan.40019.urls": 190
+        "stats.ascan.40019.urls": 230
         ,
-        "stats.pscan.10050.alerts": 12
+        "stats.pscan.10050.alerts": 16
         ,
-        "stats.ascan.90037.started": 4
+        "stats.ascan.90037.started": 5
         ,
         "stats.ascan.40026.skipped": 1
         ,
-        "stats.pscan.90001.time": 185
+        "stats.pscan.90001.time": 200
+        ,
+        "stats.api.call.json.ascan.action.addScanPolicy": 1
         ,
         "stats.config.api.disablekey": 1
         ,
-        "stats.ascan.90036.time": 1206
+        "stats.ascan.90036.time": 1384
         ,
-        "stats.pscan.10020.time": 177
+        "stats.pscan.10020.time": 489
         ,
-        "stats.ascan.90020.started": 4
+        "stats.ascan.90020.started": 5
         ,
         "stats.pscan.10034.time": 27
         ,
-        "stats.ascan.10058.time": 61
+        "stats.ascan.10058.time": 66
         ,
-        "stats.api.call.json.users.view.usersList": 4
+        "stats.api.call.json.users.view.usersList": 5
         ,
-        "stats.ascan.40022.time": 387
+        "stats.ascan.40022.time": 408
         ,
-        "stats.ascan.90035.time": 520810
+        "stats.ascan.90035.time": 520921
         ,
-        "stats.ascan.30001.started": 4
+        "stats.ascan.30001.started": 5
         ,
-        "stats.pscan.90030.time": 41
+        "stats.pscan.90030.time": 42
         ,
-        "stats.ascan.6.started": 4
+        "stats.ascan.6.started": 5
         ,
-        "stats.ascan.20015.started": 4
+        "stats.ascan.20015.started": 5
         ,
-        "stats.ascan.40027.started": 4
+        "stats.ascan.40027.started": 5
         ,
-        "stats.ascan.40019.time": 1170
+        "stats.ascan.40019.time": 1209
         ,
-        "stats.ascan.40003.time": 221
+        "stats.ascan.40003.time": 365
         ,
-        "stats.spider.started": 4
+        "stats.spider.started": 5
         ,
-        "stats.pscan.10097.time": 476
+        "stats.pscan.10097.time": 482
         ,
-        "stats.ascan.40003.urls": 133
+        "stats.ascan.40003.urls": 161
         ,
-        "stats.ascan.40022.urls": 95
+        "stats.ascan.40022.urls": 115
         ,
-        "stats.api.call.json.core.view.alerts": 4
+        "stats.api.call.json.core.view.alerts": 5
         ,
-        "stats.ascan.90036.urls": 228
+        "stats.ascan.90036.urls": 276
         ,
-        "stats.pscan.10202.time": 18
+        "stats.pscan.10202.time": 19
         ,
         "stats.log.warn.org.zaproxy.zap.extension.ascanrules.SpringActuatorScanRule": 4
         ,
-        "stats.auth.detect.session.token": 8
+        "stats.auth.detect.session.token": 9
         ,
-        "stats.ascan.6.time": 2632
+        "stats.ascan.6.time": 2711
         ,
-        "stats.ascan.40008.started": 4
+        "stats.ascan.40008.started": 5
         ,
-        "stats.ascan.40021.started": 4
+        "stats.ascan.40021.started": 5
         ,
-        "stats.ascan.7.urls": 190
+        "stats.ascan.7.urls": 230
         ,
         "stats.log.error": 14
         ,
-        "stats.pscan.10020.alerts": 49
+        "stats.pscan.10020.alerts": 74
         ,
-        "stats.ascan.40029.time": 40062
+        "stats.ascan.40029.time": 40076
         ,
-        "stats.ascan.90020.time": 3063
+        "stats.ascan.90020.time": 3156
         ,
-        "stats.pscan.10054.time": 6
+        "stats.pscan.10054.time": 7
         ,
-        "stats.ascan.0.time": 197
+        "stats.ascan.0.time": 233
         ,
-        "stats.ascan.40032.time": 40061
+        "stats.ascan.40032.time": 40083
         ,
-        "stats.ascan.90017.time": 797
+        "stats.ascan.90017.time": 859
         ,
-        "stats.ascan.90035.urls": 266
+        "stats.ascan.90035.urls": 322
         ,
         "stats.log.error.org.zaproxy.zap.extension.websocket.ExtensionWebSocket.WebSocketException(WebSocketProxy.java:427)": 2
         ,
-        "stats.ascan.90020.urls": 361
+        "stats.ascan.90020.urls": 437
         ,
-        "stats.ascan.40032.urls": 24
+        "stats.ascan.40032.urls": 29
         ,
         "stats.pscan.90011.time": 35
         ,
         "stats.pscan.10015.time": 1
         ,
-        "stats.ascan.7.time": 433
+        "stats.ascan.7.time": 487
         ,
-        "stats.ascan.90019.started": 4
+        "stats.ascan.90019.started": 5
         ,
-        "stats.ascan.40042.started": 4
+        "stats.ascan.40042.started": 5
         ,
-        "stats.api.call.json.pscan.view.recordsToScan": 4
+        "stats.api.call.json.pscan.view.recordsToScan": 5
         ,
         "stats.ascan.50000.time": 4
         ,
-        "stats.ascan.6.urls": 334
+        "stats.ascan.6.urls": 403
         ,
-        "stats.ascan.40029.urls": 24
+        "stats.ascan.40029.urls": 29
         ,
-        "stats.pscan.90002.time": 175
+        "stats.pscan.90002.time": 176
         ,
-        "stats.ascan.40045.started": 4
+        "stats.ascan.40045.started": 5
         ,
         "stats.pscan.10025.time": 75
         ,
-        "stats.api.call.json.spider.view.status": 8
+        "stats.api.call.json.spider.view.status": 10
         ,
-        "stats.pscan.10098.time": 3686
+        "stats.pscan.10098.time": 3809
         ,
-        "stats.ascan.0.urls": 84
+        "stats.ascan.0.urls": 113
         ,
-        "stats.ascan.started": 4
+        "stats.ascan.started": 5
         ,
-        "stats.ascan.40012.started": 4
+        "stats.ascan.40012.started": 5
         ,
-        "stats.network.send.success": 14243
+        "stats.network.send.success": 15529
         ,
-        "stats.ascan.30002.time": 141
+        "stats.ascan.30002.time": 177
         ,
-        "stats.pscan.50001.time": 57
+        "stats.pscan.50001.time": 58
         ,
-        "stats.ascan.40048.time": 12
+        "stats.ascan.40048.time": 16
         ,
-        "stats.ascan.40042.urls": 4
+        "stats.ascan.40042.urls": 6
         ,
         "stats.pscan.10044.time": 13
         ,
-        "stats.pscan.10113.time": 188
+        "stats.pscan.10113.time": 193
         ,
-        "stats.ascan.30002.urls": 57
+        "stats.ascan.30002.urls": 69
         ,
-        "stats.ascan.40048.urls": 4
+        "stats.ascan.40048.urls": 5
         ,
-        "stats.ascan.40042.time": 80104
+        "stats.ascan.40042.time": 80111
         ,
-        "stats.ascan.90026.time": 58
+        "stats.ascan.90026.time": 62
         ,
-        "stats.network.send.failure": 187
+        "stats.network.send.failure": 275
         ,
-        "stats.api.error.json.replacer.action.removeRule": 4
+        "stats.api.error.json.replacer.action.removeRule": 5
         ,
-        "stats.ascan.40043.time": 15
+        "stats.ascan.40043.time": 16
         ,
-        "stats.ascan.40022.started": 4
+        "stats.ascan.40022.started": 5
         ,
-        "stats.selenium.launch.10.firefox-headless": 64
+        "stats.selenium.launch.10.firefox-headless": 80
         ,
-        "stats.ascan.40043.skipped": 4
+        "stats.ascan.40043.skipped": 5
         ,
         "stats.ascan.10104.time": 850
         ,
-        "stats.ascan.30001.urls": 19
+        "stats.ascan.30001.urls": 23
         ,
         "stats.script.call.Graal.js.active": 4
         ,
-        "stats.pscan.10036.alerts": 8
+        "stats.api.call.json.ascan.view.scanners": 1
+        ,
+        "stats.pscan.10036.alerts": 11
         ,
         "stats.pscan.10043.time": 5
         ,
-        "stats.ascan.40009.time": 18040
+        "stats.ascan.40009.time": 18066
         ,
-        "stats.pscan.10057.time": 5885
+        "stats.pscan.10057.time": 6404
         ,
-        "stats.ascan.30001.time": 119
+        "stats.ascan.30001.time": 139
         ,
         "stats.ascan.10104.urls": 1008
         ,
-        "stats.ascan.40028.time": 40041
+        "stats.ascan.40028.time": 40048
         ,
-        "stats.pscan.10111.time": 206
+        "stats.pscan.10111.time": 211
         ,
-        "stats.ascan.10048.started": 4
+        "stats.log.warn.org.zaproxy.zap.extension.api.API.ApiException(ActiveScanAPI.java:743)": 1
         ,
-        "stats.ascan.20018.time": 304
+        "stats.ascan.10048.started": 5
         ,
-        "stats.api.call.json.replacer.action.removeRule": 7
+        "stats.ascan.20018.time": 348
         ,
-        "stats.ascan.40014.time": 74
+        "stats.api.call.json.replacer.action.removeRule": 9
         ,
-        "stats.spiderAjax.started": 4
+        "stats.ascan.40014.time": 81
         ,
-        "stats.ascan.10048.urls": 38
+        "stats.spiderAjax.started": 5
         ,
-        "stats.api.call.json.forcedUser.action.setForcedUser": 4
+        "stats.ascan.10048.urls": 46
+        ,
+        "stats.api.call.json.forcedUser.action.setForcedUser": 5
         ,
         "stats.log.warn.org.zaproxy.zap.extension.ascanrules.HiddenFilesScanRule": 4
         ,
-        "stats.pscan.50003.time": 160
+        "stats.pscan.50003.time": 170
         ,
-        "stats.ascan.20018.urls": 168
+        "stats.ascan.20018.urls": 226
         ,
-        "stats.ascan.10106.time": 34
+        "stats.ascan.10106.time": 41
         ,
-        "stats.ascan.40028.urls": 2
+        "stats.ascan.40028.urls": 3
         ,
-        "stats.ascan.10048.time": 459
+        "stats.ascan.10048.time": 577
         ,
         "stats.log.warn.org.zaproxy.addon.commonlib.AbstractHostFilePlugin": 2
         ,
-        "stats.client.ajax.scan": 4
+        "stats.client.ajax.scan": 5
         ,
-        "stats.ascan.40048.started": 4
+        "stats.ascan.40048.started": 5
         ,
         "stats.log.warn.org.zaproxy.zap.extension.domxss.DomXssScanRule": 11
         ,
         "stats.pscan.10010.time": 78
         ,
-        "stats.ascan.40009.urls": 74
+        "stats.ascan.40009.urls": 90
         ,
-        "stats.pscan.2.time": 6726
+        "stats.pscan.2.time": 7369
         ,
-        "stats.ascan.90034.started": 4
+        "stats.ascan.90034.started": 5
         ,
-        "stats.pscan.10024.time": 1030
+        "stats.pscan.10024.time": 1044
         ,
-        "stats.pscan.10021.alerts": 983
+        "stats.ascan.40018.alerts": 1
         ,
-        "stats.api.call.json.forcedUser.action.setForcedUserModeEnabled": 7
+        "stats.pscan.10021.alerts": 1064
         ,
-        "stats.api.call.json.ajaxSpider.action.scan": 4
+        "stats.api.call.json.forcedUser.action.setForcedUserModeEnabled": 9
         ,
-        "stats.api.call.json.ajaxSpider.view.status": 49
+        "stats.api.call.json.ajaxSpider.action.scan": 5
+        ,
+        "stats.api.call.json.ajaxSpider.view.status": 56
         ,
         "stats.ascan.10104.started": 4
         ,
-        "stats.pscan.10062.time": 301
+        "stats.pscan.10062.time": 306
         ,
-        "stats.api.call.json.ascan.view.status": 184
+        "stats.api.call.json.ascan.view.status": 196
         ,
-        "stats.pscan.-1.time": 59960
+        "stats.pscan.-1.time": 60673
         ,
         "stats.pscan.10115.time": 6
         ,
-        "stats.ascan.90021.time": 602
+        "stats.ascan.90021.time": 645
         ,
         "stats.log.error.org.zaproxy.zap.extension.selenium.ExtensionSelenium.WebDriverException(ErrorCodec.java:169)": 11
         ,
-        "stats.auth.sessiontokens.max": 4
+        "stats.auth.sessiontokens.max": 6
         ,
         "stats.log.warn.org.zaproxy.addon.commonlib.AbstractAppFilePlugin": 6
         ,
-        "stats.ascan.40012.urls": 95
+        "stats.ascan.40012.urls": 115
         ,
-        "stats.ascan.40043.started": 4
+        "stats.ascan.40043.started": 5
         ,
-        "stats.spiderAjax.time": 212321
+        "stats.spiderAjax.time": 241139
         ,
-        "stats.ascan.40018.urls": 420
+        "stats.ascan.40018.urls": 488
         ,
-        "stats.api.call.json.context.view.includeRegexs": 15
+        "stats.api.call.json.context.view.includeRegexs": 17
         ,
-        "stats.ascan.7.started": 4
+        "stats.ascan.7.started": 5
         ,
-        "stats.ascan.40018.started": 4
+        "stats.ascan.40018.started": 5
         ,
-        "stats.pscan.10033.time": 93
+        "stats.pscan.10033.time": 100
         ,
         "stats.pscan.10108.time": 6
         ,
-        "stats.ascan.20018.started": 4
+        "stats.ascan.20018.started": 5
         ,
-        "stats.pscan.10036.time": 10
+        "stats.pscan.10036.time": 11
         ,
-        "stats.ascan.90021.urls": 57
+        "stats.ascan.90021.urls": 69
         ,
-        "stats.ascan.40012.time": 758
+        "stats.ascan.40012.time": 792
         ,
-        "stats.pscan.10055.time": 225
+        "stats.pscan.10055.time": 268
         ,
         "stats.log.warn.org.openqa.selenium.remote.RemoteWebDriver.ConnectionFailedException(JdkHttpClient.java:260)": 9
         ,
-        "stats.ascan.30002.started": 4
+        "stats.ascan.30002.started": 5
         ,
-        "stats.ascan.40018.time": 12267
+        "stats.ascan.40018.time": 12328
         ,
-        "stats.pscan.10021.time": 3377
+        "stats.pscan.10021.time": 3942
         ,
-        "stats.api.call.json.context.action.setContextInScope": 16
+        "stats.api.call.json.context.action.setContextInScope": 18
         ,
         "stats.pscan.recordsToScan": 604
         ,
-        "stats.ascan.40009.started": 4
+        "stats.ascan.40009.started": 5
         ,
-        "stats.ascan.40020.started": 4
+        "stats.ascan.40020.started": 5
         ,
-        "stats.ascan.90023.time": 195
+        "stats.ascan.90023.time": 201
         ,
-        "stats.api.call.json.context.view.context": 15
+        "stats.api.call.json.context.view.context": 17
         ,
-        "stats.ascan.40035.time": 80247
+        "stats.ascan.40035.time": 80353
         ,
-        "stats.pscan.10096.time": 1096
+        "stats.pscan.10096.time": 1156
         ,
-        "stats.ascan.40021.urls": 95
+        "stats.ascan.40021.urls": 115
         ,
-        "stats.pscan.10055.alerts": 38
+        "stats.pscan.10055.alerts": 54
         ,
-        "stats.ascan.40035.urls": 104
+        "stats.ascan.40035.urls": 156
         ,
-        "stats.pscan.10109.alerts": 49
+        "stats.pscan.10109.alerts": 74
         ,
-        "stats.ascan.40021.time": 508
+        "stats.ascan.40021.time": 540
         ,
-        "stats.ascan.90037.urls": 304
+        "stats.ascan.90037.urls": 368
         ,
-        "stats.ascan.90019.time": 1520
+        "stats.ascan.90019.time": 1617
         ,
-        "stats.ascan.time": 917379
+        "stats.ascan.time": 968093
         ,
-        "stats.pscan.10096.alerts": 88
+        "stats.pscan.10096.alerts": 100
         ,
-        "stats.ascan.90024.time": 74
+        "stats.api.call.json.ascan.action.disableScanners": 1
         ,
-        "stats.pscan.10050.time": 18
+        "stats.ascan.90024.time": 81
+        ,
+        "stats.pscan.10050.time": 20
         ,
         "stats.api.call.json.context.action.includeInContext": 1
         ,
-        "stats.pscan.10111.alerts": 82
+        "stats.pscan.10111.alerts": 83
         ,
-        "stats.ascan.40017.time": 195
+        "stats.ascan.40017.time": 207
         ,
         "stats.pscan.90033.time": 49
         ,
         "stats.api.call.json.users.action.newUser": 2
         ,
-        "stats.ascan.10045.urls": 18
+        "stats.ascan.10045.urls": 22
         ,
-        "stats.pscan.10098.alerts": 1011
+        "stats.pscan.10098.alerts": 1041
         ,
-        "stats.ascan.40019.started": 4
+        "stats.ascan.40019.started": 5
         ,
-        "stats.api.call.json.ascan.action.scan": 4
+        "stats.api.call.json.ascan.action.scan": 5
         ,
-        "stats.ascan.40017.urls": 84
+        "stats.ascan.40017.urls": 113
         ,
         "stats.pscan.10019.time": 8
         ,
-        "domxss.gets.count": 1282
+        "domxss.gets.count": 1642
         ,
-        "stats.ascan.urls": 6414
+        "stats.ascan.urls": 7553
         ,
         "stats.ascan.10104.alerts": 48
         ,
         "stats.ascan.6.alerts": 2
         ,
-        "stats.spider.time": 282
+        "stats.spider.time": 701
         ,
-        "stats.ascan.40034.started": 4
+        "stats.ascan.40034.started": 5
         ,
-        "stats.pscan.3.time": 86
+        "stats.pscan.3.time": 87
         ,
-        "stats.ascan.20019.started": 4
+        "stats.ascan.20019.started": 5
         ,
-        "stats.ascan.10045.time": 263
+        "stats.ascan.started.policy.user": 1
+        ,
+        "stats.ascan.10045.time": 271
         ,
         "stats.ascan.50000.skipped": 4
         ,
         "stats.log.warn.org.zaproxy.zap.extension.ascanrules.CloudMetadataScanRule.ZapSocketTimeoutException(NioSocketImpl.java:288)": 26
         ,
-        "stats.pscan.10032.time": 51
+        "stats.pscan.10032.time": 55
         ,
         "stats.script.call.Graal.js.websocketpassive": 8008
         ,
-        "stats.ascan.90036.started": 4
+        "stats.ascan.90036.started": 5
         ,
-        "stats.pscan.10024.alerts": 311
+        "stats.pscan.10024.alerts": 313
         ,
-        "stats.spiderAjax.urls.added": 6653
+        "stats.spiderAjax.urls.added": 6658
         ,
-        "stats.ascan.40016.urls": 19
+        "stats.ascan.40016.urls": 23
         ,
-        "stats.api.call.json.context.view.contextList": 16
+        "stats.api.call.json.context.view.contextList": 18
         ,
-        "stats.pscan.10038.time": 366
+        "stats.pscan.10038.time": 572
         ,
-        "stats.log.warn": 75
+        "stats.log.warn": 79
         ,
-        "stats.ascan.40016.time": 111
+        "stats.ascan.40016.time": 119
         ,
-        "stats.pscan.10037.time": 2647
+        "stats.pscan.10037.time": 2703
         ,
-        "stats.ascan.90021.started": 4
+        "stats.ascan.90021.started": 5
         ,
-        "stats.api.call.json.reports.action.generate": 4
+        "stats.api.call.json.reports.action.generate": 5
         ,
-        "stats.pscan.10031.time": 4
+        "stats.pscan.10031.time": 5
         ,
-        "stats.api.call.json.spider.action.scan": 4
+        "stats.api.call.json.spider.action.scan": 5
         ,
-        "stats.ascan.40026.urls": 737
+        "stats.ascan.40026.urls": 809
         ,
-        "stats.ascan.40020.urls": 190
+        "stats.ascan.40020.urls": 230
         ,
-        "stats.log.warn.org.zaproxy.zap.extension.api.API.ApiException(ReplacerAPI.java:193)": 4
+        "stats.log.warn.org.zaproxy.zap.extension.api.API.ApiException(ReplacerAPI.java:193)": 5
         ,
-        "stats.auth.detect.auth.json": 82
+        "stats.auth.detect.auth.json": 83
         ,
         "stats.pscan.10028.time": 2
         ,
-        "stats.ascan.10045.started": 4
+        "stats.ascan.10045.started": 5
         ,
-        "stats.ascan.20019.urls": 171
+        "stats.ascan.20019.urls": 207
         ,
-        "stats.pscan.10003.time": 32037
+        "stats.pscan.10003.time": 34217
         ,
-        "stats.ascan.40028.started": 4
+        "stats.ascan.40028.started": 5
         ,
         "stats.pscan.10009.time": 21
         ,
-        "stats.ascan.40045.urls": 172
+        "stats.ascan.40045.urls": 231
         ,
-        "stats.ascan.90024.started": 4
+        "stats.ascan.90024.started": 5
         ,
-        "stats.ascan.90019.urls": 152
+        "stats.ascan.90019.urls": 184
         ,
-        "stats.pscan.10038.alerts": 49
+        "stats.pscan.10038.alerts": 74
         ,
         "stats.pscan.10041.time": 8
         ,
-        "stats.ascan.40020.time": 1094
+        "stats.ascan.40020.time": 1149
         ,
-        "stats.ascan.40045.time": 1716
+        "stats.ascan.40045.time": 1820
         ,
-        "stats.pscan.10027.alerts": 106
+        "stats.pscan.10027.alerts": 116
         ,
         "stats.pscan.10116.time": 21
         ,
         "stats.ascan.50000.started": 4
         ,
-        "stats.ascan.40026.time": 108837
+        "stats.ascan.40026.time": 135386
         ,
-        "stats.ascan.90029.time": 47
+        "stats.ascan.90029.time": 51
         ,
-        "stats.ascan.20019.time": 447
+        "stats.ascan.20019.time": 475
         ,
-        "stats.ascan.40016.started": 4
+        "stats.ascan.40016.started": 5
         
     },
     "afPlanErrors": [

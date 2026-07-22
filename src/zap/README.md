@@ -51,6 +51,8 @@ OPENAI_MODEL=gpt-4o-mini
 ```bash
 python3 scan_zap.py \
   --target http://localhost:3000 \
+  --auth-role user \
+  --forced-user \
   --report-format json \
   --output-file output/backend_basic.json
 ```
@@ -63,7 +65,6 @@ python3 scan_zap.py \
   --auth-role user \
   --forced-user \
   --ajax-spider \
-  --max-urls 300 \
   --report-format json \
   --output-file output/frontend_user_basic.json
 ```
@@ -76,7 +77,6 @@ python3 scan_zap.py \
   --auth-role admin \
   --forced-user \
   --ajax-spider \
-  --max-urls 300 \
   --report-format json \
   --output-file output/frontend_admin_basic.json
 ```
@@ -88,6 +88,8 @@ Script có thêm mode `--scan-mode owasp-top10-2025` để tự tạo scan polic
 ```bash
 python3 scan_zap.py \
   --target http://localhost:3000 \
+  --auth-role user \
+  --forced-user \
   --scan-mode owasp-top10-2025 \
   --report-format json \
   --output-file output/backend_top10_2025.json
@@ -105,7 +107,6 @@ python3 scan_zap.py \
   --auth-role user \
   --forced-user \
   --ajax-spider \
-  --max-urls 300 \
   --report-format json \
   --output-file output/frontend_user_basic.json
 ```
