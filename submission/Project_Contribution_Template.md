@@ -95,16 +95,16 @@ A task should be done by only 1-2 students. Duplicate tasks are not recommended.
 | 37 |  |  |  |  |  |
 | 38 |  |  |  |  |  |
 | 39 |  |  |  |  |  |
-| 40 | 23127185 | Mai Thị Kim Duyên | Tìm hiểu về ZAP.   |  | ![tìm hiểu zap](evidence/images/image-4.png) |
-| 41 | 23127185 | Mai Thị Kim Duyên | Tìm hiểu về OWASP. |  | ![tìm hiểu owasp](evidence/images/image-3.png)|
-| 42 | 23127185 | Mai Thị Kim Duyên | Tìm hiểu về OWASP Top 10: 3; 4. |  | ![tìm hiểu top 3,4](evidence/images/image-2.png) |
-| 43 | 23127185  | Mai Thị Kim Duyên  | Track Zap: Cài đặt và chạy Zap |  | ![Cài đặt zap](evidence/images/image.png)  |
-| 44 | 23127185 | Mai Thị Kim Duyên |  Track Zap: Tạo flow Test với Zap, AI Triage (có báo cáo output) |  | ![test zap, ai triage](evidence/images/image-5.png) |
-| 45 | 23127185 | Mai Thị Kim Duyên | Cài đặt và chạy cơ bản Semgrep theo hướng dẫn đã viết |  | ![chạy semgrep](evidence/images/image-8.png) |
-| 46 | 23127185 | Mai Thị Kim Duyên | Hoàn thiện Track Zap trên EShop, bổ sung evidence, output scan, AI triage và ghi chú kiểm chứng. |  | ![hoàn thiện track zap](evidence/images/image-6.png) |
-| 47 | 23127185 | Mai Thị Kim Duyên | Chuẩn bị slide và user guide cho OWASP Top 10 mục 3, 4 và 5, kèm phần giới thiệu ngắn. |  | ![user guide](evidence/images/image9.png)  |
-| 48 | 23127185 | Mai Thị Kim Duyên | Viết slide và user guide giới thiệu script ZAP của nhóm, gồm cách dùng các flag chính và ý nghĩa output. |  | ![script](evidence/images/image10.png) |
-| 49 | 23127185 | Mai Thị Kim Duyên | Phối hợp quay video demo workflow. |  | ![quay video](evidence/images/image-7.png) |
+| 40 | 23127185 | Mai Thị Kim Duyên | Tìm hiểu về ZAP.   |  | ![tìm hiểu zap](evidence/images/KD1.png) |
+| 41 | 23127185 | Mai Thị Kim Duyên | Tìm hiểu về OWASP. |  | ![tìm hiểu owasp](evidence/images/KD2.png)|
+| 42 | 23127185 | Mai Thị Kim Duyên | Tìm hiểu về OWASP Top 10: 3; 4. |  | ![tìm hiểu top 3,4](evidence/images/KD3.png) |
+| 43 | 23127185  | Mai Thị Kim Duyên  | Track Zap: Cài đặt và chạy Zap |  | ![Cài đặt zap](evidence/images/KD4.png)  |
+| 44 | 23127185 | Mai Thị Kim Duyên |  Track Zap: Tạo flow Test với Zap, AI Triage (có báo cáo output) |  | ![test zap, ai triage](evidence/images/KD5.png) |
+| 45 | 23127185 | Mai Thị Kim Duyên | Cài đặt và chạy cơ bản Semgrep theo hướng dẫn đã viết |  | ![chạy semgrep](evidence/images/KD6.png) |
+| 46 | 23127185 | Mai Thị Kim Duyên | Hoàn thiện Track Zap trên EShop, bổ sung evidence, output scan, AI triage và ghi chú kiểm chứng. |  | ![hoàn thiện track zap](evidence/images/KD7.png) |
+| 47 | 23127185 | Mai Thị Kim Duyên | Chuẩn bị slide và user guide cho OWASP Top 10 mục 3, 4 và 5, kèm phần giới thiệu ngắn. |  | ![user guide](evidence/images/KD8.png)  |
+| 48 | 23127185 | Mai Thị Kim Duyên | Viết slide và user guide giới thiệu script ZAP của nhóm, gồm cách dùng các flag chính và ý nghĩa output. |  | ![script](evidence/images/KD9.png) |
+| 49 | 23127185 | Mai Thị Kim Duyên | Phối hợp quay video demo workflow. |  | ![quay video](evidence/images/KD10.png) |
 | 50 |  |  |  |  |  |
 | 51 |  |  |  |  |  |
 | 52 |  |  |  |  |  |
