@@ -485,12 +485,12 @@ Create a CLI script that reads one or more OWASP ZAP JSON reports from `src/zap/
 ```
 
 - Evidence:
-  - `src/zap/test_openrouter_zap_json_extract.py`
-  - `src/zap/output/zap_openrouter_result.md`
+  - `src/zap/test_zap_ai_triage.py`
+  - `src/zap/output/zap_ai_triage_report.md`
 
 #### 2. Nội dung AI hỗ trợ
 
-Nội dung liên quan được audit trong `src/zap/test_openrouter_zap_json_extract.py`:
+Nội dung liên quan được audit trong `src/zap/test_zap_ai_triage.py`:
 
 ```python
 def test_parse_multiple_json_files_extracts_every_alert_instance_and_tags(self):
@@ -513,7 +513,7 @@ def test_build_prompt_contains_required_sections_for_ai(self):
     self.assertNotIn("CWE-264", prompt)
 ```
 
-AI output report có ví dụ verify PoC trong `src/zap/output/zap_openrouter_result.md`:
+AI output report có ví dụ verify PoC trong `src/zap/output/zap_ai_triage_report.md`:
 
 ```text
 PoC (Proof of Concept):
@@ -551,9 +551,9 @@ Unit tests cho parser/prompt/rendering là tốt, nhưng AI-generated report v�
 
 Sinh viên đã bổ sung:
 
-- `src/zap/test_openrouter_zap_json_extract.py`
-- `src/zap/openrouter_zap_json_extract.py`
-- `src/zap/output/zap_openrouter_result.md`
+- `src/zap/test_zap_ai_triage.py`
+- `src/zap/zap_ai_triage.py`
+- `src/zap/output/zap_ai_triage_report.md`
 
 Nội dung kiểm chứng nên sửa trước khi nộp:
 

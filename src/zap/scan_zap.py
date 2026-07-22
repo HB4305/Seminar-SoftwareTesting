@@ -13,6 +13,7 @@ import os
 import subprocess
 import sys
 import time
+from collections.abc import Iterable, Mapping
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -36,6 +37,92 @@ LOCAL_ZAP_HOSTS = {"localhost", "127.0.0.1"}
 OFFICIAL_REPORT_TEMPLATES = {
     "html": "modern",
     "json": "traditional-json-plus",
+}
+SCAN_MODE_BASIC = "basic"
+SCAN_MODE_OWASP_TOP10_2025 = "owasp-top10-2025"
+OWASP_2025_TAG_PREFIX = "OWASP_2025_"
+OWASP_2025_SCAN_POLICY_NAME = "owasp-top10-2025"
+OWASP_2025_ACTIVE_SCANNER_IDS = {
+    "0",
+    "6",
+    "7",
+    "41",
+    "42",
+    "43",
+    "10045",
+    "10047",
+    "10048",
+    "10051",
+    "10058",
+    "10095",
+    "10106",
+    "10107",
+    "10205",
+    "20012",
+    "20014",
+    "20015",
+    "20016",
+    "20017",
+    "20018",
+    "20019",
+    "30001",
+    "30002",
+    "30003",
+    "40003",
+    "40008",
+    "40009",
+    "40012",
+    "40013",
+    "40014",
+    "40015",
+    "40016",
+    "40017",
+    "40018",
+    "40019",
+    "40020",
+    "40021",
+    "40022",
+    "40023",
+    "40024",
+    "40025",
+    "40026",
+    "40027",
+    "40028",
+    "40029",
+    "40031",
+    "40032",
+    "40033",
+    "40034",
+    "40035",
+    "40038",
+    "40039",
+    "40040",
+    "40042",
+    "40043",
+    "40044",
+    "40045",
+    "40046",
+    "40047",
+    "40048",
+    "90017",
+    "90018",
+    "90019",
+    "90020",
+    "90021",
+    "90023",
+    "90024",
+    "90025",
+    "90026",
+    "90027",
+    "90028",
+    "90029",
+    "90034",
+    "90035",
+    "90036",
+    "90037",
+    "90039",
+    "100043",
+    "100044",
 }
 
 
@@ -96,6 +183,15 @@ def build_parser(load_env: bool = True) -> argparse.ArgumentParser:
         help=(
             "Giới hạn số URL được phép active scan. Nếu crawl vượt giới hạn, "
             "script bỏ qua active scan để tránh quá tải RAM."
+        ),
+    )
+    parser.add_argument(
+        "--scan-mode",
+        default=os.getenv("ZAP_SCAN_MODE", SCAN_MODE_BASIC),
+        choices=[SCAN_MODE_BASIC, SCAN_MODE_OWASP_TOP10_2025],
+        help=(
+            "Chọn policy active scan: basic dùng rule mặc định của ZAP, "
+            "owasp-top10-2025 chỉ bật các scanner có tag OWASP_2025_*."
         ),
     )
 
@@ -192,10 +288,130 @@ def wait_for_passive_scan(zap, timeout: int = 600, poll_interval: int = 2) -> No
     raise RuntimeError(f"Passive scan did not complete within {timeout}s")
 
 
-def configure_scan_policy(zap) -> str | None:
-    """Use the default ZAP basic enabled rules for all scans."""
-    print("[*] Scan mode: basic ZAP default enabled rules.")
+def _scanner_records(scanners: object) -> list[Mapping[str, object]]:
+    """Chuẩn hóa payload scanner từ ZAP về danh sách mapping."""
+    if isinstance(scanners, Mapping):
+        for key in ("scanners", "scanner", "rules", "data"):
+            value = scanners.get(key)
+            if isinstance(value, list):
+                return [item for item in value if isinstance(item, Mapping)]
+        return [scanners]
+    if isinstance(scanners, list):
+        return [item for item in scanners if isinstance(item, Mapping)]
+    if isinstance(scanners, tuple):
+        return [item for item in scanners if isinstance(item, Mapping)]
+    if isinstance(scanners, Iterable) and not isinstance(scanners, (str, bytes)):
+        return [item for item in scanners if isinstance(item, Mapping)]
+    return []
+
+
+def _scanner_id(scanner: Mapping[str, object]) -> str | None:
+    """Trích ID rule từ một record scanner."""
+    for key in ("id", "scannerId", "scanRuleId", "ruleId"):
+        value = scanner.get(key)
+        if value is not None:
+            return str(value)
     return None
+
+
+def _base_scanner_id(scanner_id: str) -> str:
+    """Chuẩn hóa ID biến thể như 40014-1 về scanner chính 40014."""
+    return scanner_id.split("-", 1)[0]
+
+
+def _flatten_tags(raw_tags: object) -> set[str]:
+    """Chuyển các kiểu biểu diễn tag của ZAP thành tập chuỗi phẳng."""
+    tags: set[str] = set()
+    if raw_tags is None:
+        return tags
+    if isinstance(raw_tags, str):
+        parts = raw_tags.replace(",", " ").replace(";", " ").split()
+        tags.update(part.strip() for part in parts if part.strip())
+        return tags
+    if isinstance(raw_tags, Mapping):
+        for key, value in raw_tags.items():
+            if isinstance(key, str) and key.strip():
+                tags.add(key.strip())
+            if isinstance(value, str) and value.strip():
+                tags.add(value.strip())
+            elif isinstance(value, Mapping):
+                tags.update(_flatten_tags(value))
+            elif isinstance(value, Iterable) and not isinstance(value, (str, bytes)):
+                for item in value:
+                    tags.update(_flatten_tags(item))
+            elif value is not None:
+                tags.add(str(value))
+        return tags
+    if isinstance(raw_tags, Iterable):
+        for item in raw_tags:
+            tags.update(_flatten_tags(item))
+        return tags
+    tags.add(str(raw_tags))
+    return tags
+
+
+def _scanner_tags(scanner: Mapping[str, object]) -> set[str]:
+    """Lấy tập tag của scanner từ nhiều schema response khác nhau của ZAP."""
+    for key in ("alertTags", "alerttags", "tags", "tag"):
+        if key in scanner:
+            return _flatten_tags(scanner.get(key))
+    return set()
+
+
+def _top10_2025_scanner_ids(zap) -> tuple[list[str], list[str]]:
+    """Tìm scanner IDs có tag OWASP 2025 để dùng cho policy giới hạn."""
+    scanners = _scanner_records(zap.ascan.scanners())
+    selected_ids: list[str] = []
+    all_ids: list[str] = []
+    for scanner in scanners:
+        scanner_id = _scanner_id(scanner)
+        if scanner_id is None:
+            continue
+        scanner_id = _base_scanner_id(scanner_id)
+        if scanner_id not in all_ids:
+            all_ids.append(scanner_id)
+        tags = _scanner_tags(scanner)
+        if (
+            any(tag.startswith(OWASP_2025_TAG_PREFIX) for tag in tags)
+            and scanner_id not in selected_ids
+        ):
+            selected_ids.append(scanner_id)
+    if selected_ids:
+        return selected_ids, all_ids
+    selected_ids = [
+        scanner_id for scanner_id in all_ids if scanner_id in OWASP_2025_ACTIVE_SCANNER_IDS
+    ]
+    return selected_ids, all_ids
+
+
+def configure_scan_policy(zap, scan_mode: str = SCAN_MODE_BASIC) -> str | None:
+    """Cấu hình policy active scan theo mode người dùng chọn."""
+    if scan_mode == SCAN_MODE_BASIC:
+        print("[*] Scan mode: basic ZAP default enabled rules.")
+        return None
+
+    if scan_mode != SCAN_MODE_OWASP_TOP10_2025:
+        raise ValueError(f"Unsupported scan mode: {scan_mode}")
+
+    print("[*] Scan mode: OWASP Top 10 2025 tag-based policy.")
+    try:
+        zap.ascan.remove_scan_policy(OWASP_2025_SCAN_POLICY_NAME)
+    except Exception:
+        pass
+    zap.ascan.add_scan_policy(OWASP_2025_SCAN_POLICY_NAME)
+    selected_ids, all_ids = _top10_2025_scanner_ids(zap)
+    if not selected_ids:
+        raise RuntimeError(
+            "No OWASP Top 10 2025 active scanners were available in this ZAP install."
+        )
+    if all_ids:
+        zap.ascan.disable_scanners(",".join(all_ids), scanpolicyname=OWASP_2025_SCAN_POLICY_NAME)
+    zap.ascan.enable_scanners(",".join(selected_ids), scanpolicyname=OWASP_2025_SCAN_POLICY_NAME)
+    print(
+        f"[*] Enabled {len(selected_ids)} OWASP Top 10 2025 active scanners "
+        f"in policy {OWASP_2025_SCAN_POLICY_NAME}."
+    )
+    return OWASP_2025_SCAN_POLICY_NAME
 
 
 def _same_origin(url: str, target: str) -> bool:
@@ -343,7 +559,7 @@ def run(args) -> int:
             auth_configured = True
             context_id = state.context_id
             verify_authenticated_session(args.zap_url)
-        scan_policy_name = configure_scan_policy(zap)
+        scan_policy_name = configure_scan_policy(zap, args.scan_mode)
         execute_scan(
             zap,
             target,

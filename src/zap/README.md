@@ -81,6 +81,20 @@ python3 scan_zap.py \
   --output-file output/frontend_admin_basic.json
 ```
 
+### Chỉ quét OWASP Top 10 2025
+
+Script có thêm mode `--scan-mode owasp-top10-2025` để tự tạo scan policy và chỉ bật các active scanner thuộc OWASP Top 10 2025:
+
+```bash
+python3 scan_zap.py \
+  --target http://localhost:3000 \
+  --scan-mode owasp-top10-2025 \
+  --report-format json \
+  --output-file output/backend_top10_2025.json
+```
+
+Mode này ưu tiên lọc theo tag `OWASP_2025_*` nếu ZAP API trả tag. Với ZAP 2.17, API `ascan.scanners()` thường không trả tag, nên script fallback sang danh sách scanner ID OWASP 2025 đã biết và chỉ enable những ID có trong bản ZAP đang chạy.
+
 ### Giới hạn URL khi scan frontend
 
 Frontend React/SPA có thể làm AJAX Spider ghi nhận rất nhiều URL, nhất là các route dev server, asset Vite hoặc request lặp theo state. Dùng `--max-urls` để đặt ngân sách trước active scan:
@@ -103,10 +117,10 @@ Nếu số URL đã crawl vượt giới hạn, script vẫn giữ kết quả s
 Nếu có OpenAI hoặc OpenRouter key, chạy:
 
 ```bash
-python3 openrouter_zap_json_extract.py \
+python3 zap_ai_triage.py \
   --input output/backend_basic.json output/frontend_user_basic.json output/frontend_admin_basic.json \
   --format markdown \
-  --output output/zap_openrouter_result.md
+  --output output/zap_ai_triage_report.md
 ```
 
 Nếu API lỗi, script sẽ tự fallback sang local triager.
@@ -116,7 +130,7 @@ Nếu API lỗi, script sẽ tự fallback sang local triager.
 - output/backend_basic.json
 - output/frontend_user_basic.json
 - output/frontend_admin_basic.json
-- output/zap_openrouter_result.md
+- output/zap_ai_triage_report.md
 
 ## 6. Ghi chú
 
