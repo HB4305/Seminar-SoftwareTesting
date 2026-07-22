@@ -194,6 +194,14 @@ class SemgrepAiTriageWorkflowTest(unittest.TestCase):
 
         self.assertIn("semgrep_triage_report", report_path.name)
         self.assertIn("rule.one", report)
+        self.assertIn(
+            "| # | Quy tắc | Tệp | Dòng | Mức độ | CWE | OWASP | Kết quả AI | Trạng thái kiểm chứng |",
+            report,
+        )
+        self.assertNotIn("| # | Rule | File | Dòng | Severity | CWE | OWASP | Output AI |", report)
+        self.assertIn("| 1 | `rule.one` | `backend/server.js` | 2 | WARNING | CWE-798 | A07:2025 |", report)
+        self.assertIn("Cần người kiểm chứng", report)
+        self.assertNotIn("| Needs Human Review |", report)
         self.assertIn("## Chi tiết từng finding", report)
         self.assertIn("### SEMGREP-001: rule.one", report)
         self.assertIn("### Phân tích AI", report)
@@ -221,11 +229,15 @@ class SemgrepAiTriageWorkflowTest(unittest.TestCase):
 
         prompt = triage.build_prompt(record)
 
-        self.assertIn("Project/source context for static triage", prompt)
-        self.assertIn("Read and compare the source evidence before classification", prompt)
-        self.assertIn("File role: application runtime code", prompt)
-        self.assertIn("localhost HTTP can be dev/lab-only", prompt)
-        self.assertIn("Classification: True Positive / False Positive / Needs Human Review", prompt)
+        self.assertIn("Hãy trả lời hoàn toàn bằng tiếng Việt", prompt)
+        self.assertIn("Ngữ cảnh source cho triage tĩnh", prompt)
+        self.assertIn("Đọc và đối chiếu source evidence trước khi phân loại", prompt)
+        self.assertIn("Vai trò file: mã runtime của ứng dụng", prompt)
+        self.assertIn("HTTP localhost có thể chỉ dùng cho dev/lab", prompt)
+        self.assertIn("Phân loại: True Positive / False Positive / Needs Human Review", prompt)
+        self.assertIn("Lý do phân loại dựa trên source evidence", prompt)
+        self.assertIn("Ghi chú cần tester kiểm tra thêm nếu chưa đủ context", prompt)
+        self.assertNotIn("PoC hoặc testcase kiểm chứng", prompt)
         self.assertNotIn("Duplicate / Same Root Cause", prompt)
 
     def test_build_prompt_marks_test_files_as_test_helper_context(self):
@@ -247,10 +259,10 @@ class SemgrepAiTriageWorkflowTest(unittest.TestCase):
 
         prompt = triage.build_prompt(record)
 
-        self.assertIn("File role: test/helper code", prompt)
-        self.assertIn("do not classify it as True Positive unless it is deployed", prompt)
+        self.assertIn("Vai trò file: mã test/helper", prompt)
+        self.assertIn("không phân loại là True Positive trừ khi file được deploy", prompt)
 
-    def test_write_triage_outputs_creates_postman_validation_report(self):
+    def test_write_triage_outputs_creates_test_case_entries_report(self):
         triage = load_triage_module()
         records = [
             triage.FindingRecord(
@@ -287,19 +299,108 @@ class SemgrepAiTriageWorkflowTest(unittest.TestCase):
 
             triage.write_triage_outputs(records, {}, output_dir)
 
-            report = (output_dir / "semgrep_postman_validation_report.md").read_text(
+            report = (output_dir / "semgrep_test_cases.md").read_text(
+                encoding="utf-8"
+            )
+            old_report_exists = (output_dir / "semgrep_postman_validation_report.md").exists()
+            old_table_report_exists = (output_dir / "semgrep_test_case_table.md").exists()
+
+        self.assertFalse(old_report_exists)
+        self.assertFalse(old_table_report_exists)
+        self.assertIn("# Danh sách test case kiểm chứng Semgrep", report)
+        self.assertIn("theo từng entry riêng", report)
+        self.assertIn("## TC-SEMGREP-001", report)
+        self.assertIn("- Finding liên quan: SEMGREP-001", report)
+        self.assertIn("### Input", report)
+        self.assertIn("### Thao tác", report)
+        self.assertIn("### Kết quả cần ghi nhận", report)
+        self.assertNotIn("### Expected output", report)
+        self.assertNotIn("### Actual output", report)
+        self.assertIn("### Trạng thái", report)
+        self.assertNotIn("| Mã test case | Finding liên quan |", report)
+        self.assertIn("GET http://localhost:3000/api/users/me", report)
+        self.assertIn("Authorization: Bearer <forged_admin_jwt>", report)
+        self.assertIn("Gửi request và ghi nhận status code, response body", report)
+        self.assertIn("## TC-SEMGREP-002", report)
+        self.assertIn("- Finding liên quan: SEMGREP-002", report)
+        self.assertIn("GET http://localhost:3000/api/products", report)
+        self.assertIn("Chưa kiểm chứng", report)
+        self.assertNotIn("Độ tin cậy mapping", report)
+        self.assertNotIn("Bằng chứng cần thu thập", report)
+
+    def test_triage_report_detail_entries_include_security_tags(self):
+        triage = load_triage_module()
+        record = triage.FindingRecord(
+            index=1,
+            rule_id="javascript.jsonwebtoken.security.jwt-hardcode.hardcoded-jwt-secret",
+            file_path="backend/server.js",
+            line=51,
+            severity="WARNING",
+            message="Hard-coded credential",
+            code='const SECRET_KEY = "super_secret_key_that_should_not_be_here";',
+            cwe="CWE-798: Use of Hard-coded Credentials",
+            owasp="A07:2021 - Identification and Authentication Failures",
+            likelihood="HIGH",
+            impact="MEDIUM",
+            confidence="HIGH",
+        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output_dir = Path(tmpdir)
+
+            triage.write_triage_outputs({record.index: record}.values(), {}, output_dir)
+
+            report = (output_dir / "semgrep_triage_report.md").read_text(
                 encoding="utf-8"
             )
 
-        self.assertIn("## SEMGREP-001: Hardcoded JWT Secret", report)
-        self.assertIn("### 4. Postman Test Case", report)
-        self.assertIn("GET http://localhost:3000/api/users/me", report)
-        self.assertIn("Authorization: Bearer <forged_admin_jwt>", report)
-        self.assertIn("## SEMGREP-002: Insecure HTTP Request", report)
-        self.assertIn("GET http://localhost:3000/api/products", report)
-        self.assertIn("ZAP related alert", report)
+        self.assertIn("### SEMGREP-001:", report)
+        self.assertIn("#### Tags lỗi", report)
+        self.assertIn("`Rule: javascript.jsonwebtoken.security.jwt-hardcode.hardcoded-jwt-secret`", report)
+        self.assertIn("`Severity: WARNING`", report)
+        self.assertIn("`CWE-798: Use of Hard-coded Credentials`", report)
+        self.assertIn("`A07:2021 - Identification and Authentication Failures`", report)
+        self.assertIn("`Likelihood: HIGH`", report)
+        self.assertIn("`Impact: MEDIUM`", report)
+        self.assertIn("`Confidence: HIGH`", report)
 
-    def test_postman_validation_report_marks_unknown_mapping_as_low_confidence(self):
+    def test_triage_report_demotes_ai_headings_inside_finding_details(self):
+        triage = load_triage_module()
+        record = triage.FindingRecord(
+            index=1,
+            rule_id="rule.one",
+            file_path="backend/server.js",
+            line=2,
+            severity="WARNING",
+            message="Hard-coded credential",
+            code="const SECRET_KEY = 'secret';",
+            cwe="CWE-798",
+            owasp="A07:2025",
+            likelihood="HIGH",
+            impact="MEDIUM",
+            confidence="HIGH",
+        )
+        ai_output = (
+            "## Triage Finding Bảo Mật SEMGREP-001\n\n"
+            "### 1. Phân loại\n\n"
+            "True Positive"
+        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output_dir = Path(tmpdir)
+
+            report_path = triage.write_triage_outputs([record], {1: ai_output}, output_dir)
+
+            report = report_path.read_text(encoding="utf-8")
+            raw_ai_output = (
+                output_dir / "findings" / "001_rule-one_ai_output.md"
+            ).read_text(encoding="utf-8")
+
+        self.assertNotIn("\n## Triage Finding Bảo Mật SEMGREP-001", report)
+        self.assertNotIn("\n### 1. Phân loại", report)
+        self.assertIn("\n##### Triage Finding Bảo Mật SEMGREP-001", report)
+        self.assertIn("\n##### 1. Phân loại", report)
+        self.assertIn("## Triage Finding Bảo Mật SEMGREP-001", raw_ai_output)
+
+    def test_test_case_entries_mark_unknown_mapping_for_manual_review(self):
         triage = load_triage_module()
         record = triage.FindingRecord(
             index=3,
@@ -318,15 +419,61 @@ class SemgrepAiTriageWorkflowTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             output_dir = Path(tmpdir)
 
-            triage.write_postman_validation_report([record], output_dir)
+            triage.write_test_case_entries_report([record], output_dir)
 
-            report = (output_dir / "semgrep_postman_validation_report.md").read_text(
+            report = (output_dir / "semgrep_test_cases.md").read_text(
                 encoding="utf-8"
             )
 
-        self.assertIn("## SEMGREP-003: Potential security issue", report)
-        self.assertIn("Mapping confidence: Low", report)
+        self.assertIn("## TC-SEMGREP-003", report)
+        self.assertIn("- Finding liên quan: SEMGREP-003", report)
         self.assertIn("http://localhost:3000/<map-endpoint>", report)
+        self.assertIn("Chưa kiểm chứng", report)
+        self.assertNotIn("### Expected output", report)
+        self.assertNotIn("### Actual output", report)
+
+    def test_main_stops_without_writing_reports_when_ai_call_fails(self):
+        triage = load_triage_module()
+        semgrep_json = {
+            "results": [
+                {
+                    "check_id": "rule.one",
+                    "path": "backend/server.js",
+                    "start": {"line": 2},
+                    "extra": {
+                        "severity": "WARNING",
+                        "message": "Hard-coded credential",
+                        "lines": "const SECRET_KEY = 'secret';",
+                        "metadata": {},
+                    },
+                }
+            ]
+        }
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_path = Path(tmpdir)
+            json_path = tmp_path / "semgrep.json"
+            output_dir = tmp_path / "output"
+            json_path.write_text(json.dumps(semgrep_json), encoding="utf-8")
+            settings = triage.AiSettings(
+                provider="openai-compatible",
+                model="test-model",
+                api_key="test-key",
+                base_url="https://example.test",
+            )
+
+            with mock.patch.object(triage, "get_ai_settings", return_value=settings):
+                with mock.patch.object(
+                    triage,
+                    "generate_ai_response",
+                    side_effect=RuntimeError("provider 402"),
+                ):
+                    with mock.patch.object(triage, "write_triage_outputs") as write_mock:
+                        exit_code = triage.main(
+                            [str(json_path), "--output-dir", str(output_dir)]
+                        )
+
+        self.assertEqual(exit_code, 1)
+        write_mock.assert_not_called()
 
 
 if __name__ == "__main__":

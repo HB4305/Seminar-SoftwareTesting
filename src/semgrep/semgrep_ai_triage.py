@@ -250,14 +250,14 @@ def infer_file_role(file_path):
         or "/test/" in normalized
         or "/tests/" in normalized
     ):
-        return "test/helper code"
+        return "mã test/helper"
     if "/backend/" in normalized and name in {"server.js", "app.js", "index.js"}:
-        return "backend runtime entrypoint"
+        return "entrypoint runtime backend"
     if "/frontend-" in normalized or "/frontend/" in normalized:
-        return "application runtime code"
+        return "mã runtime của ứng dụng"
     if "/backend/" in normalized:
-        return "backend application code"
-    return "unknown; reviewer must confirm whether this file is deployed"
+        return "mã backend của ứng dụng"
+    return "chưa rõ; reviewer cần xác nhận file này có được deploy hay không"
 
 
 def build_static_triage_context(record):
@@ -265,25 +265,25 @@ def build_static_triage_context(record):
     code_lower = (record.code or "").lower()
     rule_lower = (record.rule_id or "").lower()
     context_lines = [
-        "Project/source context for static triage:",
-        "- Read and compare the source evidence before classification.",
-        "- Semgrep is SAST: classify from source evidence and deployment context, not from HTTP responses.",
-        "- EShop is scanned as a local lab app; localhost findings need environment review before final risk.",
-        f"- File role: {file_role}.",
-        "- True Positive: source evidence matches the rule and the vulnerable code is reachable in the relevant app/runtime context.",
-        "- False Positive: source evidence or file role proves the finding is not a real vulnerability for this app.",
-        "- Needs Human Review: config, deployment usage, runtime reachability, or data sensitivity is unknown.",
-        "- If this is test/helper code, do not classify it as True Positive unless it is deployed or reused by runtime code.",
-        "- localhost HTTP can be dev/lab-only; classify it as False Positive only when source/config proves production is not affected.",
-        "- If several findings share one root cause, mention that in the explanation but still choose one of the three classifications.",
+        "Ngữ cảnh source cho triage tĩnh:",
+        "- Đọc và đối chiếu source evidence trước khi phân loại.",
+        "- Semgrep là SAST: phân loại dựa trên bằng chứng source code và ngữ cảnh deploy, không dựa trên HTTP response.",
+        "- EShop đang được quét như ứng dụng lab local; finding liên quan localhost cần kiểm tra môi trường trước khi kết luận rủi ro cuối.",
+        f"- Vai trò file: {file_role}.",
+        "- True Positive: source evidence khớp rule và code lỗi reachable trong runtime/ngữ cảnh ứng dụng liên quan.",
+        "- False Positive: source evidence hoặc vai trò file chứng minh finding không phải lỗ hổng thật của ứng dụng.",
+        "- Needs Human Review: chưa rõ config, deploy usage, runtime reachability hoặc độ nhạy cảm dữ liệu.",
+        "- Nếu đây là mã test/helper, không phân loại là True Positive trừ khi file được deploy hoặc được runtime code dùng lại.",
+        "- HTTP localhost có thể chỉ dùng cho dev/lab; chỉ phân loại False Positive khi source/config chứng minh production không bị ảnh hưởng.",
+        "- Nếu nhiều finding cùng một root cause, hãy nêu trong phần giải thích nhưng vẫn chọn một trong ba phân loại.",
     ]
     if "localhost" in code_lower or "http://127.0.0.1" in code_lower:
         context_lines.append(
-            "- This snippet references a local HTTP endpoint; verify production API_URL/base URL before calling it a real transport-security vulnerability."
+            "- Snippet này tham chiếu endpoint HTTP local; cần kiểm tra production API_URL/base URL trước khi xem là lỗ hổng truyền tải thật."
         )
     if "jwt" in rule_lower or "secret" in code_lower:
         context_lines.append(
-            "- For JWT/secret findings, confirm whether the secret signs or verifies real application tokens and whether the file is part of runtime code."
+            "- Với finding JWT/secret, cần xác nhận secret có ký/xác minh token thật của ứng dụng hay không và file có thuộc runtime code hay không."
         )
     return "\n".join(context_lines)
 
@@ -324,11 +324,12 @@ def collect_finding_records(findings: Iterable[dict], source_root=None):
 def build_prompt(record):
     return f"""Tôi dùng công cụ Semgrep (SAST) để quét mã nguồn và phát hiện một finding bảo mật.
 Bạn hãy đóng vai trò là chuyên gia bảo mật ứng dụng để triage finding này.
+Hãy trả lời hoàn toàn bằng tiếng Việt, trừ các thuật ngữ chuẩn như True Positive, False Positive, Needs Human Review, CWE, OWASP.
 
 Thông tin kỹ thuật:
-- Finding index: {record.index}
+- Mã finding: SEMGREP-{record.index:03d}
 - Rule ID: {record.rule_id}
-- File: {record.file_path}
+- File nguồn: {record.file_path}
 - Dòng: {record.line}
 - Severity: {record.severity}
 - CWE: {record.cwe}
@@ -338,7 +339,7 @@ Thông tin kỹ thuật:
 - Confidence: {record.confidence}
 - Cảnh báo Semgrep: {record.message}
 
-Source code context:
+Source code context / bằng chứng mã nguồn:
 ```text
 {record.code}
 ```
@@ -346,12 +347,11 @@ Source code context:
 {build_static_triage_context(record)}
 
 Hãy trả lời bằng Markdown với các mục:
-1. Classification: True Positive / False Positive / Needs Human Review.
-2. Giải thích lỗ hổng trong bối cảnh EShop.
-3. PoC hoặc testcase kiểm chứng.
-4. Impact thực tế.
-5. Remediation cụ thể.
-6. Human validation cần làm trước khi kết luận cuối cùng, nhất là file có chạy thật không và production config có bị ảnh hưởng không.
+1. Phân loại: True Positive / False Positive / Needs Human Review.
+2. Lý do phân loại dựa trên source evidence.
+3. Tác động thực tế trong bối cảnh EShop.
+4. Cách khắc phục cụ thể.
+5. Ghi chú cần tester kiểm tra thêm nếu chưa đủ context.
 """
 
 
@@ -416,7 +416,7 @@ def runtime_mapping_for_record(record):
     rule = record.rule_id.lower()
     if "jwt-hardcode" in rule or "hardcoded-jwt-secret" in rule:
         return RuntimeMapping(
-            title="Hardcoded JWT Secret",
+            title="JWT secret hardcode",
             affected_feature="JWT authentication / admin authorization",
             method="GET",
             url="http://localhost:3000/api/users/me",
@@ -444,7 +444,7 @@ def runtime_mapping_for_record(record):
         url = extract_first_http_url(record.code) or "http://localhost:3000/<api-path>"
         method = infer_method_from_code(record.code)
         return RuntimeMapping(
-            title="Insecure HTTP Request",
+            title="HTTP request không mã hóa",
             affected_feature="Frontend/API transport security",
             method=method,
             url=url,
@@ -493,94 +493,103 @@ def runtime_mapping_for_record(record):
     )
 
 
-def write_postman_validation_report(records: List[FindingRecord], output_dir):
+def write_test_case_entries_report(records: List[FindingRecord], output_dir):
     output_path = Path(output_dir)
     lines = [
-        "# Semgrep Postman Validation Report",
+        "# Danh sách test case kiểm chứng Semgrep",
         "",
-        "Report này format finding Semgrep theo kiểu gần với ZAP Alert và thêm test case để reviewer copy sang Postman.",
-        "",
-        "## Comparison Matrix",
-        "",
-        "| Semgrep Finding | Source Evidence | Postman Result | ZAP Related Alert | Conclusion |",
-        "|---|---|---|---|---|",
+        "Tài liệu này tổng hợp test case kiểm chứng cho các finding Semgrep theo từng entry riêng. Mỗi entry có liên kết về finding gốc để reviewer biết test case đang xác minh cảnh báo nào.",
     ]
 
-    mappings = []
     for record in records:
         mapping = runtime_mapping_for_record(record)
-        mappings.append((record, mapping))
-        lines.append(
-            f"| SEMGREP-{record.index:03d}: {mapping.title} | `{record.file_path}:{record.line}` | Needs Manual Verification | {mapping.zap_related_alert} | {mapping.conclusion} |"
-        )
-
-    for record, mapping in mappings:
+        request = f"{mapping.method} {mapping.url}"
+        action = "Gửi request và ghi nhận status code, response body."
         lines.extend(
             [
                 "",
-                f"## SEMGREP-{record.index:03d}: {mapping.title}",
+                f"## TC-SEMGREP-{record.index:03d}",
                 "",
-                "### 1. Alert Summary",
-                f"- Tool: Semgrep",
-                f"- Type: SAST",
-                f"- Rule ID: `{record.rule_id}`",
-                f"- Severity: {record.severity}",
-                f"- CWE: {record.cwe}",
-                f"- OWASP: {record.owasp}",
-                "- Status: Needs Manual Verification",
+                f"- Finding liên quan: SEMGREP-{record.index:03d}",
+                f"- Mục tiêu test: {mapping.test_objective}",
                 "",
-                "### 2. Source Evidence",
-                f"- File: `{record.file_path}`",
-                f"- Line: {record.line}",
-                "- Vulnerable code:",
-                "```text",
-                record.code,
-                "```",
+                "### Input",
                 "",
-                "### 3. Runtime Mapping",
-                f"- Affected feature: {mapping.affected_feature}",
-                f"- Related endpoint: `{mapping.method} {mapping.url}`",
-                f"- Method: `{mapping.method}`",
-                "- Base URL: `http://localhost:3000`",
-                "- Auth required: Yes" if "Authorization:" in mapping.headers else "- Auth required: No / depends on endpoint",
-                f"- Mapping confidence: {mapping.confidence}",
-                f"- Mapping note: {mapping.note}",
-                "",
-                "### 4. Postman Test Case",
-                f"- Test objective: {mapping.test_objective}",
-                "- URL:",
                 "```http",
-                f"{mapping.method} {mapping.url}",
+                request,
                 "```",
-                "- Headers:",
+                "",
+                "Headers:",
                 "```http",
                 mapping.headers,
                 "```",
-                "- Payload:",
+                "",
+                "Payload:",
                 "```json",
                 mapping.payload,
                 "```",
-                "- Pre-test setup:",
-                "```text",
+                "",
+                "### Thao tác",
+                "",
                 mapping.pre_test_setup,
-                "```",
                 "",
-                "### 5. Expected Result",
-                f"- Vulnerable behavior: {mapping.vulnerable_behavior}",
-                f"- Secure behavior: {mapping.secure_behavior}",
-                "- Evidence to capture: status code, response body, screenshot Postman, request URL/header/body.",
+                action,
                 "",
-                "### 6. ZAP Comparison",
-                f"- ZAP related alert: {mapping.zap_related_alert}",
-                "- Difference:",
-                mapping.difference,
-                f"- Conclusion: {mapping.conclusion}",
+                "### Kết quả cần ghi nhận",
+                "",
+                f"- Nếu còn lỗi: {mapping.vulnerable_behavior}",
+                f"- Nếu đã an toàn: {mapping.secure_behavior}",
+                "",
+                "### Trạng thái",
+                "",
+                "Chưa kiểm chứng",
             ]
         )
 
-    report_path = output_path / "semgrep_postman_validation_report.md"
-    report_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    lines.extend(
+        [
+            "",
+            "## Ghi chú sử dụng",
+            "",
+            "- `Finding liên quan` trỏ về ID finding trong `semgrep_triage_report.md`.",
+            "- Với finding chưa map được endpoint thật, tester cần đọc source evidence rồi điền lại URL/header/payload trước khi kiểm chứng.",
+            "- Kết quả cuối cùng vẫn phân loại theo `True Positive`, `False Positive`, hoặc `Needs Human Review`.",
+            "",
+        ]
+    )
+
+    report_path = output_path / "semgrep_test_cases.md"
+    report_path.write_text("\n".join(lines), encoding="utf-8")
     return report_path
+
+
+def build_security_tag_lines(record: FindingRecord) -> List[str]:
+    return [
+        f"`Rule: {record.rule_id}`",
+        f"`Severity: {record.severity}`",
+        f"`{record.cwe}`",
+        f"`{record.owasp}`",
+        f"`Likelihood: {record.likelihood}`",
+        f"`Impact: {record.impact}`",
+        f"`Confidence: {record.confidence}`",
+    ]
+
+
+def format_ai_output_for_triage_report(ai_output: str) -> str:
+    formatted_lines = []
+    in_code_block = False
+    for line in (ai_output or "").splitlines():
+        if line.lstrip().startswith("```"):
+            in_code_block = not in_code_block
+            formatted_lines.append(line)
+            continue
+        if not in_code_block:
+            heading_match = re.match(r"^(#{1,4})\s+(.+)$", line)
+            if heading_match:
+                formatted_lines.append(f"##### {heading_match.group(2)}")
+                continue
+        formatted_lines.append(line)
+    return "\n".join(formatted_lines).strip()
 
 
 def write_triage_outputs(records: List[FindingRecord], ai_outputs: Dict[int, str], output_dir):
@@ -589,7 +598,7 @@ def write_triage_outputs(records: List[FindingRecord], ai_outputs: Dict[int, str
     findings_dir.mkdir(parents=True, exist_ok=True)
 
     table_lines = [
-        "| # | Rule | File | Line | Severity | CWE | OWASP | AI Output | Trạng thái kiểm chứng |",
+        "| # | Quy tắc | Tệp | Dòng | Mức độ | CWE | OWASP | Kết quả AI | Trạng thái kiểm chứng |",
         "|---|---|---|---:|---|---|---|---|---|",
     ]
     detail_sections = []
@@ -600,9 +609,10 @@ def write_triage_outputs(records: List[FindingRecord], ai_outputs: Dict[int, str
         ai_output_path = findings_dir / f"{slug}_ai_output.md"
         prompt_path.write_text(build_prompt(record), encoding="utf-8")
         ai_output = ai_outputs.get(record.index, "").strip()
+        formatted_ai_output = format_ai_output_for_triage_report(ai_output)
         ai_output_path.write_text(ai_output, encoding="utf-8")
         table_lines.append(
-            "| {index} | `{rule}` | `{file}` | {line} | {severity} | {cwe} | {owasp} | `{ai}` | Needs Human Review |".format(
+            "| {index} | `{rule}` | `{file}` | {line} | {severity} | {cwe} | {owasp} | `{ai}` | Cần người kiểm chứng |".format(
                 index=record.index,
                 rule=record.rule_id,
                 file=record.file_path,
@@ -617,6 +627,9 @@ def write_triage_outputs(records: List[FindingRecord], ai_outputs: Dict[int, str
             [
                 f"### SEMGREP-{record.index:03d}: {record.rule_id}",
                 "",
+                "#### Tags lỗi",
+                " ".join(build_security_tag_lines(record)),
+                "",
                 "#### Thông tin finding",
                 f"- File: `{record.file_path}`",
                 f"- Dòng: {record.line}",
@@ -626,13 +639,13 @@ def write_triage_outputs(records: List[FindingRecord], ai_outputs: Dict[int, str
                 f"- Likelihood / Impact / Confidence: {record.likelihood} / {record.impact} / {record.confidence}",
                 f"- Trạng thái kiểm chứng: Needs Human Review",
                 "",
-                "#### Source evidence",
+                "#### Bằng chứng mã nguồn",
                 "```text",
                 record.code,
                 "```",
                 "",
                 "#### Phân tích AI",
-                ai_output or "Chưa có output AI cho finding này.",
+                formatted_ai_output or "Chưa có output AI cho finding này.",
                 "",
             ]
         )
@@ -666,7 +679,7 @@ def write_triage_outputs(records: List[FindingRecord], ai_outputs: Dict[int, str
     )
     report_path = output_path / "semgrep_triage_report.md"
     report_path.write_text(report, encoding="utf-8")
-    write_postman_validation_report(records, output_path)
+    write_test_case_entries_report(records, output_path)
     return report_path
 
 
@@ -732,21 +745,21 @@ def main(argv=None):
         print(f"Triaging #{record.index}: {record.rule_id} tại {record.file_path}:{record.line}")
         if args.offline:
             ai_outputs[record.index] = (
-                "## AI Output\n\n"
+                "## Output AI\n\n"
                 "Chưa gọi AI provider. Prompt đã được lưu để reviewer chạy triage sau.\n\n"
-                "## Human Validation\n\n"
-                "- Status: Needs Manual Verification\n"
+                "## Kiểm chứng thủ công\n\n"
+                "- Trạng thái: Needs Human Review\n"
             )
             continue
         try:
             ai_outputs[record.index] = generate_ai_response(prompt, settings)
         except Exception as exc:
-            ai_outputs[record.index] = (
-                "## AI Output Error\n\n"
-                f"Không gọi được AI provider cho finding này: {exc}\n\n"
-                "## Human Validation\n\n"
-                "- Status: Needs Manual Verification\n"
+            print(
+                f"Lỗi khi gọi AI provider cho finding #{record.index} "
+                f"({record.rule_id} tại {record.file_path}:{record.line}): {exc}"
             )
+            print("Dừng triage để tránh sinh report không có phân tích AI đầy đủ.")
+            return 1
 
     report_path = write_triage_outputs(records, ai_outputs, args.output_dir)
     print(f"Đã tạo Semgrep triage report: {report_path}")

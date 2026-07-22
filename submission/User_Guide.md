@@ -313,8 +313,15 @@ copy src\semgrep\.env.example src\semgrep\.env
 ```env
 AI_PROVIDER=openai-compatible
 AI_MODEL=google/gemini-2.5-flash-lite
+AI_MAX_TOKENS=1800
 OPENROUTER_API_KEY=sk-or-v1-...
 OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
+```
+
+Nếu OpenRouter báo lỗi credit/token, giảm `AI_MAX_TOKENS`, ví dụ:
+
+```env
+AI_MAX_TOKENS=1000
 ```
 
 Không commit file `.env` thật vì có chứa API key.
@@ -339,7 +346,15 @@ python src/semgrep/semgrep_ai_triage.py \
   --output-dir src/semgrep/output
 ```
 
-Script sẽ đọc từng finding trong JSON, lấy source context từ `--source-root`, tạo prompt phân tích và sinh báo cáo tổng hợp. Nếu không có API key, vẫn có thể chạy triage offline để sinh prompt, skeleton output và báo cáo tổng hợp. Ví dụ với source trong repo:
+Script sẽ đọc từng finding trong JSON, lấy source context từ `--source-root`, tạo prompt phân tích và sinh báo cáo tổng hợp. AI được yêu cầu đọc source evidence trước, sau đó phân loại finding theo ba trạng thái:
+
+- `True Positive`: source evidence khớp rule và lỗi có khả năng ảnh hưởng runtime/app thật.
+- `False Positive`: source evidence hoặc vai trò file chứng minh finding không phải lỗi thật của ứng dụng.
+- `Needs Human Review`: chưa đủ context về deploy, runtime reachability, config production hoặc dữ liệu nhạy cảm để chốt.
+
+Nếu đang gọi AI thật và một finding bị lỗi provider/API, script sẽ dừng ngay với exit code `1`. Khi đó script không sinh report triage thiếu phân tích AI, để tránh nộp nhầm kết quả chưa đủ bằng chứng.
+
+Nếu chưa có API key hoặc chỉ muốn tạo prompt/skeleton report để đọc thủ công, chạy offline:
 
 ```bash
 python src/semgrep/semgrep_ai_triage.py \
@@ -361,9 +376,52 @@ ls src/semgrep/output/findings
 Output cần nộp hoặc dùng khi demo:
 
 - `src/semgrep/output/semgrep_results.json`: kết quả scan gốc từ Semgrep.
-- `src/semgrep/output/semgrep_triage_report.md`: báo cáo tổng hợp sau triage.
-- `src/semgrep/output/semgrep_postman_validation_report.md`: format lỗi dùng để đối chiếu Postman/ZAP comparison.
-- `src/semgrep/output/findings/`: prompt và output riêng cho từng finding.
+- `src/semgrep/output/semgrep_triage_report.md`: báo cáo tổng hợp tất cả findings sau AI triage.
+- `src/semgrep/output/semgrep_test_cases.md`: danh sách test case kiểm chứng từng finding, mỗi test case là một entry riêng.
+- `src/semgrep/output/findings/`: prompt và output AI riêng cho từng finding.
+
+Nội dung chính của `semgrep_triage_report.md`:
+
+- Tổng quan số finding.
+- Bảng tổng hợp bằng tiếng Việt: quy tắc, tệp, dòng, mức độ, CWE, OWASP, kết quả AI và trạng thái kiểm chứng.
+- Chi tiết từng finding.
+- Tags lỗi trong từng finding entry: Rule, Severity, CWE, OWASP, Likelihood, Impact, Confidence.
+- Bằng chứng mã nguồn.
+- Phân tích AI inline bằng tiếng Việt; heading do AI sinh ra được hạ cấp để không phá bố cục report.
+- Checklist kiểm chứng thủ công.
+
+Nội dung chính của `semgrep_test_cases.md`:
+
+```markdown
+## TC-SEMGREP-001
+
+- Finding liên quan: SEMGREP-001
+- Mục tiêu test: ...
+
+### Input
+
+Request, headers và payload dùng để test.
+
+### Thao tác
+
+Gửi request và ghi nhận status code, response body.
+
+### Kết quả cần ghi nhận
+
+Nếu còn lỗi và nếu đã an toàn thì ghi nhận biểu hiện tương ứng.
+
+### Trạng thái
+
+Chưa kiểm chứng
+```
+
+Output AI trong từng file `findings/*_ai_output.md` chỉ tập trung phân tích finding, không sinh test case chi tiết để tránh trùng với `semgrep_test_cases.md`. Mỗi output gồm:
+
+1. Phân loại.
+2. Lý do phân loại dựa trên source evidence.
+3. Tác động thực tế trong bối cảnh EShop.
+4. Cách khắc phục cụ thể.
+5. Ghi chú cần tester kiểm tra thêm nếu chưa đủ context.
 
 Khi đọc báo cáo, nhóm cần kiểm chứng lại từng finding bằng source code thật:
 
@@ -371,7 +429,7 @@ Khi đọc báo cáo, nhóm cần kiểm chứng lại từng finding bằng sou
 - Dữ liệu người dùng có đi tới sink nguy hiểm hay không.
 - Secret, token, URL HTTP hoặc cấu hình yếu có dùng ở runtime hay chỉ là sample/test.
 - AI có giải thích đúng file, dòng code, impact và remediation hay không.
-- Kết luận cuối cùng là `True Positive`, `False Positive`, `Needs Manual Review` hoặc `Not Applicable`.
+- Kết luận cuối cùng là `True Positive`, `False Positive` hoặc `Needs Human Review`.
 
 Trong output hiện có, Semgrep ghi nhận 12 findings, gồm hardcoded JWT secret trong `backend/server.js` và nhiều request HTTP không mã hóa trong `frontend-mobile/App.js`.
 
@@ -821,7 +879,7 @@ Kết quả cần ghi nhận:
 | --- | --- | --- | --- |
 | Không cài được package Python global | `externally-managed-environment` | Distro chặn cài pip vào system Python | Dùng `.venv` rồi cài dependency trong virtual environment. |
 | Semgrep không tìm thấy source | Lệnh scan báo không có `./eshop-sut` hoặc `$SOURCE_ROOT` | Source EShop nằm khác vị trí mặc định hoặc biến `SOURCE_ROOT` sai | Kiểm tra `ls ./eshop-sut`; nếu source nằm nơi khác, đặt lại `SOURCE_ROOT` bằng đường dẫn source thật. |
-| OpenRouter trả `402` | AI triage lỗi billing/credit | Hết credit hoặc model quá tốn token | Dùng model nhẹ hơn, nạp credit hoặc chạy/đọc output offline. |
+| OpenRouter trả `402` | AI triage dừng với exit code `1` | Hết credit hoặc model/request quá tốn token | Giảm `AI_MAX_TOKENS`, dùng model nhẹ hơn, nạp credit hoặc chạy `--offline` để tạo prompt/skeleton đọc thủ công. |
 | ZAP không khởi động | Docker unavailable hoặc image pull lỗi | Docker chưa chạy, thiếu quyền, mạng chậm | Kiểm tra Docker daemon, pull trước image ZAP hoặc dùng ZAP GUI/daemon tự chạy tại `localhost:8090`. |
 | Authenticated ZAP scan lỗi `401/403` | Login hoặc `/api/users/me` fail | Sai credential, account bị khóa, backend chưa chạy | Reset dữ liệu test, đổi credential trong `.env`, kiểm tra backend `3000`. |
 | Report backend lẫn frontend | JSON/HTML có nhiều `site` khác target | ZAP daemon giữ session cũ hoặc output file đặt nhầm | Tạo session mới/clear history trong ZAP, hoặc dùng file output riêng cho từng target. |
