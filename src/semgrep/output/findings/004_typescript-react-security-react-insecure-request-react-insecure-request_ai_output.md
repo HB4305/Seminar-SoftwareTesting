@@ -1,43 +1,39 @@
-Tuyệt vời! Với vai trò là chuyên gia bảo mật ứng dụng, tôi sẽ tiến hành triage finding này dựa trên thông tin bạn cung cấp.
+Tuyệt vời! Tôi sẽ đóng vai trò chuyên gia bảo mật ứng dụng để triage finding SEMGREP-004 này.
 
-```markdown
-## Triage Finding Bảo Mật: SEMGREP-004
+---
 
-**1. Phân loại:** Needs Human Review
+### Triage Finding: SEMGREP-004
 
-**2. Lý do phân loại dựa trên source evidence:**
+1.  **Phân loại:** `Needs Human Review`
 
-Finding này chỉ ra **Unencrypted request over HTTP detected** tại dòng 174 trong file `App.js`, gửi request tới `${API_URL}/orders/my-orders`. Rule Semgrep và CWE đều liên quan đến việc truyền dữ liệu nhạy cảm qua kênh không mã hóa. Mã nguồn cho thấy việc sử dụng `fetch` API để gửi request đến `API_URL` với header `Authorization` chứa token.
+2.  **Lý do phân loại dựa trên source evidence:**
+    *   **Phân tích source evidence:** Đoạn mã tại dòng 174 trong file `App.js` sử dụng hàm `fetch` để gửi yêu cầu đến `${API_URL}/orders/my-orders`. Header `Authorization: Bearer ${currentToken}` được đính kèm, cho thấy việc truyền token xác thực.
+    *   **Phân tích rule Semgrep:** Rule `typescript.react.security.react-insecure-request.react-insecure-request` phát hiện các yêu cầu không mã hóa qua HTTP.
+    *   **Đối chiếu và nhận định:** Rule này đúng là đã phát hiện một yêu cầu được thực hiện qua HTTP (chưa rõ là HTTP hay HTTPS). Tuy nhiên, việc xác định rõ ràng đây là lỗ hổng bảo mật thực tế hay không phụ thuộc nhiều vào cách `API_URL` được định nghĩa và môi trường triển khai.
+    *   **Ngữ cảnh bổ sung:**
+        *   `API_URL` có thể được định cấu hình để trỏ đến `http://localhost:xxxx` trong môi trường phát triển hoặc lab, nơi kết nối thường không yêu cầu mã hóa và dữ liệu nhạy cảm ở mức độ thấp cho mục đích thử nghiệm.
+        *   Nếu `API_URL` trong môi trường production thực sự trỏ đến một URL HTTP thay vì HTTPS, thì đây là **True Positive**.
+        *   Tuy nhiên, nếu `API_URL` được cấu hình để sử dụng HTTPS trong production, hoặc việc yêu cầu này chỉ diễn ra trong môi trường dev/lab mà không ảnh hưởng đến production, thì đây có thể là **False Positive** đối với môi trường production.
+        *   Độ nhạy cảm của thông tin được truyền đi (token xác thực) là **Medium**, và khả năng bị khai thác **Low**, nhưng nếu lỗ hổng tồn tại thì tác động sẽ đáng kể.
+    *   Vì vậy, dựa trên thông tin hiện có, chúng ta chưa thể kết luận chắc chắn đây là True Positive hay False Positive mà cần thêm thông tin về cấu hình `API_URL` và môi trường triển khai thực tế.
 
-Tuy nhiên, việc phân loại **False Positive** hay **True Positive** còn phụ thuộc nhiều vào ngữ cảnh triển khai và giá trị của `API_URL`.
-*   Nếu `API_URL` trỏ đến một localhost hoặc một URL được cấu hình để chỉ sử dụng trong môi trường phát triển (dev/lab), nơi mà mạng nội bộ được kiểm soát và không có nguy cơ bị nghe lén, thì đây có thể được xem là **False Positive** đối với môi trường production.
-*   Ngược lại, nếu `API_URL` có thể trỏ đến một endpoint của production hoặc staging mà vẫn sử dụng HTTP thay vì HTTPS, và dữ liệu nhạy cảm (như `currentToken` và thông tin đơn hàng) được truyền đi, thì đây sẽ là một **True Positive**.
+3.  **Tác động thực tế trong bối cảnh EShop:**
+    *   Nếu `API_URL` trỏ đến một máy chủ qua giao thức HTTP không mã hóa trong môi trường Production:
+        *   Token xác thực của người dùng (`currentToken`) có thể bị kẻ tấn công nghe lén trên đường truyền mạng (Man-in-the-Middle attack).
+        *   Kẻ tấn công có thể sử dụng token bị đánh cắp để mạo danh người dùng, truy cập trái phép vào thông tin đơn hàng của họ, gây ra **Sensitive Data Exposure** và ảnh hưởng đến sự tin cậy của ứng dụng.
+    *   Nếu `API_URL` chỉ là `localhost` trong môi trường Lab/Dev:
+        *   Tác động thực tế là rất thấp, vì lưu lượng mạng thường chỉ diễn ra trong cùng một máy và không có kẻ tấn công bên ngoài có thể can thiệp. Tuy nhiên, đây vẫn là một "bad practice" về mặt bảo mật cần khắc phục trước khi đưa ra Production.
 
-Chúng ta chưa có đủ thông tin về cách `API_URL` được định nghĩa và cấu hình trong các môi trường khác nhau của EShop.
+4.  **Cách khắc phục cụ thể:**
+    *   **Ưu tiên hàng đầu:** Đảm bảo rằng tất cả các kết nối đến API đều sử dụng giao thức HTTPS, ngay cả trong môi trường phát triển nếu có thể.
+    *   **Cập nhật cấu hình `API_URL`:** Xác minh và cập nhật biến `API_URL` trong các file cấu hình môi trường (`.env`, `config.js`, v.v.) để luôn trỏ đến một URL sử dụng HTTPS, ví dụ: `https://api.yourdomain.com`.
+    *   **Cấu hình SSL/TLS cho Server:** Đảm bảo máy chủ API được cấu hình đúng với chứng chỉ SSL/TLS hợp lệ và luôn phục vụ các yêu cầu qua HTTPS.
+    *   **Theo dõi việc sử dụng `fetch`:** Kiểm tra các lần gọi `fetch` khác trong ứng dụng để đảm bảo tương tự các yêu cầu đều được gửi qua HTTPS.
 
-**3. Tác động thực tế trong bối cảnh EShop:**
+5.  **Ghi chú cần tester kiểm tra thêm nếu chưa đủ context:**
+    *   Kiểm tra giá trị và cách định nghĩa của biến `API_URL` trong các file cấu hình khác nhau (ví dụ: `.env`, `config.js`) và đối chiếu với môi trường triển khai (Development, Staging, Production).
+    *   Xác nhận liệu ứng dụng có được deploy với cấu hình `localhost` hay một tên miền thực tế.
+    *   Kiểm tra xem máy chủ backend có sẵn sàng phục vụ các yêu cầu qua HTTPS hay không.
+    *   Nếu có thể, hãy xem xét toàn bộ các URL mà `fetch` hoặc thư viện HTTP khác sử dụng trong ứng dụng để phát hiện các điểm không nhất quán.
 
-Nếu `API_URL` thực sự đang gọi qua HTTP và truyền tải dữ liệu nhạy cảm, tác động có thể bao gồm:
-*   **Lộ thông tin nhạy cảm:** Token xác thực (`currentToken`) và chi tiết đơn hàng có thể bị kẻ tấn công trong cùng một mạng (ví dụ: mạng Wi-Fi công cộng) đọc trộm.
-*   **Giả mạo danh tính:** Kẻ tấn công có thể sử dụng token bị lộ để thực hiện các hành vi trái phép nhân danh người dùng.
-*   **Can thiệp dữ liệu:** Dữ liệu truyền đi có thể bị thay đổi trên đường truyền (man-in-the-middle attack).
-
-Tuy nhiên, do EShop được quét như ứng dụng lab local, nếu `API_URL` chỉ định có thể dẫn đến localhost hoặc URL dev, rủi ro cho môi trường production thực tế có thể thấp hoặc không tồn tại.
-
-**4. Cách khắc phục cụ thể:**
-
-*   **Ưu tiên sử dụng HTTPS:** Đảm bảo tất cả các endpoint API mà ứng dụng tương tác đều được truy cập thông qua HTTPS.
-    *   **Cấu hình server:** Đảm bảo server backend của EShop được cấu hình để phục vụ API qua HTTPS.
-    *   **Cấu hình client (ứng dụng mobile):** Mặc dù Semgrep đang báo cáo về phía client, nguyên nhân gốc rễ có thể nằm ở server. Tuy nhiên, trong trường hợp frontend mobile chủ động gửi request qua HTTP, cần kiểm tra lại cách `API_URL` được định nghĩa.
-*   **Kiểm tra cấu hình `API_URL`:** Xác định giá trị của `API_URL` trong các môi trường khác nhau (dev, staging, production).
-    *   Nếu ứng dụng mobile được phép sử dụng HTTP cho localhost, đây có thể là hành vi mong muốn cho môi trường dev, nhưng *cần đảm bảo rằng nó không bao giờ được sử dụng cho production*.
-    *   Nếu `API_URL` được định nghĩa động dựa trên biến môi trường hoặc cấu hình, cần kiểm tra xem liệu có khả năng nó được trỏ đến một endpoint không an toàn trong production hay không.
-*   **Strict Transport Security (HSTS) (nếu áp dụng cho web):** Mặc dù đây là ứng dụng mobile, nếu có liên quan đến tương tác web view, HSTS là một biện pháp giúp trình duyệt chỉ cho phép kết nối HTTPS.
-
-**5. Ghi chú cần tester kiểm tra thêm nếu chưa đủ context:**
-
-*   **Giá trị thực tế của `API_URL`:** Tester cần kiểm tra giá trị của biến `API_URL` trong code hoặc thông qua quá trình build/deploy các môi trường khác nhau của EShop.
-*   **Môi trường triển khai:** Xác nhận EShop đang chạy trong môi trường lab local như mô tả hay có khả năng là môi trường staging/production được sử dụng để thử nghiệm.
-*   **Cấu hình mạng:** Nếu EShop đang chạy trên môi trường mạng bị kiểm soát (isolated network) như trong lab, thì rủi ro nghe lén là rất thấp.
-*   **Sensitive Data:** Kiểm tra xem token `currentToken` và thông tin trả về từ `my-orders` có thực sự chứa dữ liệu cực kỳ nhạy cảm cần bảo vệ tối đa hay không.
-```
+---

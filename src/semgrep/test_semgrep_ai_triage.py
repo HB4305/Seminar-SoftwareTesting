@@ -419,6 +419,68 @@ class SemgrepAiTriageWorkflowTest(unittest.TestCase):
         self.assertIn("\n##### 1. Phân loại", report)
         self.assertIn("## Triage Finding Bảo Mật SEMGREP-001", raw_ai_output)
 
+    def test_triage_report_unwraps_outer_markdown_fence_from_ai_analysis(self):
+        triage = load_triage_module()
+        record = triage.FindingRecord(
+            index=1,
+            rule_id="rule.one",
+            file_path="backend/server.js",
+            line=2,
+            severity="WARNING",
+            message="Hard-coded credential",
+            code="const SECRET_KEY = 'secret';",
+            cwe="CWE-798",
+            owasp="A07:2025",
+            likelihood="HIGH",
+            impact="MEDIUM",
+            confidence="HIGH",
+        )
+        ai_output = (
+            "```markdown\n"
+            "## Triage Finding Bảo Mật SEMGREP-001\n\n"
+            "### 1. Phân loại\n\n"
+            "True Positive\n"
+            "```"
+        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output_dir = Path(tmpdir)
+
+            report_path = triage.write_triage_outputs([record], {1: ai_output}, output_dir)
+
+            report = report_path.read_text(encoding="utf-8")
+            raw_ai_output = (
+                output_dir / "findings" / "001_rule-one_ai_output.md"
+            ).read_text(encoding="utf-8")
+
+        ai_analysis = report.split("#### Phân tích AI", 1)[1].split(
+            "## Checklist kiểm chứng thủ công", 1
+        )[0]
+        self.assertNotIn("```markdown", ai_analysis)
+        self.assertNotIn("\n```", ai_analysis)
+        self.assertIn("\n##### Triage Finding Bảo Mật SEMGREP-001", ai_analysis)
+        self.assertIn("\n##### 1. Phân loại", ai_analysis)
+        self.assertIn("```markdown", raw_ai_output)
+
+    def test_triage_report_unwraps_prefaced_markdown_fence_from_ai_analysis(self):
+        triage = load_triage_module()
+        ai_output = (
+            "Nhận xét mở đầu.\n\n"
+            "```markdown\n"
+            "## Phân loại Finding Bảo mật - SEMGREP-001\n\n"
+            "**1. Phân loại:** True Positive\n"
+            "```\n"
+            "\nKết luận sau fence."
+        )
+
+        formatted = triage.format_ai_output_for_triage_report(ai_output)
+
+        self.assertNotIn("```markdown", formatted)
+        self.assertNotIn("\n```", formatted)
+        self.assertIn("Nhận xét mở đầu.", formatted)
+        self.assertIn("##### Phân loại Finding Bảo mật - SEMGREP-001", formatted)
+        self.assertIn("**1. Phân loại:** True Positive", formatted)
+        self.assertIn("Kết luận sau fence.", formatted)
+
     def test_postman_mapping_extracts_api_url_template_literal_and_method(self):
         triage = load_triage_module()
         login_record = triage.FindingRecord(
