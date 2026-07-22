@@ -54,105 +54,105 @@ Source template: `resources/2022-2023-HK2-GroupXX-Project Contribution.xlsx`
 
 A task should be done by only 1-2 students. Duplicate tasks are not recommended. Each member should work on at least 5 tasks.
 
-| No  | Student ID | Full name       | Task Description                                                     | Hours | Evidence (screenshots of chat messages, of Git commits... proving that you perform and finish the task) |
-| --- | ---------- | --------------- | -------------------------------------------------------------------- | ----- | ------------------------------------------------------------------------------------------------------- |
-| 1   | 23127075   | Lê Trung Kiên | Tìm hiểu về DAST và viết doc                                    | 0.5   | ![1784735469770](image/Project_Contribution_Template/1784735469770.png)                                 |
-| 2   | 23127075   | Lê Trung Kiên | Tìm hiểu về ZAP và viết doc                                     | 5     | ![1784735514655](image/Project_Contribution_Template/1784735514655.png)                                 |
-| 3   | 23127075   | Lê Trung Kiên | Tìm hiểu về OWASP Top 10: 1; 2 và viết doc                      | 1     | ![1784735533992](image/Project_Contribution_Template/1784735533992.png)                                 |
-| 4   | 23127075   | Lê Trung Kiên | Track Zap: Cài đặt và chạy Zap                                  | 5     |                                                                                                         |
-| 5   | 23127075   | Lê Trung Kiên | Track Zap: Tạo flow Test với Zap, AI Triage (có báo cáo output) | 5     |                                                                                                         |
-| 6   | 23127075   | Lê Trung Kiên |                                                                      |       |                                                                                                         |
-| 7   | 23127075   | Lê Trung Kiên |                                                                      |       |                                                                                                         |
-| 8   | 23127075   | Lê Trung Kiên |                                                                      |       |                                                                                                         |
-| 9   | 23127075   | Lê Trung Kiên |                                                                      |       |                                                                                                         |
-| 10  | 23127075   | Lê Trung Kiên |                                                                      |       |                                                                                                         |
-| 11  | 23127075   | Lê Trung Kiên |                                                                      |       |                                                                                                         |
-| 12  | 23127075   | Lê Trung Kiên |                                                                      |       |                                                                                                         |
-| 13  | 23127075   | Lê Trung Kiên |                                                                      |       |                                                                                                         |
-| 14  | 23127075   | Lê Trung Kiên |                                                                      |       |                                                                                                         |
-| 15  | 23127075   | Lê Trung Kiên |                                                                      |       |                                                                                                         |
-| 16  | 23127075   | Lê Trung Kiên |                                                                      |       |                                                                                                         |
-| 17  | 23127075   | Lê Trung Kiên |                                                                      |       |                                                                                                         |
-| 18  | 23127075   | Lê Trung Kiên |                                                                      |       |                                                                                                         |
-| 19  | 23127075   | Lê Trung Kiên |                                                                      |       |                                                                                                         |
-| 20  | 23127075   | Lê Trung Kiên |                                                                      |       |                                                                                                         |
-| 21  |            |                 |                                                                      |       |                                                                                                         |
-| 22  |            |                 |                                                                      |       |                                                                                                         |
-| 23  |            |                 |                                                                      |       |                                                                                                         |
-| 24  |            |                 |                                                                      |       |                                                                                                         |
-| 25  |            |                 |                                                                      |       |                                                                                                         |
-| 26  |            |                 |                                                                      |       |                                                                                                         |
-| 27  |            |                 |                                                                      |       |                                                                                                         |
-| 28  |            |                 |                                                                      |       |                                                                                                         |
-| 29  |            |                 |                                                                      |       |                                                                                                         |
-| 30  |            |                 |                                                                      |       |                                                                                                         |
-| 31  |            |                 |                                                                      |       |                                                                                                         |
-| 32  |            |                 |                                                                      |       |                                                                                                         |
-| 33  |            |                 |                                                                      |       |                                                                                                         |
-| 34  |            |                 |                                                                      |       |                                                                                                         |
-| 35  |            |                 |                                                                      |       |                                                                                                         |
-| 36  |            |                 |                                                                      |       |                                                                                                         |
-| 37  |            |                 |                                                                      |       |                                                                                                         |
-| 38  |            |                 |                                                                      |       |                                                                                                         |
-| 39  |            |                 |                                                                      |       |                                                                                                         |
-| 40  |            |                 |                                                                      |       |                                                                                                         |
-| 41  |            |                 |                                                                      |       |                                                                                                         |
-| 42  |            |                 |                                                                      |       |                                                                                                         |
-| 43  |            |                 |                                                                      |       |                                                                                                         |
-| 44  |            |                 |                                                                      |       |                                                                                                         |
-| 45  |            |                 |                                                                      |       |                                                                                                         |
-| 46  |            |                 |                                                                      |       |                                                                                                         |
-| 47  |            |                 |                                                                      |       |                                                                                                         |
-| 48  |            |                 |                                                                      |       |                                                                                                         |
-| 49  |            |                 |                                                                      |       |                                                                                                         |
-| 50  |            |                 |                                                                      |       |                                                                                                         |
-| 51  |            |                 |                                                                      |       |                                                                                                         |
-| 52  |            |                 |                                                                      |       |                                                                                                         |
-| 53  |            |                 |                                                                      |       |                                                                                                         |
-| 54  |            |                 |                                                                      |       |                                                                                                         |
-| 55  |            |                 |                                                                      |       |                                                                                                         |
-| 56  |            |                 |                                                                      |       |                                                                                                         |
-| 57  |            |                 |                                                                      |       |                                                                                                         |
-| 58  |            |                 |                                                                      |       |                                                                                                         |
-| 59  |            |                 |                                                                      |       |                                                                                                         |
-| 60  |            |                 |                                                                      |       |                                                                                                         |
-| 61  |            |                 |                                                                      |       |                                                                                                         |
-| 62  |            |                 |                                                                      |       |                                                                                                         |
-| 63  |            |                 |                                                                      |       |                                                                                                         |
-| 64  |            |                 |                                                                      |       |                                                                                                         |
-| 65  |            |                 |                                                                      |       |                                                                                                         |
-| 66  |            |                 |                                                                      |       |                                                                                                         |
-| 67  |            |                 |                                                                      |       |                                                                                                         |
-| 68  |            |                 |                                                                      |       |                                                                                                         |
-| 69  |            |                 |                                                                      |       |                                                                                                         |
-| 70  |            |                 |                                                                      |       |                                                                                                         |
-| 71  |            |                 |                                                                      |       |                                                                                                         |
-| 72  |            |                 |                                                                      |       |                                                                                                         |
-| 73  |            |                 |                                                                      |       |                                                                                                         |
-| 74  |            |                 |                                                                      |       |                                                                                                         |
-| 75  |            |                 |                                                                      |       |                                                                                                         |
-| 76  |            |                 |                                                                      |       |                                                                                                         |
-| 77  |            |                 |                                                                      |       |                                                                                                         |
-| 78  |            |                 |                                                                      |       |                                                                                                         |
-| 79  |            |                 |                                                                      |       |                                                                                                         |
-| 80  |            |                 |                                                                      |       |                                                                                                         |
-| 81  |            |                 |                                                                      |       |                                                                                                         |
-| 82  |            |                 |                                                                      |       |                                                                                                         |
-| 83  |            |                 |                                                                      |       |                                                                                                         |
-| 84  |            |                 |                                                                      |       |                                                                                                         |
-| 85  |            |                 |                                                                      |       |                                                                                                         |
-| 86  |            |                 |                                                                      |       |                                                                                                         |
-| 87  |            |                 |                                                                      |       |                                                                                                         |
-| 88  |            |                 |                                                                      |       |                                                                                                         |
-| 89  |            |                 |                                                                      |       |                                                                                                         |
-| 90  |            |                 |                                                                      |       |                                                                                                         |
-| 91  |            |                 |                                                                      |       |                                                                                                         |
-| 92  |            |                 |                                                                      |       |                                                                                                         |
-| 93  |            |                 |                                                                      |       |                                                                                                         |
-| 94  |            |                 |                                                                      |       |                                                                                                         |
-| 95  |            |                 |                                                                      |       |                                                                                                         |
-| 96  |            |                 |                                                                      |       |                                                                                                         |
-| 97  |            |                 |                                                                      |       |                                                                                                         |
-| 98  |            |                 |                                                                      |       |                                                                                                         |
-| 99  |            |                 |                                                                      |       |                                                                                                         |
-| 100 |            |                 |                                                                      |       |                                                                                                         |
+| No | Student ID | Full name | Task Description | Hours | Evidence (screenshots of chat messages, of Git commits... proving that you perform and finish the task) |
+|---|---|---|---|---|---|
+| 1 |  |  |  |  |  |
+| 2 |  |  |  |  |  |
+| 3 |  |  |  |  |  |
+| 4 |  |  |  |  |  |
+| 5 |  |  |  |  |  |
+| 6 |  |  |  |  |  |
+| 7 |  |  |  |  |  |
+| 8 |  |  |  |  |  |
+| 9 |  |  |  |  |  |
+| 10 |  |  |  |  |  |
+| 11 |  |  |  |  |  |
+| 12 |  |  |  |  |  |
+| 13 |  |  |  |  |  |
+| 14 |  |  |  |  |  |
+| 15 |  |  |  |  |  |
+| 16 |  |  |  |  |  |
+| 17 |  |  |  |  |  |
+| 18 |  |  |  |  |  |
+| 19 |  |  |  |  |  |
+| 20 |  |  |  |  |  |
+| 21 |  |  |  |  |  |
+| 22 |  |  |  |  |  |
+| 23 |  |  |  |  |  |
+| 24 |  |  |  |  |  |
+| 25 |  |  |  |  |  |
+| 26 |  |  |  |  |  |
+| 27 |  |  |  |  |  |
+| 28 |  |  |  |  |  |
+| 29 |  |  |  |  |  |
+| 30 |  |  |  |  |  |
+| 31 |  |  |  |  |  |
+| 32 |  |  |  |  |  |
+| 33 |  |  |  |  |  |
+| 34 |  |  |  |  |  |
+| 35 |  |  |  |  |  |
+| 36 |  |  |  |  |  |
+| 37 |  |  |  |  |  |
+| 38 |  |  |  |  |  |
+| 39 |  |  |  |  |  |
+| 40 | 23127185 | Mai Thị Kim Duyên | Tìm hiểu về ZAP.   |  | ![tìm hiểu zap](evidence/images/image-4.png) |
+| 41 | 23127185 | Mai Thị Kim Duyên | Tìm hiểu về OWASP. |  | ![tìm hiểu owasp](evidence/images/image-3.png)|
+| 42 | 23127185 | Mai Thị Kim Duyên | Tìm hiểu về OWASP Top 10: 3; 4. |  | ![tìm hiểu top 3,4](evidence/images/image-2.png) |
+| 43 | 23127185  | Mai Thị Kim Duyên  | Track Zap: Cài đặt và chạy Zap |  | ![Cài đặt zap](evidence/images/image.png)  |
+| 44 | 23127185 | Mai Thị Kim Duyên |  Track Zap: Tạo flow Test với Zap, AI Triage (có báo cáo output) |  | ![test zap, ai triage](evidence/images/image-5.png) |
+| 45 | 23127185 | Mai Thị Kim Duyên | Cài đặt và chạy cơ bản Semgrep theo hướng dẫn đã viết |  | ![chạy semgrep](evidence/images/image-8.png) |
+| 46 | 23127185 | Mai Thị Kim Duyên | Hoàn thiện Track Zap trên EShop, bổ sung evidence, output scan, AI triage và ghi chú kiểm chứng. |  | ![hoàn thiện track zap](evidence/images/image-6.png) |
+| 47 | 23127185 | Mai Thị Kim Duyên | Chuẩn bị slide và user guide cho OWASP Top 10 mục 3, 4 và 5, kèm phần giới thiệu ngắn. |  | ![user guide](evidence/images/image9.png)  |
+| 48 | 23127185 | Mai Thị Kim Duyên | Viết slide và user guide giới thiệu script ZAP của nhóm, gồm cách dùng các flag chính và ý nghĩa output. |  | ![script](evidence/images/image10.png) |
+| 49 | 23127185 | Mai Thị Kim Duyên | Phối hợp quay video demo workflow. |  | ![quay video](evidence/images/image-7.png) |
+| 50 |  |  |  |  |  |
+| 51 |  |  |  |  |  |
+| 52 |  |  |  |  |  |
+| 53 |  |  |  |  |  |
+| 54 |  |  |  |  |  |
+| 55 |  |  |  |  |  |
+| 56 |  |  |  |  |  |
+| 57 |  |  |  |  |  |
+| 58 |  |  |  |  |  |
+| 59 |  |  |  |  |  |
+| 60 |  |  |  |  |  |
+| 61 |  | Lê Mai Hoài Bảo | Initial survey of Semgrep, OWASP ZAP, Burp Suite, and Gemini API tools to propose direction for the security testing seminar. | 3 | ![61-1](./evidence/lemaihoaibao/61-1.png) ![61-2](./evidence/lemaihoaibao/61-2.png) |
+| 62 |  | Lê Mai Hoài Bảo | Construct security testing workflow documentation combining Semgrep SAST, ZAP DAST, and AI triage. | 3 | ![62](./evidence/lemaihoaibao/62.png) |
+| 63 |  | Lê Mai Hoài Bảo | Research and summarize the Semgrep/SAST track for the seminar and share with the team. | 3 | ![63](./evidence/lemaihoaibao/63.png) |
+| 64 |  | Lê Mai Hoài Bảo | Research OWASP Top 10 categories 7, 8, 9, and 10 as assigned in week W04. | 3 | ![64](./evidence/lemaihoaibao/64.png) |
+| 65 |  | Lê Mai Hoài Bảo | Create Track A Semgrep template and add image/resource evidence for Semgrep scanning. | 3 | ![65](./evidence/lemaihoaibao/65.png) |
+| 66 |  | Lê Mai Hoài Bảo | Complete phase 1 content for Track A Semgrep in the report template. | 3 | ![66](./evidence/lemaihoaibao/66.png) |
+| 67 |  | Lê Mai Hoài Bảo | Install, test run Semgrep, and document scan/output instructions for the EShop project. | 3 | ![67](./evidence/lemaihoaibao/67.png) |
+| 68 |  | Lê Mai Hoài Bảo | Build Semgrep AI Triage flow and sample report for `hardcoded-jwt-secret` finding. | 3 | ![68-1](./evidence/lemaihoaibao/68-1.png) ![68-2](./evidence/lemaihoaibao/68-2.png) |
+| 69 |  | Lê Mai Hoài Bảo | Fix Gemini integration for `semgrep_ai_triage.py`, migrate to new SDK, and handle error/retry on API overload. | 3 | ![69-1](./evidence/lemaihoaibao/69-1.png) ![69-2](./evidence/lemaihoaibao/69-2.png) ![69-3](./evidence/lemaihoaibao/69-3.png) ![69-4](./evidence/lemaihoaibao/69-4.png) |
+| 70 |  | Lê Mai Hoài Bảo | Fix Semgrep Linux installation guide and update Track A documentation for proper execution environments. | 3 | ![70](./evidence/lemaihoaibao/70.png) |
+| 71 |  | Lê Mai Hoài Bảo | Update Semgrep AI Triage documentation to support OpenAI-compatible provider/OpenRouter. | 3 | ![71](./evidence/lemaihoaibao/71.png) |
+| 72 |  | Lê Mai Hoài Bảo | Add `.env.example` configuration for OpenRouter/Gemini and standardize environment variables for API key/base URL. | 3 | ![72-1](./evidence/lemaihoaibao/72-1.png) ![72-2](./evidence/lemaihoaibao/72-2.png) ![72-3](./evidence/lemaihoaibao/72-3.png) |
+| 73 |  | Lê Mai Hoài Bảo | Upgrade Semgrep AI triage script to process all findings in JSON instead of a single finding. | 3 | ![73-1](./evidence/lemaihoaibao/73-1.png) ![73-2](./evidence/lemaihoaibao/73-2.png) |
+| 74 |  | Lê Mai Hoài Bảo | Write unit tests for OpenRouter configuration and multi-finding processing in Semgrep AI triage. | 3 | ![74-1](./evidence/lemaihoaibao/74-1.png) ![74-2](./evidence/lemaihoaibao/74-2.png) ![74-3](./evidence/lemaihoaibao/74-3.png) |
+| 75 |  | Lê Mai Hoài Bảo | Reorganize Semgrep Track structure: docs in `docs/semgrep/`, scripts/runtime in `src/semgrep/`, pipeline runnable from root. | 3 | ![75](./evidence/lemaihoaibao/75.png) |
+| 76 |  | Lê Mai Hoài Bảo | Retest Semgrep offline triage workflow, confirming output handles all 12 findings without live API dependency. | 3 | ![76](./evidence/lemaihoaibao/76.png) |
+| 77 |  | Lê Mai Hoài Bảo | Install and perform basic local execution for ZAP Track to understand cross-DAST scan flow with ZAP team. | 3 | ![77](./evidence/lemaihoaibao/77.png) |
+| 78 |  | Lê Mai Hoài Bảo | Update Semgrep section in User Guide: EShop source path, scanning methods, `.semgrepignore`, custom rules, and root execution guide. | 3 | ![78-1](./evidence/lemaihoaibao/78-1.png) ![78-2](./evidence/lemaihoaibao/78-2.png) ![78-3](./evidence/lemaihoaibao/78-3.png) |
+| 79 |  | Lê Mai Hoài Bảo | Review and complete AI audit/disclosure/reflective statement for the group, double-checking assignment requirements. | 3 | ![79-1](./evidence/lemaihoaibao/79-1.png) ![79-2](./evidence/lemaihoaibao/79-2.png) ![79-3](./evidence/lemaihoaibao/79-3.png) |
+| 80 |  | Lê Mai Hoài Bảo | Create project contribution template and final documentation checklist for group submission tracking. | 3 | ![80-1](./evidence/lemaihoaibao/80-1.png) ![80-2](./evidence/lemaihoaibao/80-2.png) |
+| 81 |  |  |  |  |  |
+| 82 |  |  |  |  |  |
+| 83 |  |  |  |  |  |
+| 84 |  |  |  |  |  |
+| 85 |  |  |  |  |  |
+| 86 |  |  |  |  |  |
+| 87 |  |  |  |  |  |
+| 88 |  |  |  |  |  |
+| 89 |  |  |  |  |  |
+| 90 |  |  |  |  |  |
+| 91 |  |  |  |  |  |
+| 92 |  |  |  |  |  |
+| 93 |  |  |  |  |  |
+| 94 |  |  |  |  |  |
+| 95 |  |  |  |  |  |
+| 96 |  |  |  |  |  |
+| 97 |  |  |  |  |  |
+| 98 |  |  |  |  |  |
+| 99 |  |  |  |  |  |
+| 100 |  |  |  |  |  |
