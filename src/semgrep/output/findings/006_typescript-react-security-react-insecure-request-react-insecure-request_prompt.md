@@ -1,0 +1,70 @@
+Tôi dùng công cụ Semgrep (SAST) để quét mã nguồn và phát hiện một finding bảo mật.
+Bạn hãy đóng vai trò là chuyên gia bảo mật ứng dụng để triage finding này.
+Hãy trả lời hoàn toàn bằng tiếng Việt, trừ các thuật ngữ chuẩn như True Positive, False Positive, Needs Human Review, CWE, OWASP.
+
+Thông tin kỹ thuật:
+- Mã finding: SEMGREP-006
+- Rule ID: typescript.react.security.react-insecure-request.react-insecure-request
+- File nguồn: eshop-sut\frontend-mobile\App.js
+- Dòng: 222
+- Severity: ERROR
+- CWE: CWE-319: Cleartext Transmission of Sensitive Information
+- OWASP: A03:2017 - Sensitive Data Exposure, A02:2021 - Cryptographic Failures, A04:2025 - Cryptographic Failures
+- Likelihood: LOW
+- Impact: MEDIUM
+- Confidence: MEDIUM
+- Cảnh báo Semgrep: Unencrypted request over HTTP detected.
+
+Source code context / bằng chứng mã nguồn:
+```text
+   207:   };
+   208:
+   209:   const handleRegister = async () => {
+   210:     setRegisterError("");
+   211:     const strongPasswordRegex =
+   212:       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
+   213:
+   214:     if (!strongPasswordRegex.test(registerPassword)) {
+   215:       setRegisterError(
+   216:         "Mật khẩu quá yếu! Phải dài tối thiểu 8 ký tự, gồm chữ hoa, chữ thường, số và KÝ TỰ ĐẶC BIỆT.",
+   217:       );
+   218:       return;
+   219:     }
+   220:
+   221:     try {
+=> 222:       const response = await fetch(`${API_URL}/register`, {
+   223:         method: "POST",
+   224:         headers: { "Content-Type": "application/json" },
+   225:         body: JSON.stringify({
+   226:           name: registerName,
+   227:           email: registerEmail,
+   228:           password: registerPassword,
+   229:         }),
+   230:       });
+   231:       const data = await response.json().catch(() => ({}));
+   232:       if (!response.ok) throw new Error(data.error || "Đăng ký thất bại.");
+   233:       Alert.alert("Thành công", "Đăng ký tài khoản thành công.");
+   234:       setEmail(registerEmail);
+   235:       setPassword("");
+   236:       setView("login");
+   237:     } catch (error) {
+```
+
+Ngữ cảnh source cho triage tĩnh:
+- Đọc và đối chiếu source evidence trước khi phân loại.
+- Semgrep là SAST: phân loại dựa trên bằng chứng source code và ngữ cảnh deploy, không dựa trên HTTP response.
+- EShop đang được quét như ứng dụng lab local; finding liên quan localhost cần kiểm tra môi trường trước khi kết luận rủi ro cuối.
+- Vai trò file: mã runtime của ứng dụng.
+- True Positive: source evidence khớp rule và code lỗi reachable trong runtime/ngữ cảnh ứng dụng liên quan.
+- False Positive: source evidence hoặc vai trò file chứng minh finding không phải lỗ hổng thật của ứng dụng.
+- Needs Human Review: chưa rõ config, deploy usage, runtime reachability hoặc độ nhạy cảm dữ liệu.
+- Nếu đây là mã test/helper, không phân loại là True Positive trừ khi file được deploy hoặc được runtime code dùng lại.
+- HTTP localhost có thể chỉ dùng cho dev/lab; chỉ phân loại False Positive khi source/config chứng minh production không bị ảnh hưởng.
+- Nếu nhiều finding cùng một root cause, hãy nêu trong phần giải thích nhưng vẫn chọn một trong ba phân loại.
+
+Hãy trả lời bằng Markdown với các mục:
+1. Phân loại: True Positive / False Positive / Needs Human Review.
+2. Lý do phân loại dựa trên source evidence.
+3. Tác động thực tế trong bối cảnh EShop.
+4. Cách khắc phục cụ thể.
+5. Ghi chú cần tester kiểm tra thêm nếu chưa đủ context.
