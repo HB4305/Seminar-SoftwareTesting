@@ -844,7 +844,19 @@ Kết quả cần ghi nhận:
 | CORS`*`              | ZAP           | `/api/products?search=`                           | Header`Access-Control-Allow-Origin`                         | Confirmed / Low impact / Needs Auth Check     |
 | SQL Injection search | Manual + ZAP  | `/api/products?search=`                           | Response bất thường hoặc lỗi SQL                            | Confirmed / False Negative / Not Reproducible |
 
-## 11. Xử lý sự cố
+## 11. Ranh giới trách nhiệm: Tester vs Developer vs SOC
+
+Khi dùng Semgrep, ZAP và AI triage, người thực hiện kiểm thử cần phân biệt rõ trách nhiệm của từng vai trò khi một finding được phát hiện. Alert từ công cụ chưa tự động đồng nghĩa với lỗi đã xác nhận; mỗi vai trò cần xử lý đúng phần việc của mình để kết luận cuối cùng có bằng chứng.
+
+| Vai trò | Trách nhiệm chính | Output cần bàn giao |
+| --- | --- | --- |
+| Tester / Security Tester | Chạy Semgrep/ZAP, triage alert, tái hiện lỗi bằng PoC, phân loại `True Positive`, `False Positive` hoặc `Needs Human Review`. | Report có bước tái hiện, evidence source/runtime, mức độ ảnh hưởng và điều kiện xảy ra lỗi. |
+| Developer | Đọc report, xác định nguyên nhân trong code/config, sửa lỗi, bổ sung test chống tái diễn và phản hồi nếu finding là false positive hoặc chỉ xảy ra trong môi trường dev. | Patch, test case, giải thích kỹ thuật và trạng thái sau khi verify lại. |
+| SOC / Security Operation Center | Theo dõi hệ thống thật sau deploy, phát hiện dấu hiệu khai thác qua log/alert, phối hợp xử lý incident nếu lỗi đã ảnh hưởng production. | Alert vận hành, timeline sự cố, mức độ ảnh hưởng thực tế và khuyến nghị phản ứng. |
+
+Tóm lại, tester chịu trách nhiệm tìm và chứng minh lỗi, developer chịu trách nhiệm sửa lỗi trong sản phẩm, còn SOC chịu trách nhiệm giám sát và phản ứng khi rủi ro xuất hiện trên môi trường vận hành. Trong seminar này, phần demo/report cần thể hiện ranh giới đó để tránh nhầm lẫn giữa phát hiện tự động, lỗi đã được kiểm chứng và sự cố thật ngoài production.
+
+## 12. Xử lý sự cố
 
 | Vấn đề | Dấu hiệu | Nguyên nhân thường gặp | Cách xử lý |
 | --- | --- | --- | --- |
@@ -855,7 +867,7 @@ Kết quả cần ghi nhận:
 | Authenticated ZAP scan lỗi `401/403` | Login hoặc `/api/users/me` fail | Sai credential, account bị khóa, backend chưa chạy | Reset dữ liệu test, đổi credential trong `.env`, kiểm tra backend `3000`. |
 | Report backend lẫn frontend | JSON/HTML có nhiều `site` khác target | ZAP daemon giữ session cũ hoặc output file đặt nhầm | Tạo session mới/clear history trong ZAP, hoặc dùng file output riêng cho từng target. |
 
-## 12. Tài liệu tham khảo
+## 13. Tài liệu tham khảo
 
 - OWASP Top 10 2025: https://owasp.org/www-project-top-ten/
 - Semgrep documentation: https://semgrep.dev/docs/
@@ -864,6 +876,6 @@ Kết quả cần ghi nhận:
 - OWASP ZAP Report Generation: https://www.zaproxy.org/docs/desktop/addons/report-generation/
 - Tài liệu trong repo: `docs/semgrep/`, `src/semgrep/`, `docs/zap/`, `src/zap/`, `weekly-reports/Group06_06/Group06.md`.
 
-## 13. Công bố sử dụng AI
+## 14. Công bố sử dụng AI
 
 Nhóm có sử dụng AI để hỗ trợ soạn thảo hướng dẫn, phân tích Semgrep findings và triage ZAP alerts. Các command, flag CLI, đường dẫn output và nhận định kỹ thuật cần được thành viên nhóm kiểm tra lại bằng source code, report JSON/HTML và request runtime trước khi đưa vào kết luận cuối cùng.
