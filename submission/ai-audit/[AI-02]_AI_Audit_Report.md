@@ -1,6 +1,19 @@
 # [AI-02] Báo Cáo Audit AI - Group 06
 
-## 1. Audit Chi Tiết
+## 1. Thông Tin Nhóm
+
+- Nhóm: Group 06 - KDBK
+- Đề tài: T09 - Security Testing (DAST / SAST)
+- Seminar track: Security testing với Semgrep/SAST, OWASP ZAP/DAST và AI-assisted triage.
+- Thành viên:
+  - Lê Trung Kiên
+  - Mai Thị Kim Duyên
+  - Lâm Hữu Khánh
+  - Lê Mai Hoài Bảo
+- Phạm vi audit: các nội dung AI hỗ trợ trong quá trình chọn công cụ, viết script Semgrep/ZAP, phân tích finding, tạo PoC/checklist kiểm chứng và biên tập report.
+- Nguyên tắc đánh giá: AI output chỉ được xem là hợp lệ khi có human review và được đối chiếu với source code, output Semgrep/ZAP, unit test, request/response log, screenshot hoặc tài liệu chính thức.
+
+## 2. Bảng Audit
 
 ### Mục 1 - Semgrep Hardcoded JWT Secret: PoC Forge Token
 
@@ -570,7 +583,7 @@ Evidence:
 - Attach raw request/response headers or screenshot.
 ```
 
-## 2. Tổng Kết Audit
+## 3. Tổng Kết Độ Chính Xác AI
 
 | ID | Nhóm test | Verdict | Ghi chú chính |
 | --- | --- | --- | --- |
@@ -582,7 +595,16 @@ Evidence:
 | Mục 6 | ZAP authenticated scan | VALID | Kiểm tra target allowlist, JWT Replacer, Forced User Mode, cleanup. |
 | Mục 7 | ZAP JSON/OpenRouter report | INCOMPLETE | Parser tests tốt nhưng AI report cần dedup, sửa tag sai và thêm evidence execute. |
 
-## 3. Kết Luận
+Tổng cộng có 7 nhóm nội dung AI được audit:
+
+- 4/7 mục được đánh giá `VALID` ở mức unit/component/regression testing hoặc workflow có mock rõ ràng.
+- 3/7 mục được đánh giá `INCOMPLETE` vì còn thiếu runtime evidence, precondition, test data đúng SUT, request/response log hoặc screenshot xác minh.
+- Tỉ lệ nội dung có thể dùng trực tiếp sau human review: khoảng 57%.
+- Tỉ lệ nội dung cần bổ sung bằng chứng trước khi dùng làm kết luận cuối: khoảng 43%.
+
+AI hữu ích nhất khi hỗ trợ cấu trúc hóa script, test, prompt và report. AI kém tin cậy hơn khi phải tự suy ra dữ liệu runtime, endpoint thật, taxonomy OWASP hoặc trạng thái "Actual" nếu nhóm chưa cung cấp bằng chứng execute.
+
+## 4. Kết Luận
 
 AI hỗ trợ tốt nhất ở các việc:
 
@@ -599,3 +621,19 @@ Các lỗi hoặc hạn chế đã audit được:
 - Có sai sót taxonomy/tag OWASP trong output AI.
 
 Kết luận về mức độ tin cậy: các unit tests đã được sinh viên sửa/bổ sung trong `src/semgrep` và `src/zap` có thể xem là hợp lệ ở mức component/regression testing. Các PoC, hướng kiểm chứng và security report có AI hỗ trợ cần tiếp tục human validation bằng source evidence, request/response log, screenshot hoặc report ZAP/Semgrep trước khi dùng làm bằng chứng chính thức.
+
+## 5. Disclosure
+
+Nhóm có sử dụng các công cụ AI như ChatGPT/Codex, Google Gemini và Gemini qua OpenRouter để hỗ trợ học công cụ, viết nháp script, tạo prompt triage, giải thích finding, đề xuất PoC, đề xuất remediation và rà soát nội dung báo cáo.
+
+Nhóm không xem AI là nguồn bằng chứng cuối cùng. Các kết luận trong báo cáo chỉ được giữ lại khi đã được thành viên phụ trách đọc lại, chỉnh sửa và đối chiếu với ít nhất một trong các nguồn sau:
+
+- Source code EShop hoặc script trong repository.
+- Output Semgrep/ZAP đã lưu.
+- Unit test hoặc mock test trong `src/semgrep` và `src/zap`.
+- PoC/testcase, request/response log, screenshot hoặc evidence trong weekly reports.
+- Tài liệu chính thức của Semgrep, OWASP ZAP, OWASP Top 10 hoặc provider liên quan.
+
+Các phần còn `INCOMPLETE` được giữ nguyên trạng thái để minh bạch rằng AI output hoặc report chưa đủ bằng chứng kiểm thử cuối cùng. Nhóm không sử dụng AI để tạo giả feedback, attendance, log chạy tool, screenshot hoặc kết quả scan.
+
+Chi tiết công bố theo từng thành viên được ghi trong `ai-audit/[AI-03]_AI_Disclosure_Template.md` và cần được ký/xuất thành `ai-audit/[AI-03]_AI_Disclosure.pdf` trước khi nộp.
