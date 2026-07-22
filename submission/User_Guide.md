@@ -36,7 +36,6 @@ Chạy từ root repo `Seminar-SoftwareTesting`.
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install -r src/semgrep/requirements.txt
 ```
 
 Nếu dùng Windows PowerShell:
@@ -44,7 +43,6 @@ Nếu dùng Windows PowerShell:
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-python -m pip install -r src/semgrep/requirements.txt
 ```
 
 ### 3.2. Cài Semgrep CLI
@@ -791,13 +789,13 @@ Testcase mẫu:
   - `const SECRET_KEY = "super_secret_key_that_should_not_be_here";`
   - `jwt.sign(..., SECRET_KEY)`
   - `jwt.verify(..., SECRET_KEY)`
-- PoC: `weekly-reports/Group06_05/evidence/semgrep/exploit.js`
+- PoC: `src/semgrep/exploit.js`
 
 ###### Thao tác
 
 1. Chạy PoC để tạo forged token:
    ```bash
-   node weekly-reports/Group06_05/evidence/semgrep/exploit.js
+   node src/semgrep/exploit.js
    ```
 2. Copy token sinh ra từ PoC.
 3. Gửi request kiểm tra:
