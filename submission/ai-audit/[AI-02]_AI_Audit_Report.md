@@ -583,6 +583,133 @@ Evidence:
 - Attach raw request/response headers or screenshot.
 ```
 
+### Mục 8 - Semgrep AI Triage Refinement Trong Phiên Chat: Source Context, Fail-Fast, Report Format
+
+#### 1. Prompt + công cụ AI
+
+- Công cụ: Codex/ChatGPT trong phiên làm việc trực tiếp với repository.
+- Các yêu cầu chính từ phiên chat:
+
+```text
+Sửa context là đọc source sau đó phân loại true/false/need human review.
+```
+
+```text
+Nếu gọi AI bị lỗi thì cho nó fail hoặc stop chứ không cho gen ra các finding.
+```
+
+```text
+Hãy xem xét các output của AI là tiếng Việt nhé.
+```
+
+```text
+Hãy bỏ script tạo postman validation, thêm script tạo bảng test case có include tới finding nào.
+```
+
+```text
+Test case làm theo từng entry chứ không sinh ra bảng.
+```
+
+```text
+Mỗi entry trong semgrep_triage_report thêm tag lỗi CWE/OWASP.
+```
+
+```text
+Format lại semgrep_triage_report để heading AI kiểu ## Triage Finding không làm mất cân đối.
+```
+
+```text
+Bảng trong semgrep_triage_report dùng tiếng Việt, trừ tên tag lỗi.
+```
+
+#### 2. Nội dung AI hỗ trợ
+
+AI đã hỗ trợ chỉnh workflow Semgrep trong `src/semgrep/semgrep_ai_triage.py` và tài liệu `submission/User_Guide.md`.
+
+Các thay đổi kỹ thuật chính:
+
+- Prompt AI yêu cầu đọc source evidence trước khi phân loại.
+- Chỉ dùng ba trạng thái triage: `True Positive`, `False Positive`, `Needs Human Review`.
+- AI output yêu cầu viết bằng tiếng Việt, trừ thuật ngữ chuẩn như `CWE`, `OWASP`, `True Positive`.
+- Thêm giới hạn `AI_MAX_TOKENS` để tránh lỗi request quá lớn qua OpenRouter.
+- Nếu AI provider lỗi, ví dụ OpenRouter `402`, script dừng với exit code `1` và không sinh report thiếu phân tích.
+- Bỏ report Postman validation cũ, thay bằng `semgrep_test_cases.md` dạng từng entry test case.
+- `semgrep_triage_report.md` có tag lỗi trong từng finding entry: `Rule`, `Severity`, `CWE`, `OWASP`, `Likelihood`, `Impact`, `Confidence`.
+- Heading do AI sinh ra khi nhúng inline vào report được hạ cấp để không phá hierarchy Markdown.
+- Bảng tổng hợp trong `semgrep_triage_report.md` dùng tiếng Việt: `Quy tắc`, `Tệp`, `Mức độ`, `Kết quả AI`, `Trạng thái kiểm chứng`.
+
+Các regression tests liên quan trong `src/semgrep/test_semgrep_ai_triage.py`:
+
+```python
+def test_build_prompt_includes_source_first_three_state_classification_context(self):
+    ...
+    self.assertIn("Đọc và đối chiếu source evidence trước khi phân loại", prompt)
+    self.assertIn("Phân loại: True Positive / False Positive / Needs Human Review", prompt)
+    self.assertNotIn("PoC hoặc testcase kiểm chứng", prompt)
+
+def test_main_stops_without_writing_reports_when_ai_call_fails(self):
+    ...
+    self.assertEqual(exit_code, 1)
+    write_mock.assert_not_called()
+
+def test_write_triage_outputs_creates_test_case_entries_report(self):
+    ...
+    self.assertIn("## TC-SEMGREP-001", report)
+    self.assertIn("### Input", report)
+    self.assertIn("### Thao tác", report)
+    self.assertNotIn("### Expected output", report)
+    self.assertNotIn("### Actual output", report)
+
+def test_triage_report_detail_entries_include_security_tags(self):
+    ...
+    self.assertIn("#### Tags lỗi", report)
+    self.assertIn("`CWE-798: Use of Hard-coded Credentials`", report)
+    self.assertIn("`A07:2021 - Identification and Authentication Failures`", report)
+
+def test_triage_report_demotes_ai_headings_inside_finding_details(self):
+    ...
+    self.assertNotIn("\n## Triage Finding Bảo Mật SEMGREP-001", report)
+    self.assertIn("\n##### Triage Finding Bảo Mật SEMGREP-001", report)
+```
+
+Verification đã chạy trong phiên:
+
+```bash
+python3 -m unittest discover -s src/semgrep -p 'test_*.py'
+```
+
+Kết quả cuối cùng: `Ran 15 tests ... OK`.
+
+#### 3. Verdict
+
+`VALID`
+
+Các chỉnh sửa này hợp lệ ở mức workflow/component regression vì có test tự động bảo vệ những yêu cầu chính: source-first context, phân loại ba trạng thái, fail-fast khi AI lỗi, không sinh Postman validation report cũ, test case dạng entry, tag CWE/OWASP trong report và format Markdown không bị lệch heading.
+
+#### 4. Lý do theo ISTQB
+
+- Traceability rõ từ yêu cầu trong phiên chat đến test case tự động.
+- Có negative/regression testing cho lỗi provider: script không sinh report khi AI lỗi.
+- Có test oracle cụ thể bằng assertion trên output Markdown.
+- Giảm nguy cơ false evidence: AI không tự sinh "Actual result" hoặc finding khi provider lỗi.
+- Tách vai trò hợp lý: AI phân tích finding, còn test case kiểm chứng nằm ở file riêng để tester thực thi và điền kết quả.
+- Giới hạn còn lại: regression tests xác minh format/script, chưa thay thế manual validation bằng runtime request, source review và evidence thật.
+
+#### 5. Nội dung đã được SV sửa hoặc bổ sung
+
+Sinh viên đã bổ sung/cập nhật:
+
+- `src/semgrep/semgrep_ai_triage.py`
+- `src/semgrep/test_semgrep_ai_triage.py`
+- `submission/User_Guide.md`
+
+Kết quả workflow hiện tại:
+
+- `semgrep_triage_report.md`: báo cáo tổng hợp all findings, có bảng tiếng Việt, tag lỗi, source evidence và AI analysis đã normalize heading.
+- `semgrep_test_cases.md`: danh sách test case theo từng entry, có `Finding liên quan`, `Input`, `Thao tác`, `Kết quả cần ghi nhận`, `Trạng thái`.
+- `findings/*_prompt.md`: prompt từng finding, yêu cầu AI đọc source và phân loại ba trạng thái.
+- `findings/*_ai_output.md`: raw output từng finding, giữ nguyên để đối chiếu.
+
 ## 3. Tổng Kết Độ Chính Xác AI
 
 | ID | Nhóm test | Verdict | Ghi chú chính |
@@ -594,13 +721,14 @@ Evidence:
 | Mục 5 | ZAP CLI scan mode/report format | VALID | Có positive/negative tests và traceability với yêu cầu W06. |
 | Mục 6 | ZAP authenticated scan | VALID | Kiểm tra target allowlist, JWT Replacer, Forced User Mode, cleanup. |
 | Mục 7 | ZAP JSON/OpenRouter report | INCOMPLETE | Parser tests tốt nhưng AI report cần dedup, sửa tag sai và thêm evidence execute. |
+| Mục 8 | Semgrep AI triage refinement trong phiên chat | VALID | Có regression tests cho source-first prompt, fail-fast AI, report tiếng Việt, test case entry, tag CWE/OWASP và format heading. |
 
-Tổng cộng có 7 nhóm nội dung AI được audit:
+Tổng cộng có 8 nhóm nội dung AI được audit:
 
-- 4/7 mục được đánh giá `VALID` ở mức unit/component/regression testing hoặc workflow có mock rõ ràng.
-- 3/7 mục được đánh giá `INCOMPLETE` vì còn thiếu runtime evidence, precondition, test data đúng SUT, request/response log hoặc screenshot xác minh.
-- Tỉ lệ nội dung có thể dùng trực tiếp sau human review: khoảng 57%.
-- Tỉ lệ nội dung cần bổ sung bằng chứng trước khi dùng làm kết luận cuối: khoảng 43%.
+- 5/8 mục được đánh giá `VALID` ở mức unit/component/regression testing hoặc workflow có mock rõ ràng.
+- 3/8 mục được đánh giá `INCOMPLETE` vì còn thiếu runtime evidence, precondition, test data đúng SUT, request/response log hoặc screenshot xác minh.
+- Tỉ lệ nội dung có thể dùng trực tiếp sau human review: khoảng 62,5%.
+- Tỉ lệ nội dung cần bổ sung bằng chứng trước khi dùng làm kết luận cuối: khoảng 37,5%.
 
 AI hữu ích nhất khi hỗ trợ cấu trúc hóa script, test, prompt và report. AI kém tin cậy hơn khi phải tự suy ra dữ liệu runtime, endpoint thật, taxonomy OWASP hoặc trạng thái "Actual" nếu nhóm chưa cung cấp bằng chứng execute.
 
@@ -619,6 +747,8 @@ Các lỗi hoặc hạn chế đã audit được:
 - Có nguy cơ ghi "Actual" khi chưa có bằng chứng execution.
 - Có duplicate findings cùng root cause.
 - Có sai sót taxonomy/tag OWASP trong output AI.
+- Có nguy cơ format report bị lệch nếu nhúng raw AI Markdown trực tiếp; đã giảm rủi ro bằng cách normalize heading trong `semgrep_triage_report.md`.
+- Có nguy cơ report thiếu phân tích khi provider lỗi; đã giảm rủi ro bằng fail-fast thay vì sinh output lỗi như finding hợp lệ.
 
 Kết luận về mức độ tin cậy: các unit tests đã được sinh viên sửa/bổ sung trong `src/semgrep` và `src/zap` có thể xem là hợp lệ ở mức component/regression testing. Các PoC, hướng kiểm chứng và security report có AI hỗ trợ cần tiếp tục human validation bằng source evidence, request/response log, screenshot hoặc report ZAP/Semgrep trước khi dùng làm bằng chứng chính thức.
 
