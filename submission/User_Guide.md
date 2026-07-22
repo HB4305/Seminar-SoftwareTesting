@@ -52,7 +52,7 @@ python -m pip install -r src/semgrep/requirements.txt
 Linux/macOS:
 
 ```bash
-python3 -m pip install --user semgrep
+python3 -m pip install semgrep
 semgrep --version
 ```
 
@@ -66,7 +66,7 @@ semgrep --version
 Windows PowerShell:
 
 ```powershell
-pip install semgrep
+python3 -m pip install semgrep
 $env:PYTHONUTF8='1'
 chcp 65001
 semgrep --version

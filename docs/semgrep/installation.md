@@ -22,7 +22,7 @@ Windows không phải là môi trường gốc được hỗ trợ hoàn hảo n
 1. Mở Terminal (PowerShell hoặc Command Prompt) với quyền Administrator.
 2. Chạy lệnh cài đặt:
    ```powershell
-   pip install semgrep
+   python3 -m pip install semgrep
    ```
 3. **⚠️ Cấu hình bắt buộc trên Windows (Tránh lỗi mã hóa):**
    Mặc định Windows sử dụng bảng mã CP1252. Khi Semgrep phân tích và xuất kết quả (JSON/Markdown) chứa ký tự tiếng Việt hoặc Unicode, hệ thống sẽ gặp lỗi `UnicodeEncodeError`. 
@@ -46,7 +46,7 @@ Nếu bạn thường xuyên phát triển phần mềm trên Windows, sử dụ
    ```bash
    sudo apt update
    sudo apt install python3-pip -y
-   python3 -m pip install --user semgrep
+   python3 -m pip install semgrep
    ```
 3. Sau khi cài đặt xong, bạn có thể gọi trực tiếp lệnh `semgrep` trong môi trường WSL.
 
@@ -88,7 +88,7 @@ Trên macOS, bạn có thể dễ dàng cài đặt thông qua trình quản lý
 1. Mở Terminal.
 2. Chạy lệnh:
    ```bash
-   pip3 install semgrep
+   python3 -m pip install semgrep
    ```
 
 ---
@@ -105,7 +105,7 @@ Trên macOS, bạn có thể dễ dàng cài đặt thông qua trình quản lý
    ```
 2. Cài đặt Semgrep:
    ```bash
-   python3 -m pip install --user semgrep
+   python3 -m pip install semgrep
    ```
 
 ### Fedora
@@ -115,7 +115,7 @@ Trên macOS, bạn có thể dễ dàng cài đặt thông qua trình quản lý
    ```
 2. Cài đặt Semgrep:
    ```bash
-   python3 -m pip install --user semgrep
+   python3 -m pip install semgrep
    ```
 
 ### Arch Linux
@@ -125,7 +125,7 @@ Trên macOS, bạn có thể dễ dàng cài đặt thông qua trình quản lý
    ```
 2. Cài đặt Semgrep:
    ```bash
-   python3 -m pip install --user semgrep
+   python3 -m pip install semgrep
    ```
 
 ### Cấu hình PATH sau khi cài bằng pip
@@ -172,5 +172,5 @@ Nếu màn hình hiển thị số phiên bản (Ví dụ: `1.168.0` hoặc mớ
 * **Nguyên nhân:** Lệnh tải tự động `curl -fsSL https://semgrep.dev/get | sh` không lấy được nội dung shell script hợp lệ trong môi trường mạng/distro hiện tại.
 * **Cách khắc phục:** Không dùng script này trong báo cáo của nhóm. Chuyển sang cách cài bằng pip theo distro ở **Mục 3**:
   ```bash
-  python3 -m pip install --user semgrep
+  python3 -m pip install semgrep
   ```
