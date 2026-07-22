@@ -416,8 +416,8 @@ def runtime_mapping_for_record(record):
     rule = record.rule_id.lower()
     if "jwt-hardcode" in rule or "hardcoded-jwt-secret" in rule:
         return RuntimeMapping(
-            title="JWT secret hardcode",
-            affected_feature="JWT authentication / admin authorization",
+            title="JWT Secret hardcode",
+            affected_feature="Xác thực JWT / phân quyền admin",
             method="GET",
             url="http://localhost:3000/api/users/me",
             headers="Authorization: Bearer <forged_admin_jwt>\nContent-Type: application/json",
@@ -430,7 +430,7 @@ def runtime_mapping_for_record(record):
             test_objective="Kiểm tra backend có chấp nhận JWT giả được ký bằng hardcoded secret hay không.",
             vulnerable_behavior="Server trả `200 OK` và chấp nhận token giả.",
             secure_behavior="Server trả `401 Unauthorized` hoặc `403 Forbidden`.",
-            zap_related_alert="Not directly detected / Authentication weakness may require authenticated active scan.",
+            zap_related_alert="ZAP không phát hiện trực tiếp; điểm yếu xác thực có thể cần authenticated active scan.",
             difference=(
                 "- Semgrep phát hiện root cause trong source code.\n"
                 "- ZAP cần runtime request hợp lệ hoặc attack path để quan sát hành vi."
@@ -445,7 +445,7 @@ def runtime_mapping_for_record(record):
         method = infer_method_from_code(record.code)
         return RuntimeMapping(
             title="HTTP request không mã hóa",
-            affected_feature="Frontend/API transport security",
+            affected_feature="Bảo mật truyền tải frontend/API",
             method=method,
             url=url,
             headers="Content-Type: application/json",
@@ -458,7 +458,7 @@ def runtime_mapping_for_record(record):
             test_objective="Kiểm tra request đang dùng HTTP cleartext thay vì HTTPS.",
             vulnerable_behavior="Request gọi thành công qua `http://` hoặc dữ liệu nhạy cảm đi qua kênh không mã hóa.",
             secure_behavior="Ứng dụng dùng `https://` hoặc cấu hình base URL an toàn theo môi trường.",
-            zap_related_alert="May appear as passive/runtime transport or mixed-content evidence if ZAP observes the same request.",
+            zap_related_alert="Có thể xuất hiện như evidence truyền tải runtime nếu ZAP quan sát được request tương ứng.",
             difference=(
                 "- Semgrep phát hiện hardcoded `http://` trong source code.\n"
                 "- ZAP chỉ thấy lỗi nếu request đó thực sự được crawl/spider hoặc gửi qua proxy."
@@ -470,7 +470,7 @@ def runtime_mapping_for_record(record):
 
     return RuntimeMapping(
         title=record.message.strip(".") or "Semgrep Finding",
-        affected_feature="Needs manual source-to-runtime mapping",
+        affected_feature="Cần mapping thủ công từ source sang runtime",
         method="GET",
         url="http://localhost:3000/<map-endpoint>",
         headers="Content-Type: application/json",
@@ -482,7 +482,7 @@ def runtime_mapping_for_record(record):
         test_objective="Xác thực finding Semgrep bằng hành vi runtime nếu có thể.",
         vulnerable_behavior="Hành vi lỗi tái hiện được trong Postman.",
         secure_behavior="Hành vi lỗi không còn tái hiện hoặc được chặn an toàn.",
-        zap_related_alert="Unknown until mapped against ZAP report.",
+        zap_related_alert="Chưa xác định cho đến khi đối chiếu với ZAP report.",
         difference=(
             "- Semgrep cung cấp source evidence.\n"
             "- ZAP cung cấp runtime HTTP evidence nếu scan đi qua endpoint tương ứng."
