@@ -944,6 +944,172 @@ Kết quả workflow hiện tại:
 - `findings/*_prompt.md`: prompt từng finding, yêu cầu AI đọc source và phân loại ba trạng thái.
 - `findings/*_ai_output.md`: raw output từng finding, giữ nguyên để đối chiếu.
 
+### Mục 15 - Format Semgrep Finding Thành Test Case Postman
+
+#### 1. Prompt + công cụ AI
+
+- Công cụ: Codex/ChatGPT trong phiên làm việc trực tiếp với repository.
+- Prompt hoàn thiện:
+
+```text
+Hãy đề xuất format chuẩn để chuyển finding Semgrep thành test case có thể kiểm chứng bằng Postman. Format cần gần giống alert bảo mật nhưng tách rõ `Source Evidence` và `Runtime Mapping`, vì Semgrep là SAST nên không tự có endpoint/request/response. Mỗi finding cần có Rule ID, severity, CWE, OWASP, file, line, vulnerable code, method, URL, headers, payload mẫu, pre-test setup, expected vulnerable behavior, expected secure behavior, status kiểm chứng và mapping confidence.
+```
+
+#### 2. Nội dung AI hỗ trợ
+
+AI hỗ trợ thiết kế format Markdown cho từng finding Semgrep:
+
+- `Alert Summary`: tool, type, rule, severity, CWE, OWASP, status.
+- `Source Evidence`: file, line, vulnerable code.
+- `Runtime Mapping`: affected feature, method, endpoint, base URL, auth, confidence.
+- `Postman Test Case`: URL, headers, payload, pre-test setup.
+- `Expected Result`: vulnerable behavior, secure behavior, evidence cần thu thập.
+- `Human Validation`: trạng thái cần tester cập nhật sau khi chạy PoC.
+
+Format này được dùng làm nền để cập nhật `src/semgrep/semgrep_ai_triage.py`, `semgrep_triage_report.md` và `semgrep_test_cases.md`.
+
+#### 3. Verdict
+
+`VALID`
+
+#### 4. Lý do theo ISTQB
+
+- Test objective rõ: biến static finding thành manual test case có thể execute.
+- Có precondition, input, action và expected result.
+- Có phân biệt source evidence và runtime evidence, giảm rủi ro kết luận sai từ SAST.
+- Có trường confidence/status để minh bạch finding cần human validation.
+
+#### 5. Nội dung đã được SV sửa hoặc bổ sung
+
+Sinh viên yêu cầu:
+
+- Đồng bộ output tiếng Việt, trừ thuật ngữ chuẩn.
+- Không sinh bảng test case quá khó đọc, mà chuyển sang từng entry riêng.
+- Không ghi `Actual result` nếu chưa chạy Postman thật.
+- Bổ sung payload mẫu để tester có thể thay dữ liệu và chạy PoC.
+
+### Mục 16 - Payload Mẫu Tự Động Cho Postman/PoC Từ Semgrep Finding
+
+#### 1. Prompt + công cụ AI
+
+- Công cụ: Codex/ChatGPT trong phiên làm việc trực tiếp với repository.
+- Prompt hoàn thiện:
+
+```text
+Hãy bổ sung khả năng tự sinh payload mẫu cho test case Postman từ source code Semgrep finding. Với request có `body: JSON.stringify(...)`, script cần trích field trong object và map sang giá trị mẫu hoặc biến Postman như `{{test_email}}`, `{{test_password}}`, `{{coupon_code}}`. Với GET/HEAD thì ghi rõ không có request body. Payload chỉ là mẫu để tester thay dữ liệu thật khi chạy PoC, không được ghi như actual result.
+```
+
+#### 2. Nội dung AI hỗ trợ
+
+AI hỗ trợ thêm logic trong `src/semgrep/semgrep_ai_triage.py`:
+
+- Parse `body: JSON.stringify(...)` từ source snippet.
+- Tách các field top-level trong object request body.
+- Sinh payload JSON mẫu cho Postman.
+- Sinh giá trị mẫu cho field phổ biến như `email`, `password`, `name`, `phone`, `items`, `coupon_id`.
+- Với `GET`/`HEAD`, ghi rõ `Không có request body.`
+- Ưu tiên endpoint/payload gần dòng finding được Semgrep đánh dấu.
+- Nhúng block `Postman/PoC tự động` vào từng finding trong `semgrep_triage_report.md`.
+
+#### 3. Verdict
+
+`VALID`
+
+#### 4. Lý do theo ISTQB
+
+- Test data có traceability từ source code, không phải AI tự bịa hoàn toàn.
+- Có phân biệt payload mẫu với actual runtime result.
+- Có negative path: nếu không trích được body thì payload `{}` và confidence thấp.
+- Có unit tests cho login payload, checkout payload, GET no body và marked finding line.
+
+#### 5. Nội dung đã được SV sửa hoặc bổ sung
+
+Sinh viên yêu cầu generator tự sinh payload trong output mới, không chỉnh trực tiếp file generated. Sau đó script và tests được cập nhật để khi chạy lại AI triage, payload mẫu được sinh tự động trong `semgrep_triage_report.md` và `semgrep_test_cases.md`.
+
+### Mục 17 - User Guide Và Debug Cài Đặt Semgrep Trên Windows
+
+#### 1. Prompt + công cụ AI
+
+- Công cụ: Codex/ChatGPT trong phiên làm việc trực tiếp với repository.
+- Prompt hoàn thiện:
+
+```text
+Hãy cập nhật user guide Semgrep để người dùng chạy được flow thủ công trên Windows, macOS và Linux. Guide cần có bước tạo venv, cài dependency triage, cài Semgrep CLI, scan source `./eshop-sut` hoặc dùng `SOURCE_ROOT` nếu source nằm nơi khác, chạy AI triage, kiểm tra output và xử lý lỗi thường gặp như PowerShell không dùng `source`, command xuống dòng bằng `\`, path WSL/Windows không tương thích, Unicode `charmap`, `python` not found, `failed to locate pyvenv.cfg`, lỗi `maturin/rpds-py/Rust not found` và lỗi provider AI.
+```
+
+#### 2. Nội dung AI hỗ trợ
+
+AI hỗ trợ cập nhật `submission/User_Guide.md` và giải thích lỗi môi trường:
+
+- `source .venv/bin/activate` không dùng trong PowerShell; Windows dùng `.\.venv\Scripts\Activate.ps1`.
+- PowerShell không dùng dấu `\` để xuống dòng như Git Bash.
+- Path `/mnt/d/...` là WSL path; Semgrep Windows cần path Windows hoặc chạy trong cùng môi trường shell.
+- `python` not found ở Bash có thể do PATH khác PowerShell.
+- `failed to locate pyvenv.cfg` thường do `.venv` hỏng hoặc Python/PATH trỏ nhầm.
+- Lỗi `maturin/rpds-py/Rust not found` là lỗi build dependency native trong pip environment, không phải lỗi source EShop.
+- Theo trạng thái cuối, guide cài Semgrep CLI bằng `python -m pip install semgrep` và kiểm tra bằng `semgrep --version`.
+
+#### 3. Verdict
+
+`VALID`
+
+#### 4. Lý do theo ISTQB
+
+- Đây là environment/setup documentation, không phải evidence defect của SUT.
+- Các lỗi được phân tích từ log thực tế của sinh viên.
+- Có command kiểm tra và expected result rõ ở từng bước.
+- Có phân biệt lỗi tool/environment với lỗi trong ứng dụng EShop.
+
+#### 5. Nội dung đã được SV sửa hoặc bổ sung
+
+Sinh viên yêu cầu:
+
+- Bỏ pipeline tự động, chỉ giữ flow chạy thủ công.
+- Đưa option Windows/Git Bash vào từng bước, không dồn hết xuống troubleshooting.
+- Bỏ `pipx` khỏi guide khi cài Semgrep bằng pip đã hoạt động.
+- Giải thích rõ phần cài Semgrep CLI trong script quay video.
+
+### Mục 18 - Kiểm Chứng Output Semgrep AI Triage Sau Khi Generate
+
+#### 1. Prompt + công cụ AI
+
+- Công cụ: Codex/ChatGPT trong phiên làm việc trực tiếp với repository.
+- Prompt hoàn thiện:
+
+```text
+Hãy đọc các file output được sinh sau khi chạy Semgrep scan và AI triage, gồm `semgrep_results.json`, `semgrep_triage_report.md`, `semgrep_test_cases.md` và các file trong `output/findings`. Kiểm tra xem report có đúng số finding, đúng source evidence, đồng bộ tiếng Việt, có tag lỗi, có Postman/PoC tự động, có payload mẫu, có status kiểm chứng và không ghi actual result khi chưa execute hay không. Nêu các điểm sai hoặc cần chỉnh trước khi dùng cho báo cáo cuối và test Postman.
+```
+
+#### 2. Nội dung AI hỗ trợ
+
+AI hỗ trợ review generated artifacts:
+
+- Xác định `semgrep_test_cases.md` đã có payload mẫu nhưng `semgrep_triage_report.md` chưa nhúng block Postman/PoC trong từng finding.
+- Đề xuất đưa `Postman/PoC tự động` vào chi tiết finding để reviewer đọc một file vẫn thấy request test.
+- Xác định payload nào cần body và payload nào không cần body.
+- Nhấn mạnh payload mẫu không phải actual value; tester phải thay bằng data thật.
+- Nhấn mạnh `Confirmed` chỉ được ghi sau khi chạy Postman và có evidence.
+
+#### 3. Verdict
+
+`VALID`
+
+#### 4. Lý do theo ISTQB
+
+- Có artifact review sau khi generate output.
+- Có traceability từ Semgrep finding sang test case Postman.
+- Có oracle rõ: không được ghi actual result khi chưa execute.
+- Có regression test sau khi chỉnh generator để tránh mất block Postman/PoC.
+
+#### 5. Nội dung đã được SV sửa hoặc bổ sung
+
+Sinh viên yêu cầu không sửa trực tiếp output generated, mà phải sửa generator để lần chạy sau tự sinh đúng payload/testcase. Script và test sau đó được cập nhật, verification đã chạy:
+
+```text
+python -m unittest src.semgrep.test_semgrep_ai_triage
+Ran 23 tests ... OK
+```
+
 ## 3. Tổng Kết Độ Chính Xác AI
 
 | ID      | Nhóm test                                      | Verdict    | Ghi chú chính                                                                                                                     |
@@ -962,13 +1128,17 @@ Kết quả workflow hiện tại:
 | Mục 12 | ZAP authenticated scan                         | VALID      | Kiểm tra target allowlist, JWT Replacer, Forced User Mode, cleanup.                                                               |
 | Mục 13 | ZAP JSON/OpenRouter report                     | INCOMPLETE | Parser tests tốt nhưng AI report cần dedup, sửa tag sai và thêm evidence execute.                                                 |
 | Mục 14 | Semgrep AI triage refinement trong phiên chat  | VALID      | Có regression tests cho source-first prompt, fail-fast AI, report tiếng Việt, test case entry, tag CWE/OWASP và format heading.    |
+| Mục 15 | Semgrep finding -> Postman testcase format     | VALID      | Có source evidence, runtime mapping, expected behavior và validation status.                                                       |
+| Mục 16 | Semgrep payload mẫu tự động                    | VALID      | Payload sinh từ source `JSON.stringify`, không ghi actual result khi chưa execute.                                                 |
+| Mục 17 | Semgrep user guide/debug Windows               | VALID      | Dựa trên lỗi môi trường thực tế và command đã chỉnh trong guide.                                                                   |
+| Mục 18 | Kiểm chứng output Semgrep AI triage            | VALID      | Review generated artifacts và sửa generator thay vì sửa output thủ công.                                                          |
 
-Tổng cộng có 14 nhóm nội dung AI được audit:
+Tổng cộng có 18 nhóm nội dung AI được audit:
 
-- 10/14 mục được đánh giá `VALID` ở mức research/documentation support, unit/component/regression testing hoặc workflow có review rõ ràng.
-- 4/14 mục được đánh giá `INCOMPLETE` vì còn thiếu runtime evidence, precondition, test data đúng SUT, request/response log, screenshot xác minh hoặc cần sửa bản nháp AI trước khi dùng.
-- Tỉ lệ nội dung có thể dùng trực tiếp sau human review: khoảng 71,4%.
-- Tỉ lệ nội dung cần bổ sung bằng chứng hoặc chỉnh sửa trước khi dùng làm kết luận cuối: khoảng 28,6%.
+- 14/18 mục được đánh giá `VALID` ở mức research/documentation support, unit/component/regression testing hoặc workflow có review rõ ràng.
+- 4/18 mục được đánh giá `INCOMPLETE` vì còn thiếu runtime evidence, precondition, test data đúng SUT, request/response log, screenshot xác minh hoặc cần sửa bản nháp AI trước khi dùng.
+- Tỉ lệ nội dung có thể dùng trực tiếp sau human review: khoảng 77,8%.
+- Tỉ lệ nội dung cần bổ sung bằng chứng hoặc chỉnh sửa trước khi dùng làm kết luận cuối: khoảng 22,2%.
 
 AI hữu ích nhất khi hỗ trợ cấu trúc hóa script, test, prompt và report. AI kém tin cậy hơn khi phải tự suy ra dữ liệu runtime, endpoint thật, taxonomy OWASP hoặc trạng thái "Actual" nếu nhóm chưa cung cấp bằng chứng execute.
 
@@ -979,6 +1149,7 @@ AI hỗ trợ tốt nhất ở các việc:
 - Hỗ trợ rà soát parser, CLI, config và luồng AI triage.
 - Gợi ý PoC và remediation cho hardcoded JWT secret.
 - Tạo prompt/report format cho AI triage.
+- Chuẩn hóa Semgrep finding thành Postman testcase.
 - Hỗ trợ tìm hiểu nguồn chính thống, tóm tắt user guide, khởi tạo slide và tạo bản nháp final report.
 
 Các lỗi hoặc hạn chế đã audit được:
@@ -990,6 +1161,7 @@ Các lỗi hoặc hạn chế đã audit được:
 - Có sai sót taxonomy/tag OWASP trong output AI.
 - Có nguy cơ format report bị lệch nếu nhúng raw AI Markdown trực tiếp; đã giảm rủi ro bằng cách normalize heading trong `semgrep_triage_report.md`.
 - Có nguy cơ report thiếu phân tích khi provider lỗi; đã giảm rủi ro bằng fail-fast thay vì sinh output lỗi như finding hợp lệ.
+- Có nguy cơ dùng payload mẫu như dữ liệu thật; đã giảm rủi ro bằng cách ghi rõ payload chỉ là template và cần tester thay bằng dữ liệu Postman.
 
 Kết luận về mức độ tin cậy: các unit tests đã được sinh viên sửa/bổ sung trong `src/semgrep` và `src/zap` có thể xem là hợp lệ ở mức component/regression testing. Các PoC, hướng kiểm chứng và security report có AI hỗ trợ cần tiếp tục human validation bằng source evidence, request/response log, screenshot hoặc report ZAP/Semgrep trước khi dùng làm bằng chứng chính thức.
 
