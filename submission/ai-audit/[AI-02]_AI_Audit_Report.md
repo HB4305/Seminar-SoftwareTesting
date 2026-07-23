@@ -15,7 +15,312 @@
 
 ## 2. Bảng Audit
 
-### Mục 1 - Semgrep Hardcoded JWT Secret: PoC Forge Token
+### Mục 1 - DAST, ZAP Và OWASP Top 10: Tìm Nguồn Và Tìm Hiểu Nền Tảng
+
+#### 1. Prompt + công cụ AI
+
+- Công cụ: Gemini 3.1 Pro, NotebookLM cho Lê Trung Kiên.
+- Prompt/nội dung yêu cầu:
+
+```text
+Yêu cầu AI tìm nguồn chính thống và giải thích các khái niệm nền tảng về DAST, OWASP ZAP và OWASP Top 10 để phục vụ phần seminar Security Testing.
+```
+
+#### 2. Nội dung AI hỗ trợ
+
+AI hỗ trợ tổng hợp nội dung nền tảng:
+
+- DAST là gì và khác SAST ở điểm nào.
+- Vai trò của OWASP ZAP trong kiểm thử bảo mật động.
+- Cách OWASP Top 10 được dùng để phân loại và ưu tiên rủi ro bảo mật.
+- Các nguồn tham khảo nên dùng khi viết user guide, slide và report.
+
+Lê Trung Kiên đã kiểm tra lại output AI trên nguồn chính thống của OWASP và ZAP trước khi đưa vào tài liệu.
+
+Screenshot: không có screenshot trực tiếp của AI output trong weekly report.
+
+#### 3. Verdict
+
+`VALID`
+
+Nội dung AI được dùng ở mức hỗ trợ tìm hiểu và tổng hợp kiến thức. Sinh viên đã đối chiếu lại với tài liệu chính thống của OWASP và ZAP trước khi sử dụng.
+
+#### 4. Lý do theo ISTQB
+
+- Nguồn tham chiếu phù hợp với mục tiêu học công cụ và chuẩn bảo mật.
+- AI không được dùng làm nguồn bằng chứng cuối cùng; output được human review và cross-check với tài liệu chính thống.
+- Nội dung thuộc dạng knowledge support, rủi ro thấp hơn so với kết luận defect/runtime evidence.
+- Có traceability tới phần nội dung seminar về DAST, ZAP và OWASP Top 10.
+
+#### 5. Nội dung đã được SV sửa hoặc bổ sung
+
+Sinh viên đã dùng phần đã kiểm tra để hỗ trợ biên soạn:
+
+- Nội dung giới thiệu DAST/ZAP/OWASP Top 10 trong user guide và slide.
+- Cách diễn giải vai trò của ZAP trong workflow kiểm thử bảo mật.
+- Các liên kết/tài liệu tham khảo chính thống được ưu tiên hơn output AI.
+
+### Mục 2 - ZAP Scan Output Format: JSON Và HTML
+
+#### 1. Prompt + công cụ AI
+
+- Công cụ: GPT-5.5 cho Lê Trung Kiên.
+- Prompt/nội dung yêu cầu:
+
+```text
+Yêu cầu AI hỗ trợ viết script cấu hình output format của ZAP scan ra JSON và HTML để phục vụ pipeline đọc kết quả và báo cáo thủ công.
+```
+
+#### 2. Nội dung AI hỗ trợ
+
+AI hỗ trợ phần script cho ZAP scan:
+
+- Cho phép chọn report format `json` hoặc `html`.
+- Tách đường dẫn output theo nhu cầu scan frontend/backend.
+- Chuẩn hóa output để pipeline sau này có thể đọc JSON.
+- Gợi ý cấu trúc phần tag trong report.
+
+Lê Trung Kiên đã kiểm tra lại output, chỉnh sửa và bổ sung thêm phần tag để kết quả scan có thể trace với nhóm lỗi bảo mật liên quan.
+
+Screenshot: không có screenshot trực tiếp của AI output trong weekly report.
+
+#### 3. Verdict
+
+`VALID`
+
+Script AI hỗ trợ đã được sinh viên kiểm tra lại, bổ sung tag và đối chiếu với nhu cầu xuất báo cáo JSON/HTML của workflow ZAP.
+
+#### 4. Lý do theo ISTQB
+
+- Test objective rõ: ZAP scan phải xuất được định dạng phù hợp cho cả human review và pipeline xử lý sau.
+- Có expected behavior cụ thể: chỉ chấp nhận output format phục vụ pipeline, đặc biệt là `json` và `html`.
+- Sinh viên đã human review output và bổ sung metadata/tag cần thiết.
+- Phù hợp regression testing cho CLI/report generation.
+
+#### 5. Nội dung đã được SV sửa hoặc bổ sung
+
+Sinh viên đã kiểm tra và bổ sung:
+
+- Cấu hình output report `json`/`html`.
+- Tag lỗi trong output để hỗ trợ phân loại và đối chiếu.
+- Đường dẫn output phù hợp với các mục tiêu scan khác nhau.
+
+### Mục 3 - ZAP GUI Scan Với Authentication: Firefox Localhost Config
+
+#### 1. Prompt + công cụ AI
+
+- Công cụ: Gemini 3.1 Pro cho Lê Trung Kiên.
+- Prompt/nội dung yêu cầu:
+
+```text
+Yêu cầu AI giải thích và hướng dẫn trong quá trình tìm hiểu GUI Scan với authentication trên OWASP ZAP, đặc biệt khi cần cấu hình Firefox để cho phép kết nối localhost.
+```
+
+#### 2. Nội dung AI hỗ trợ
+
+Gemini hướng dẫn kiểm tra cấu hình Firefox `about:config` để allow localhost trong quá trình dùng ZAP GUI scan với authentication.
+
+Lê Trung Kiên dùng hướng dẫn này như tài liệu hỗ trợ thao tác, sau đó kiểm tra lại trong quá trình thực hành GUI scan.
+
+Screenshot: không có screenshot trực tiếp của AI output trong weekly report.
+
+#### 3. Verdict
+
+`VALID`
+
+Nội dung AI hỗ trợ đúng phạm vi hướng dẫn thao tác cấu hình môi trường local và đã được sinh viên kiểm tra lại khi thực hành.
+
+#### 4. Lý do theo ISTQB
+
+- Đây là environment setup support, không phải bằng chứng defect cuối cùng.
+- Sinh viên đã xác nhận lại bằng thao tác thực tế trong quá trình tìm hiểu GUI scan.
+- Nội dung có precondition rõ: Firefox/ZAP GUI/proxy/local target.
+- Rủi ro được kiểm soát vì chỉ áp dụng cho môi trường local seminar.
+
+#### 5. Nội dung đã được SV sửa hoặc bổ sung
+
+Sinh viên đã dùng hướng dẫn này để hỗ trợ:
+
+- Cấu hình trình duyệt khi scan ứng dụng local qua ZAP.
+- Tìm hiểu authenticated scan bằng GUI.
+- Ghi chú lại các điều kiện môi trường cần có khi chạy ZAP với localhost.
+
+### Mục 4 - ZAP AI Triage Và Testcase Generation
+
+#### 1. Prompt + công cụ AI
+
+- Công cụ: GPT-5.5 cho Lê Trung Kiên.
+- Prompt/nội dung yêu cầu:
+
+```text
+Yêu cầu AI hỗ trợ viết script tạo AI triage report và testcase từ kết quả ZAP scan.
+```
+
+#### 2. Nội dung AI hỗ trợ
+
+AI hỗ trợ tạo script và output cho luồng ZAP AI triage:
+
+- Đọc kết quả ZAP scan.
+- Tạo nội dung AI triage theo từng alert/finding.
+- Sinh testcase/checklist kiểm chứng.
+- Chuẩn hóa các section cần có trong report.
+
+Lê Trung Kiên đã kiểm tra lại code và output do AI tạo, xác nhận output có đủ các section yêu cầu, kiểm thử script và xác nhận output tốt.
+
+Screenshot: không có screenshot trực tiếp của AI output trong weekly report.
+
+#### 3. Verdict
+
+`VALID`
+
+Script và output AI triage đã được sinh viên review, kiểm thử và xác nhận đáp ứng format/section yêu cầu.
+
+#### 4. Lý do theo ISTQB
+
+- Có traceability từ input ZAP scan tới triage report và testcase.
+- Có expected output cụ thể bằng các section bắt buộc trong report.
+- Sinh viên đã kiểm tra code và output, không dùng raw AI output làm kết luận cuối.
+- Phù hợp component/regression testing cho parser, renderer và report generation.
+
+#### 5. Nội dung đã được SV sửa hoặc bổ sung
+
+Sinh viên đã kiểm tra/bổ sung:
+
+- Code tạo AI triage report.
+- Code hoặc output tạo testcase/checklist.
+- Các section bắt buộc trong output để phục vụ human validation.
+
+### Mục 5 - User Guide Summary Cho Nội Dung Được Giao
+
+#### 1. Prompt + công cụ AI
+
+- Công cụ: GPT-5.5 cho Lê Trung Kiên.
+- Prompt/nội dung yêu cầu:
+
+```text
+Yêu cầu AI tóm tắt nội dung được giao vào user guide.
+```
+
+#### 2. Nội dung AI hỗ trợ
+
+AI hỗ trợ tóm tắt phần nội dung Trung Kiên phụ trách để đưa vào user guide, gồm các phần liên quan tới DAST/ZAP, scan workflow, AI triage và cách đọc output.
+
+Lê Trung Kiên đã đọc lại, kiểm tra và chỉnh nội dung trước khi giữ trong tài liệu.
+
+Screenshot: không có screenshot trực tiếp của AI output trong weekly report.
+
+#### 3. Verdict
+
+`VALID`
+
+AI hỗ trợ tốt ở tác vụ tóm tắt tài liệu. Nội dung đã được sinh viên kiểm tra lại trước khi sử dụng.
+
+#### 4. Lý do theo ISTQB
+
+- Đây là documentation assistance, không phải evidence kiểm thử độc lập.
+- Sinh viên đã human review nội dung tóm tắt.
+- Nội dung được đối chiếu với workflow/script/report trong repository.
+- Rủi ro chính là thiếu/chệch ý, đã được giảm bằng bước đọc và sửa lại của sinh viên.
+
+#### 5. Nội dung đã được SV sửa hoặc bổ sung
+
+Sinh viên đã dùng output AI để hỗ trợ:
+
+- Tóm tắt phần hướng dẫn DAST/ZAP.
+- Mô tả luồng scan và triage.
+- Chỉnh lại nội dung user guide theo phạm vi công việc được giao.
+
+### Mục 6 - Khởi Tạo Slide Từ Outline Và User Guide
+
+#### 1. Prompt + công cụ AI
+
+- Công cụ: GPT-5.5 cho Lê Trung Kiên.
+- Công cụ/phương pháp bổ trợ: taste skill để cải thiện giao diện slide.
+- Prompt/nội dung yêu cầu:
+
+```text
+Yêu cầu AI khởi tạo slide từ outline thuyết trình do Kiên viết và user guide, có sử dụng taste skill để giao diện đẹp hơn.
+```
+
+#### 2. Nội dung AI hỗ trợ
+
+AI hỗ trợ tạo slide deck ban đầu:
+
+- Dựa trên outline thuyết trình do Lê Trung Kiên viết.
+- Dựa trên nội dung trong user guide.
+- Tổ chức các phần chính của seminar vào slide.
+- Áp dụng taste skill để cải thiện bố cục, typography và giao diện trình bày.
+
+Lê Trung Kiên đã kiểm tra lại slide, xác nhận slide đủ và đúng nội dung cần trình bày.
+
+Screenshot: không có screenshot trực tiếp của AI output trong weekly report.
+
+#### 3. Verdict
+
+`VALID`
+
+Slide được AI hỗ trợ khởi tạo từ outline/user guide đã có human review, nội dung được kiểm tra lại về độ đủ và đúng trước khi sử dụng.
+
+#### 4. Lý do theo ISTQB
+
+- Đây là documentation/presentation generation, không phải kết luận defect.
+- Input chính đến từ outline và user guide do sinh viên kiểm soát.
+- Sinh viên đã review nội dung slide sau khi AI tạo.
+- Taste skill chỉ hỗ trợ trình bày giao diện, không thay thế kiểm tra nội dung kỹ thuật.
+
+#### 5. Nội dung đã được SV sửa hoặc bổ sung
+
+Sinh viên đã kiểm tra:
+
+- Slide có đủ các phần cần thuyết trình.
+- Nội dung slide khớp với user guide và outline.
+- Bố cục/giao diện đạt yêu cầu trình bày seminar.
+
+### Mục 7 - Final Report Generation
+
+#### 1. Prompt + công cụ AI
+
+- Công cụ: GPT-5.5 cho Lê Trung Kiên.
+- Prompt/nội dung yêu cầu:
+
+```text
+Yêu cầu AI tạo file final-report từ các nội dung đã có trong repository.
+```
+
+#### 2. Nội dung AI hỗ trợ
+
+AI hỗ trợ khởi tạo file final report bằng cách tổng hợp các phần nội dung liên quan trong repository.
+
+Lê Trung Kiên đã đọc lại và sửa:
+
+- Thứ tự section trong báo cáo.
+- Path đến các nội dung liên quan.
+- Bổ sung link YouTube.
+
+Screenshot: không có screenshot trực tiếp của AI output trong weekly report.
+
+#### 3. Verdict
+
+`INCOMPLETE`
+
+AI tạo được bản nháp final report, nhưng cần sinh viên đọc, sắp xếp lại section, sửa path và bổ sung link trước khi có thể dùng làm bản nộp cuối.
+
+#### 4. Lý do theo ISTQB
+
+- Đây là report generation có rủi ro sai traceability/path nếu AI tự suy luận từ repository.
+- Output ban đầu chưa đủ tin cậy để dùng trực tiếp vì cần chỉnh lại thứ tự section và đường dẫn.
+- Sinh viên đã human review và sửa, nhưng trạng thái audit vẫn giữ `INCOMPLETE` để minh bạch rằng AI output gốc chưa đạt chuẩn final evidence.
+- Cần kiểm tra thủ công toàn bộ link/path và nội dung tham chiếu trước khi nộp.
+
+#### 5. Nội dung đã được SV sửa hoặc bổ sung
+
+Sinh viên đã bổ sung/chỉnh sửa:
+
+- Thứ tự section trong final report.
+- Path đến các nội dung liên quan.
+- Link YouTube cho phần nộp seminar.
+
+### Mục 8 - Semgrep Hardcoded JWT Secret: PoC Forge Token
 
 #### 1. Prompt + công cụ AI
 
@@ -90,7 +395,7 @@ Bản đã sửa/bổ sung:
 - Bổ sung remediation: dùng `process.env.JWT_SECRET`, không commit `.env`, rotate token/secret cũ.
 - Nên bổ sung thêm request runtime đến endpoint protected/admin với expected `200/403` trước và sau khi fix.
 
-### Mục 2 - Semgrep Cleartext HTTP Request: Ý tưởng kiểm chứng bằng proxy
+### Mục 9 - Semgrep Cleartext HTTP Request: Ý tưởng kiểm chứng bằng proxy
 
 #### 1. Prompt + công cụ AI
 
@@ -170,7 +475,7 @@ Evidence:
 - Lưu proxy screenshot/log request + response header.
 ```
 
-### Mục 3 - Semgrep AI Triage Workflow: Unit Tests Cho All Findings
+### Mục 10 - Semgrep AI Triage Workflow: Unit Tests Cho All Findings
 
 #### 1. Prompt + công cụ AI
 
@@ -249,78 +554,7 @@ Kết quả kỳ vọng của bản đã sửa:
 - Mỗi finding có prompt và AI output riêng.
 - Finding chưa được human validate thì giữ trạng thái `Needs Manual Verification`, không tự động kết luận confirmed.
 
-### Mục 4 - ZAP Offline AI Triage: HTML Parsing, XSS/CORS
-
-#### 1. Prompt + công cụ AI
-
-- Công cụ theo W05: ChatGPT, model GPT-5.5 cho Lê Trung Kiên.
-- Prompt theo weekly report:
-
-```text
-Yêu cầu AI hỗ trợ viết script đọc output scan OWASP ZAP, tạo báo cáo AI triage và gợi ý prompt phân tích alert/impact/PoC/fix.
-```
-
-- Evidence liên quan:
-  - `docs/zap/test_ai_triage_zap.py`
-  - `docs/zap/ai_triage_zap.py`
-  - `docs/zap/output/backend_report_ai_triage.md`
-
-#### 2. Nội dung AI hỗ trợ
-
-Nội dung liên quan được audit trong `docs/zap/test_ai_triage_zap.py`:
-
-```python
-def test_parse_zap_html_extracts_alert_from_table_report(self):
-    alerts = parse_zap_html(SAMPLE_REPORT)
-    self.assertEqual(len(alerts), 1)
-    self.assertEqual(alerts[0].name, "Cross Site Scripting (DOM Based)")
-    self.assertEqual(alerts[0].risk, "High")
-    self.assertEqual(alerts[0].confidence, "High")
-    self.assertEqual(alerts[0].method, "GET")
-    self.assertEqual(alerts[0].parameter, "name")
-    self.assertIn("onerror=alert(1)", alerts[0].evidence)
-
-def test_offline_triage_includes_poc_and_testcase_for_xss(self):
-    ...
-    self.assertIn("DOM XSS", triage)
-    self.assertIn("PoC", triage)
-    self.assertIn("Testcase", triage)
-
-def test_parse_zap_html_extracts_alert_from_classic_report(self):
-    ...
-    self.assertEqual(alerts[0].name, "Cross-Domain Misconfiguration")
-    self.assertEqual(alerts[0].risk, "Medium")
-    self.assertEqual(alerts[0].parameter, "Access-Control-Allow-Origin")
-    self.assertEqual(alerts[0].evidence, "Access-Control-Allow-Origin: *")
-```
-
-Screenshot: không có screenshot trực tiếp của AI output trong weekly report.
-
-#### 3. Verdict
-
-`VALID`
-
-Nhóm unit tests này hợp lệ để kiểm tra parser và renderer của ZAP AI triage. Mẫu HTML nhỏ nhưng có coverage cho hai dạng report, có assert field-level và có assert triage offline tạo PoC/checklist kiểm chứng cho XSS.
-
-#### 4. Lý do theo ISTQB
-
-- Test objective rõ: verify HTML parser extract đúng alert fields và offline triage tạo nội dung cần thiết.
-- Test data có tính đại diện: table report và classic report.
-- Expected result cụ thể: số lượng alert, field-level assertions, output markdown sections.
-- Không cần live ZAP vì mục tiêu là component parser test.
-- Giới hạn: chưa kiểm tra hết các biến thể HTML report thật của ZAP, nên cần thêm regression test nếu template report thay đổi.
-
-#### 5. Nội dung đã được SV sửa hoặc bổ sung
-
-Sinh viên đã bổ sung:
-
-- `docs/zap/test_ai_triage_zap.py`
-- `docs/zap/output/backend_report_ai_triage.md`
-- `docs/zap/scan_ai_triage_guide.md`
-
-Bản đã sửa giữ offline triage khi không có API key, giúp test deterministic và repeatable theo đúng kỳ vọng của automated regression test.
-
-### Mục 5 - ZAP CLI Scan Mode, Report Format, Output Path
+### Mục 11 - ZAP CLI Scan Mode, Report Format, Output Path
 
 #### 1. Prompt + công cụ AI
 
@@ -397,7 +631,7 @@ Bản đã sửa:
 - `basic` giữ default enabled rules.
 - `owasp-top10-2025` lọc active scanner theo tag `OWASP_2025_A*`, có fallback theo rule ID nếu ZAP API không trả tag.
 
-### Mục 6 - ZAP Authenticated Scan: JWT, Context, Replacer, Cleanup
+### Mục 12 - ZAP Authenticated Scan: JWT, Context, Replacer, Cleanup
 
 #### 1. Prompt + công cụ AI
 
@@ -486,7 +720,7 @@ Bản đã sửa:
 - `login_for_token()` đi qua ZAP proxy và không in JWT ra stdout/stderr.
 - `cleanup_authenticated_context()` xóa Replacer rule và tắt Forced User Mode.
 
-### Mục 7 - ZAP JSON -> OpenRouter: PoC Extraction Và AI Report
+### Mục 13 - ZAP JSON -> OpenRouter: PoC Extraction Và AI Report
 
 #### 1. Prompt + công cụ AI
 
@@ -583,7 +817,7 @@ Evidence:
 - Attach raw request/response headers or screenshot.
 ```
 
-### Mục 8 - Semgrep AI Triage Refinement Trong Phiên Chat: Source Context, Fail-Fast, Report Format
+### Mục 14 - Semgrep AI Triage Refinement Trong Phiên Chat: Source Context, Fail-Fast, Report Format
 
 #### 1. Prompt + công cụ AI
 
@@ -712,23 +946,29 @@ Kết quả workflow hiện tại:
 
 ## 3. Tổng Kết Độ Chính Xác AI
 
-| ID     | Nhóm test                                     | Verdict    | Ghi chú chính                                                                                                                     |
-| ------ | ---------------------------------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| Mục 1 | Semgrep hardcoded JWT PoC                      | INCOMPLETE | Ý tưởng đúng nhưng AI dùng placeholder secret/endpoint; SV đã sửa bằng`exploit.js`.                                    |
-| Mục 2 | Semgrep cleartext HTTP proxy verification      | INCOMPLETE | Cần runtime config, proxy log và oracle rõ.                                                                                      |
-| Mục 3 | Semgrep all-findings/unit workflow             | VALID      | Unit tests deterministic, có oracle, không phụ thuộc API.                                                                       |
-| Mục 4 | ZAP HTML parser/offline triage                 | VALID      | Parser/renderer tests có fixture và expected result rõ.                                                                          |
-| Mục 5 | ZAP CLI scan mode/report format                | VALID      | Có positive/negative tests và traceability với yêu cầu W06.                                                                    |
-| Mục 6 | ZAP authenticated scan                         | VALID      | Kiểm tra target allowlist, JWT Replacer, Forced User Mode, cleanup.                                                                |
-| Mục 7 | ZAP JSON/OpenRouter report                     | INCOMPLETE | Parser tests tốt nhưng AI report cần dedup, sửa tag sai và thêm evidence execute.                                             |
-| Mục 8 | Semgrep AI triage refinement trong phiên chat | VALID      | Có regression tests cho source-first prompt, fail-fast AI, report tiếng Việt, test case entry, tag CWE/OWASP và format heading. |
+| ID      | Nhóm test                                      | Verdict    | Ghi chú chính                                                                                                                     |
+| ------- | ---------------------------------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Mục 1  | DAST/ZAP/OWASP Top 10 research                 | VALID      | AI hỗ trợ tìm hiểu, SV đối chiếu lại với nguồn chính thống OWASP/ZAP.                                                             |
+| Mục 2  | ZAP scan output JSON/HTML                      | VALID      | Script output format được SV kiểm tra và bổ sung tag.                                                                              |
+| Mục 3  | ZAP GUI authenticated scan setup               | VALID      | Hướng dẫn Firefox localhost được SV kiểm tra trong môi trường local.                                                               |
+| Mục 4  | ZAP AI triage/testcase generation              | VALID      | Code và output có đủ section yêu cầu, đã được SV kiểm thử và xác nhận.                                                            |
+| Mục 5  | User guide summary                             | VALID      | AI tóm tắt nội dung được giao, SV đọc lại và chỉnh trước khi dùng.                                                                |
+| Mục 6  | Slide generation from outline/user guide       | VALID      | Slide được khởi tạo từ outline/user guide và kiểm tra lại nội dung.                                                               |
+| Mục 7  | Final report generation                        | INCOMPLETE | AI tạo bản nháp nhưng cần SV sửa section, path và bổ sung link YouTube.                                                           |
+| Mục 8  | Semgrep hardcoded JWT PoC                      | INCOMPLETE | Ý tưởng đúng nhưng AI dùng placeholder secret/endpoint; SV đã sửa bằng `exploit.js`.                                              |
+| Mục 9  | Semgrep cleartext HTTP proxy verification      | INCOMPLETE | Cần runtime config, proxy log và oracle rõ.                                                                                       |
+| Mục 10 | Semgrep all-findings/unit workflow             | VALID      | Unit tests deterministic, có oracle, không phụ thuộc API.                                                                         |
+| Mục 11 | ZAP CLI scan mode/report format                | VALID      | Có positive/negative tests và traceability với yêu cầu W06.                                                                       |
+| Mục 12 | ZAP authenticated scan                         | VALID      | Kiểm tra target allowlist, JWT Replacer, Forced User Mode, cleanup.                                                               |
+| Mục 13 | ZAP JSON/OpenRouter report                     | INCOMPLETE | Parser tests tốt nhưng AI report cần dedup, sửa tag sai và thêm evidence execute.                                                 |
+| Mục 14 | Semgrep AI triage refinement trong phiên chat  | VALID      | Có regression tests cho source-first prompt, fail-fast AI, report tiếng Việt, test case entry, tag CWE/OWASP và format heading.    |
 
-Tổng cộng có 8 nhóm nội dung AI được audit:
+Tổng cộng có 14 nhóm nội dung AI được audit:
 
-- 5/8 mục được đánh giá `VALID` ở mức unit/component/regression testing hoặc workflow có mock rõ ràng.
-- 3/8 mục được đánh giá `INCOMPLETE` vì còn thiếu runtime evidence, precondition, test data đúng SUT, request/response log hoặc screenshot xác minh.
-- Tỉ lệ nội dung có thể dùng trực tiếp sau human review: khoảng 62,5%.
-- Tỉ lệ nội dung cần bổ sung bằng chứng trước khi dùng làm kết luận cuối: khoảng 37,5%.
+- 10/14 mục được đánh giá `VALID` ở mức research/documentation support, unit/component/regression testing hoặc workflow có review rõ ràng.
+- 4/14 mục được đánh giá `INCOMPLETE` vì còn thiếu runtime evidence, precondition, test data đúng SUT, request/response log, screenshot xác minh hoặc cần sửa bản nháp AI trước khi dùng.
+- Tỉ lệ nội dung có thể dùng trực tiếp sau human review: khoảng 71,4%.
+- Tỉ lệ nội dung cần bổ sung bằng chứng hoặc chỉnh sửa trước khi dùng làm kết luận cuối: khoảng 28,6%.
 
 AI hữu ích nhất khi hỗ trợ cấu trúc hóa script, test, prompt và report. AI kém tin cậy hơn khi phải tự suy ra dữ liệu runtime, endpoint thật, taxonomy OWASP hoặc trạng thái "Actual" nếu nhóm chưa cung cấp bằng chứng execute.
 
@@ -739,6 +979,7 @@ AI hỗ trợ tốt nhất ở các việc:
 - Hỗ trợ rà soát parser, CLI, config và luồng AI triage.
 - Gợi ý PoC và remediation cho hardcoded JWT secret.
 - Tạo prompt/report format cho AI triage.
+- Hỗ trợ tìm hiểu nguồn chính thống, tóm tắt user guide, khởi tạo slide và tạo bản nháp final report.
 
 Các lỗi hoặc hạn chế đã audit được:
 
