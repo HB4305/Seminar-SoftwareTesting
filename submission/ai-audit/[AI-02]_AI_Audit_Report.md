@@ -6,10 +6,10 @@
 - Đề tài: T09 - Security Testing (DAST / SAST)
 - Seminar track: Security testing với Semgrep/SAST, OWASP ZAP/DAST và AI-assisted triage.
 - Thành viên:
-  - Lê Trung Kiên
-  - Mai Thị Kim Duyên
-  - Lâm Hữu Khánh
-  - Lê Mai Hoài Bảo
+  - Lê Trung Kiên - 23127075
+  - Mai Thị Kim Duyên - 23127185
+  - Lâm Hữu Khánh - 23127205
+  - Lê Mai Hoài Bảo - 23127326
 - Phạm vi audit: các nội dung AI hỗ trợ trong quá trình chọn công cụ, viết script Semgrep/ZAP, phân tích finding, tạo PoC/checklist kiểm chứng và biên tập report.
 - Nguyên tắc đánh giá: AI output chỉ được xem là hợp lệ khi có human review và được đối chiếu với source code, output Semgrep/ZAP, unit test, request/response log, screenshot hoặc tài liệu chính thức.
 
@@ -712,16 +712,16 @@ Kết quả workflow hiện tại:
 
 ## 3. Tổng Kết Độ Chính Xác AI
 
-| ID | Nhóm test | Verdict | Ghi chú chính |
-| --- | --- | --- | --- |
-| Mục 1 | Semgrep hardcoded JWT PoC | INCOMPLETE | Ý tưởng đúng nhưng AI dùng placeholder secret/endpoint; SV đã sửa bằng `exploit.js`. |
-| Mục 2 | Semgrep cleartext HTTP proxy verification | INCOMPLETE | Cần runtime config, proxy log và oracle rõ. |
-| Mục 3 | Semgrep all-findings/unit workflow | VALID | Unit tests deterministic, có oracle, không phụ thuộc API. |
-| Mục 4 | ZAP HTML parser/offline triage | VALID | Parser/renderer tests có fixture và expected result rõ. |
-| Mục 5 | ZAP CLI scan mode/report format | VALID | Có positive/negative tests và traceability với yêu cầu W06. |
-| Mục 6 | ZAP authenticated scan | VALID | Kiểm tra target allowlist, JWT Replacer, Forced User Mode, cleanup. |
-| Mục 7 | ZAP JSON/OpenRouter report | INCOMPLETE | Parser tests tốt nhưng AI report cần dedup, sửa tag sai và thêm evidence execute. |
-| Mục 8 | Semgrep AI triage refinement trong phiên chat | VALID | Có regression tests cho source-first prompt, fail-fast AI, report tiếng Việt, test case entry, tag CWE/OWASP và format heading. |
+| ID     | Nhóm test                                     | Verdict    | Ghi chú chính                                                                                                                     |
+| ------ | ---------------------------------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Mục 1 | Semgrep hardcoded JWT PoC                      | INCOMPLETE | Ý tưởng đúng nhưng AI dùng placeholder secret/endpoint; SV đã sửa bằng`exploit.js`.                                    |
+| Mục 2 | Semgrep cleartext HTTP proxy verification      | INCOMPLETE | Cần runtime config, proxy log và oracle rõ.                                                                                      |
+| Mục 3 | Semgrep all-findings/unit workflow             | VALID      | Unit tests deterministic, có oracle, không phụ thuộc API.                                                                       |
+| Mục 4 | ZAP HTML parser/offline triage                 | VALID      | Parser/renderer tests có fixture và expected result rõ.                                                                          |
+| Mục 5 | ZAP CLI scan mode/report format                | VALID      | Có positive/negative tests và traceability với yêu cầu W06.                                                                    |
+| Mục 6 | ZAP authenticated scan                         | VALID      | Kiểm tra target allowlist, JWT Replacer, Forced User Mode, cleanup.                                                                |
+| Mục 7 | ZAP JSON/OpenRouter report                     | INCOMPLETE | Parser tests tốt nhưng AI report cần dedup, sửa tag sai và thêm evidence execute.                                             |
+| Mục 8 | Semgrep AI triage refinement trong phiên chat | VALID      | Có regression tests cho source-first prompt, fail-fast AI, report tiếng Việt, test case entry, tag CWE/OWASP và format heading. |
 
 Tổng cộng có 8 nhóm nội dung AI được audit:
 
