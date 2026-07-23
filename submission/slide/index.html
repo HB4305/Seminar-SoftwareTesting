@@ -468,6 +468,70 @@
         font-weight: 760;
       }
 
+      .main-agenda {
+        display: grid;
+        grid-template-columns: 0.78fr 1.22fr;
+        align-items: center;
+        gap: 44px;
+      }
+
+      .main-agenda-copy {
+        display: grid;
+        gap: 20px;
+      }
+
+      .main-agenda-copy h2 {
+        max-width: 620px;
+        font-size: clamp(54px, 6.8vw, 96px);
+        line-height: 0.92;
+      }
+
+      .main-agenda-list {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .main-agenda-item {
+        display: grid;
+        align-content: space-between;
+        min-height: 176px;
+        padding: 24px;
+        border: 1px solid rgba(22, 32, 51, 0.1);
+        border-radius: 24px;
+        background: rgba(255, 255, 255, 0.84);
+        box-shadow: 0 20px 52px rgba(28, 77, 114, 0.1);
+      }
+
+      .main-agenda-item:nth-child(2) {
+        background: #e8f2ff;
+        border-color: rgba(37, 99, 235, 0.2);
+      }
+
+      .main-agenda-item:nth-child(3) {
+        background: #eefafc;
+        border-color: rgba(14, 143, 159, 0.2);
+      }
+
+      .main-agenda-no {
+        display: grid;
+        place-items: center;
+        width: 48px;
+        height: 48px;
+        border-radius: 16px;
+        background: #2563eb;
+        color: var(--white);
+        font-family: var(--mono);
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .main-agenda-item h3 {
+        font-size: clamp(27px, 2.4vw, 38px);
+        line-height: 1;
+        letter-spacing: -0.04em;
+      }
+
       .dast-opener {
         position: relative;
         display: grid;
@@ -1576,6 +1640,8 @@
 
         .split,
         .split.reverse,
+        .main-agenda,
+        .main-agenda-list,
         .section-opener,
         .guide-brief,
         .guide-flow,
@@ -1692,6 +1758,42 @@
           </div>
         </main>
         <footer class="footer-line"><span>T09 Security Testing</span><span>Seminar Software Testing</span></footer>
+      </section>
+
+      <section class="slide">
+        <header>
+          <div class="kicker">Agenda</div>
+          <div class="index">03 / 34</div>
+        </header>
+        <main class="main-agenda">
+          <div class="main-agenda-copy">
+            <div class="section-labels">
+              <span class="section-chip">Seminar flow</span>
+              <span class="section-chip">SAST + DAST</span>
+            </div>
+            <h2>Nội dung trình bày</h2>
+            <p class="lead">Bốn phần chính đi từ khung kiểm thử tổng thể đến hai nhánh công cụ của nhóm.</p>
+          </div>
+          <div class="main-agenda-list" aria-label="Agenda seminar">
+            <article class="main-agenda-item">
+              <span class="main-agenda-no">01</span>
+              <h3>Workflow</h3>
+            </article>
+            <article class="main-agenda-item">
+              <span class="main-agenda-no">02</span>
+              <h3>OWASP Top 10</h3>
+            </article>
+            <article class="main-agenda-item">
+              <span class="main-agenda-no">03</span>
+              <h3>SAST và Semgrep</h3>
+            </article>
+            <article class="main-agenda-item">
+              <span class="main-agenda-no">04</span>
+              <h3>DAST và ZAP</h3>
+            </article>
+          </div>
+        </main>
+        <footer class="footer-line"><span>Agenda</span><span>Workflow, OWASP Top 10, SAST, DAST</span></footer>
       </section>
 
       <section class="slide">
@@ -2528,6 +2630,11 @@ Authorization: Bearer &lt;token_da_zap_ghi_nhan&gt;</div>
 
     <script>
       const slides = Array.from(document.querySelectorAll(".slide"));
+      slides.forEach((slide, index) => {
+        const indexNode = slide.querySelector(".index");
+        if (indexNode) indexNode.textContent = `${String(index + 1).padStart(2, "0")} / ${slides.length}`;
+      });
+
       let current = 0;
 
       function showSlide(index) {
