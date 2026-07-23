@@ -49,7 +49,7 @@ Tôi xác nhận các nội dung AI hỗ trợ đã được tôi đọc lại, 
 Tôi xác nhận các nội dung AI hỗ trợ đã được tôi đọc lại, chỉnh sửa và kiểm chứng trước khi đưa vào tài liệu nhóm.
 
 - Ngày: 21/07/2026
-- Chữ ký:
+- Chữ ký: Mai Thị Kim Duyên
 
 ## Thành viên 3 - Lâm Hữu Khánh
 
@@ -69,7 +69,7 @@ Tôi xác nhận các nội dung AI hỗ trợ đã được tôi đọc lại, 
 Tôi xác nhận các nội dung AI hỗ trợ đã được tôi đọc lại, chỉnh sửa và kiểm chứng trước khi đưa vào tài liệu nhóm.
 
 - Ngày: 21/07/2026
-- Chữ ký:
+- Chữ ký: Lâm Hữu Khánh
 
 ## Thành viên 4 - Lê Mai Hoài Bảo
 
@@ -89,7 +89,7 @@ Tôi xác nhận các nội dung AI hỗ trợ đã được tôi đọc lại, 
 Tôi xác nhận các nội dung AI hỗ trợ đã được tôi đọc lại, chỉnh sửa và kiểm chứng trước khi đưa vào tài liệu nhóm.
 
 - Ngày: 21/07/2026
-- Chữ ký:
+- Chữ ký: Lê Mai Hoài Bảo
 
 ## Cam kết của nhóm
 
