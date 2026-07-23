@@ -167,6 +167,11 @@
         font-weight: 840;
       }
 
+      .slide:not(.hero):not(.section-opener) h2 {
+        font-size: clamp(32px, 3.8vw, 52px);
+        line-height: 1.05;
+      }
+
       h3 {
         font-size: clamp(21px, 1.9vw, 30px);
         line-height: 1.08;
@@ -321,26 +326,27 @@
       .reference-no {
         display: grid;
         place-items: center;
-        width: 42px;
-        height: 42px;
+        width: 44px;
+        height: 44px;
         border-radius: 14px;
         background: #2563eb;
         color: var(--white);
         font-family: var(--mono);
-        font-size: 13px;
+        font-size: 14px;
         font-weight: 800;
       }
 
       .reference-card h3 {
-        margin-bottom: 5px;
-        font-size: 17px;
-        line-height: 1.08;
+        margin-bottom: 4px;
+        font-size: clamp(18px, 1.6vw, 22px);
+        font-weight: 700;
+        line-height: 1.15;
       }
 
       .reference-card p {
         color: var(--muted);
         font-family: var(--mono);
-        font-size: 10.5px;
+        font-size: clamp(13px, 1.15vw, 15.5px);
         line-height: 1.35;
         overflow-wrap: anywhere;
       }
@@ -782,7 +788,8 @@
 
       .zap-gui-hero h2 {
         max-width: 760px;
-        font-size: clamp(38px, 4.2vw, 60px);
+        font-size: clamp(32px, 3.8vw, 52px);
+        line-height: 1.05;
       }
 
       .zap-gui-steps {
@@ -823,13 +830,13 @@
       }
 
       .zap-gui-step h3 {
-        font-size: clamp(21px, 1.8vw, 28px);
+        font-size: clamp(22px, 2vw, 28px);
       }
 
       .zap-gui-step p {
         color: var(--muted);
-        font-size: clamp(14px, 1.25vw, 17px);
-        line-height: 1.34;
+        font-size: clamp(16.5px, 1.5vw, 20.5px);
+        line-height: 1.36;
       }
 
       .zap-gui-command-grid {
@@ -908,15 +915,15 @@
       }
 
       .zap-os-title {
-        font-size: clamp(20px, 1.8vw, 26px);
+        font-size: clamp(22px, 2vw, 28px);
         font-weight: 800;
         margin: 0;
       }
 
       .zap-os-badge {
         font-family: var(--mono);
-        font-size: 11px;
-        padding: 4px 10px;
+        font-size: 13px;
+        padding: 5px 12px;
         border-radius: 999px;
         background: rgba(37, 99, 235, 0.1);
         color: var(--navy);
@@ -926,8 +933,8 @@
       .zap-os-body {
         display: grid;
         gap: 10px;
-        font-size: 13.5px;
-        line-height: 1.38;
+        font-size: 16.5px;
+        line-height: 1.45;
       }
 
       .zap-os-body strong {
@@ -941,11 +948,11 @@
 
       .zap-os-body code {
         display: block;
-        padding: 5px 9px;
+        padding: 6px 10px;
         border-radius: 8px;
         background: rgba(22, 32, 51, 0.05);
         font-family: var(--mono);
-        font-size: 12px;
+        font-size: 14.5px;
         word-break: break-all;
         color: #1e293b;
         margin-top: 3px;
@@ -955,9 +962,9 @@
         margin-top: auto;
         padding-top: 8px;
         border-top: 1px dashed rgba(22, 32, 51, 0.12);
-        font-size: 12px;
+        font-size: 14.5px;
         color: var(--muted);
-        line-height: 1.35;
+        line-height: 1.38;
       }
 
 
@@ -969,12 +976,13 @@
       }
 
       .zap-cli-layout h2 {
-        font-size: clamp(36px, 4vw, 56px);
+        font-size: clamp(32px, 3.8vw, 50px);
+        line-height: 1.05;
       }
 
       .zap-cli-layout .lead {
-        font-size: clamp(18px, 1.7vw, 23px);
-        line-height: 1.3;
+        font-size: clamp(19px, 1.8vw, 24px);
+        line-height: 1.34;
       }
 
       .zap-cli-card {
@@ -988,13 +996,13 @@
       }
 
       .zap-cli-card h3 {
-        font-size: clamp(22px, 1.9vw, 30px);
+        font-size: clamp(23px, 2.1vw, 30px);
       }
 
       .zap-cli-card p {
         color: var(--muted);
-        font-size: clamp(15px, 1.28vw, 18px);
-        line-height: 1.36;
+        font-size: clamp(17px, 1.5vw, 20.5px);
+        line-height: 1.38;
       }
 
       .zap-cli-command {
@@ -1018,7 +1026,7 @@
         border-radius: 0;
         padding: 0;
         box-shadow: none;
-        font-size: clamp(11px, 1vw, 14px);
+        font-size: clamp(14px, 1.25vw, 17px);
       }
 
       .zap-cli-matrix {
@@ -1044,14 +1052,14 @@
       }
 
       .zap-cli-pill strong {
-        font-size: clamp(18px, 1.45vw, 23px);
+        font-size: clamp(20px, 1.7vw, 25px);
         line-height: 1.12;
       }
 
       .zap-cli-pill span {
         color: var(--muted);
-        font-size: clamp(13px, 1.12vw, 16px);
-        line-height: 1.34;
+        font-size: clamp(15.5px, 1.35vw, 18.5px);
+        line-height: 1.36;
       }
 
       .guide-brief {
@@ -1221,7 +1229,7 @@
 
       .caption {
         color: var(--muted);
-        font-size: 15px;
+        font-size: clamp(16.5px, 1.5vw, 20px);
         line-height: 1.38;
       }
 
@@ -1295,8 +1303,8 @@
         border-radius: 18px;
         padding: 18px;
         font-family: var(--mono);
-        font-size: clamp(12px, 1.25vw, 16px);
-        line-height: 1.42;
+        font-size: clamp(14.5px, 1.35vw, 18px);
+        line-height: 1.45;
         white-space: pre-wrap;
         overflow-wrap: anywhere;
       }
@@ -1449,11 +1457,11 @@
       }
 
       .table > div {
-        padding: 12px 14px;
+        padding: 14px 16px;
         border-right: 1px solid var(--line);
         border-bottom: 1px solid var(--line);
-        font-size: clamp(14px, 1.25vw, 17px);
-        line-height: 1.28;
+        font-size: clamp(16px, 1.45vw, 19.5px);
+        line-height: 1.32;
       }
 
       .table > div:nth-child(3n) {
@@ -1481,14 +1489,14 @@
 
       .owasp-card {
         display: grid;
-        grid-template-columns: 58px 1fr;
-        gap: 12px;
+        grid-template-columns: 50px 1fr;
+        gap: 14px;
         align-items: start;
         min-height: 82px;
         border: 1px solid var(--line);
         border-radius: 16px;
         background: rgba(255, 255, 255, 0.82);
-        padding: 13px 15px;
+        padding: 14px 16px;
       }
 
       .owasp-code {
@@ -1500,20 +1508,21 @@
         background: var(--blue);
         color: var(--white);
         font-family: var(--mono);
-        font-size: 13px;
-        font-weight: 700;
+        font-size: 14.5px;
+        font-weight: 800;
       }
 
       .owasp-card h3 {
-        font-size: clamp(16px, 1.45vw, 21px);
-        line-height: 1.04;
-        margin-bottom: 5px;
+        font-size: clamp(18px, 1.6vw, 22px);
+        font-weight: 800;
+        line-height: 1.1;
+        margin-bottom: 4px;
       }
 
       .owasp-card p {
         color: var(--muted);
-        font-size: clamp(12px, 1.05vw, 15px);
-        line-height: 1.28;
+        font-size: clamp(14.5px, 1.25vw, 17.5px);
+        line-height: 1.32;
       }
 
       .head {
@@ -2471,9 +2480,9 @@ console.log("Bearer " + forgedToken);</div>
             </div>
           </div>
           <div class="zap-cli-command">
-            <div class="codebox">python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install python-owasp-zap-v2.4
+            <div class="codebox">python3 -m venv venv
+source venv/bin/activate
+pip install python-owasp-zap-v2.4
 
 docker run --rm -d --name eshop-zap --network host \
   -v $(pwd):$(pwd) \
@@ -2528,12 +2537,12 @@ ZAP_ADMIN_PASSWORD=Admin123!</div>
             </div>
           </div>
           <div class="zap-cli-command">
-            <div class="codebox">python src/zap/scan_zap.py \
+            <div class="codebox">python3 src/zap/scan_zap.py \
   --target http://localhost:3000 \
   --report-format json \
   --output-file src/zap/output/backend_basic.json
 
-python src/zap/scan_zap.py \
+python3 src/zap/scan_zap.py \
   --target http://localhost:5173 \
   --ajax-spider \
   --report-format json \
@@ -2547,7 +2556,7 @@ python src/zap/scan_zap.py \
         <header><div class="kicker">ZAP CLI / Section 8.2</div><div class="index">25 / 33</div></header>
         <main class="zap-cli-layout">
           <div class="zap-cli-command">
-            <div class="codebox">python src/zap/scan_zap.py \
+            <div class="codebox">python3 src/zap/scan_zap.py \
   --target http://localhost:5173 \
   --auth-role user \
   --forced-user \
@@ -2555,7 +2564,7 @@ python src/zap/scan_zap.py \
   --report-format json \
   --output-file src/zap/output/frontend_user_basic.json
 
-python src/zap/scan_zap.py \
+python3 src/zap/scan_zap.py \
   --target http://localhost:5174 \
   --auth-role admin \
   --forced-user \
@@ -2579,17 +2588,19 @@ python src/zap/scan_zap.py \
       <section class="slide">
         <header><div class="kicker">ZAP CLI / Sections 8.3 and 8.4</div><div class="index">26 / 33</div></header>
         <main class="content">
-          <h2>Đọc flag và output để biết report có đáng tin hay không.</h2>
+          <h2>Bảng tổng hợp các flag CLI chính trong <code>scan_zap.py</code></h2>
           <div class="table cols-4">
-            <div class="head">Flag</div><div class="head">Ý nghĩa</div><div class="head">Khi dùng</div><div class="head">Output liên quan</div>
-            <div><code>--target</code></div><div>URL cần scan</div><div>Backend <code>3000</code>, user <code>5173</code>, admin <code>5174</code></div><div>Tách report theo target</div>
-            <div><code>--auth-role</code></div><div>Chọn seed account</div><div><code>none</code>, <code>user</code>, <code>admin</code></div><div>So sánh guest, user, admin</div>
-            <div><code>--ajax-spider</code></div><div>Crawl route sinh bởi JavaScript</div><div>Frontend React/SPA</div><div>Public hoặc auth frontend JSON</div>
-            <div><code>--max-urls</code></div><div>Giới hạn URL trước active scan</div><div>Khi SPA crawl quá rộng</div><div>Giữ spider/passive, bỏ active nếu vượt</div>
-            <div><code>--report-format</code></div><div>Chọn <code>json</code> hoặc <code>html</code></div><div>Pipeline AI hoặc đọc thủ công</div><div><code>src/zap/output</code></div>
+            <div class="head">Flag</div><div class="head">Ý nghĩa</div><div class="head">Khi dùng</div><div class="head">Output / Hành vi</div>
+            <div><code>--target</code></div><div>URL đích cần scan</div><div>Backend <code>3000</code>, user FE <code>5173</code>, admin FE <code>5174</code></div><div>Phân loại report theo target</div>
+            <div><code>--auth-role</code></div><div>Chọn tài khoản seed auth</div><div><code>none</code> (khách), <code>user</code>, <code>admin</code></div><div>Tạo auth context &amp; token</div>
+            <div><code>--forced-user</code></div><div>Bật Forced User Mode</div><div>Scan endpoint yêu cầu đăng nhập</div><div>Gắn user vào mọi request scan</div>
+            <div><code>--ajax-spider</code></div><div>Crawl route sinh bởi JavaScript</div><div>Frontend Single Page App (React)</div><div>Bắt thêm route frontend</div>
+            <div><code>--scan-mode</code></div><div>Chế độ active scan</div><div><code>basic</code> (mặc định) hoặc <code>owasp-top10-2025</code></div><div>Chỉ bật scanner OWASP Top 10 2025</div>
+            <div><code>--max-urls</code></div><div>Giới hạn URL trước active scan</div><div>Tránh quá tải RAM khi SPA crawl rộng</div><div>Giữ spider/passive, bỏ active nếu vượt</div>
+            <div><code>--report-format</code></div><div>Định dạng file xuất ra</div><div><code>json</code> (cho AI triage) hoặc <code>html</code> (đọc tay)</div><div>Xuất file tại <code>src/zap/output/</code></div>
           </div>
         </main>
-        <footer class="footer-line"><span>User_Guide.md sections 8.3 and 8.4</span><span>backend_basic.json, frontend_user_basic.json, frontend_admin_basic.json</span></footer>
+        <footer class="footer-line"><span>User_Guide.md sections 8.3 and 8.4</span><span>Cấu hình scan_zap.py</span></footer>
       </section>
 
       <section class="slide dark">
@@ -2642,7 +2653,7 @@ OPENROUTER_MAX_TOKENS=4096</div>
         <header><div class="kicker">ZAP AI Triage / Section 9.2</div><div class="index">29 / 33</div></header>
         <main class="content">
           <h2>Chạy triage trên nhiều report và lọc đúng target bằng prefix.</h2>
-          <div class="codebox">python src/zap/zap_ai_triage.py \
+          <div class="codebox">python3 src/zap/zap_ai_triage.py \
   src/zap/output/backend_basic.json \
   src/zap/output/frontend_user_basic.json \
   src/zap/output/frontend_admin_basic.json \
