@@ -1059,6 +1059,12 @@
         gap: 14px;
       }
 
+      .grid-5 {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 12px;
+      }
+
       .stack {
         display: grid;
         gap: 16px;
@@ -2009,9 +2015,10 @@ OPENROUTER_BASE_URL=https://openrouter.ai/api/v1</div>
           <div class="grid-4">
             <div class="panel"><span class="num">01</span><h3>Input</h3><p class="caption"><code>semgrep_results.json</code></p></div>
             <div class="panel"><span class="num">02</span><h3>Context</h3><p class="caption">Script lấy source context từ <code>--source-root</code>.</p></div>
-            <div class="panel"><span class="num">03</span><h3>AI Triage</h3><p class="caption"><code>semgrep_ai_triage.py</code> phân tích từng finding.</p></div>
-            <div class="panel"><span class="num">04</span><h3>Output</h3><p class="caption">Report, test cases và folder <code>findings/</code>.</p></div>
+            <div class="panel"><span class="num">03</span><h3>Triage Report + Findings</h3><p class="caption"><code>semgrep_triage_report.md</code> &amp; folder <code>findings/</code> — tổng hợp và phân tích từng lỗi.</p></div>
+            <div class="panel"><span class="num">04</span><h3>Test Cases</h3><p class="caption"><code>semgrep_test_cases.md</code> — kịch bản kiểm chứng từng finding.</p></div>
           </div>
+
           <div class="codebox">python src/semgrep/semgrep_ai_triage.py \
   src/semgrep/output/semgrep_results.json \
   --source-root eshop-sut \
