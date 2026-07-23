@@ -1,4 +1,4 @@
-# Báo Cáo Cuối Kỳ
+# Báo Cáo Seminar
 
 ## 1. Thông tin tổng quan
 
@@ -20,15 +20,15 @@
 
 ## 2. Nội dung báo cáo
 
-| ID | Nội dung            | Đường dẫn                                                                                 | Ghi chú                                          |
-| -- | -------------------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| 1  | Tool Survey Proposal | [Tool_Survey_Proposal.md](Tool_Survey_Proposal.md)                                             | Đề xuất và khảo sát công cụ               |
-| 2  | User Guide           | [User_Guide.md](User_Guide.md)                                                                 | Hướng dẫn cài đặt, cấu hình và sử dụng |
-| 3  | Activity Worksheet   | [Activity_Worksheet.md](Activity_Worksheet.md)                                                 | Phiếu hoạt động trên lớp                    |
-| 4  | Slide                | [slide/](slide/)                                                                        | Thư mục slide                                   |
-| 5  | Project Contribution | [Project_Contribution.md](Project_Contribution.md)                                             | Đóng góp của từng thành viên               |
-| 6  | Evidence             | [evidence/](evidence/)                                                                   | Minh chứng thực hiện                            |
-| 7  | AI Audit             | [ai-audit/](ai-audit/)                                                                         | Gói tài liệu audit AI                          |
+| ID | Nội dung            | Đường dẫn                                     | Ghi chú                                          |
+| -- | -------------------- | ------------------------------------------------- | ------------------------------------------------- |
+| 1  | Tool Survey Proposal | [Tool_Survey_Proposal.md](Tool_Survey_Proposal.md) | Đề xuất và khảo sát công cụ               |
+| 2  | User Guide           | [User_Guide.md](User_Guide.md)                     | Hướng dẫn cài đặt, cấu hình và sử dụng |
+| 3  | Activity Worksheet   | [Activity_Worksheet.md](Activity_Worksheet.md)     | Phiếu hoạt động trên lớp                    |
+| 4  | Slide                | [slide/](slide/)                                   | Thư mục slide                                   |
+| 5  | Project Contribution | [Project_Contribution.md](Project_Contribution.md) | Đóng góp của từng thành viên               |
+| 6  | Evidence             | [evidence/](evidence/)                             | Minh chứng thực hiện                           |
+| 7  | AI Audit             | [ai-audit/](ai-audit/)                             | Gói tài liệu audit AI                          |
 
 ## 3. Link Youtube demo video
 
