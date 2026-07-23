@@ -10,17 +10,19 @@
     />
     <style>
       :root {
-        --ink: #0b1014;
-        --paper: #f4f1e8;
-        --line: rgba(11, 16, 20, 0.16);
-        --muted: #59616a;
-        --navy: #071d2e;
-        --blue: #0f4c81;
-        --cyan: #4bc3d6;
-        --lime: #c7f05b;
-        --amber: #f0b84b;
-        --red: #d84a3a;
-        --white: #f9faf6;
+        --ink: #162033;
+        --paper: #f8fbff;
+        --surface: #ffffff;
+        --surface-tint: #eef6ff;
+        --line: rgba(22, 32, 51, 0.14);
+        --muted: #5d6b7c;
+        --navy: #1c4d72;
+        --blue: #2563eb;
+        --cyan: #0e8f9f;
+        --lime: #d9f99d;
+        --amber: #f5b84b;
+        --red: #dc3b32;
+        --white: #ffffff;
         --mono: "IBM Plex Mono", "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
         --sans: "Aptos Display", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
       }
@@ -42,6 +44,7 @@
         display: grid;
         place-items: center;
         overflow: hidden;
+        background: #dfe8f3;
       }
 
       .deck {
@@ -49,7 +52,10 @@
         height: 100dvh;
         position: relative;
         overflow: hidden;
-        background: var(--paper);
+        background:
+          linear-gradient(135deg, rgba(37, 99, 235, 0.06), transparent 36%),
+          linear-gradient(315deg, rgba(14, 143, 159, 0.06), transparent 34%),
+          var(--paper);
       }
 
       .slide {
@@ -76,24 +82,24 @@
         inset: 0;
         pointer-events: none;
         background:
-          linear-gradient(90deg, rgba(7, 29, 46, 0.05) 1px, transparent 1px),
-          linear-gradient(rgba(7, 29, 46, 0.04) 1px, transparent 1px);
+          linear-gradient(90deg, rgba(37, 99, 235, 0.045) 1px, transparent 1px),
+          linear-gradient(rgba(28, 77, 114, 0.035) 1px, transparent 1px);
         background-size: 44px 44px;
         mask-image: linear-gradient(130deg, rgba(0, 0, 0, 0.9), transparent 65%);
       }
 
       .slide.dark {
         background:
-          radial-gradient(circle at 88% 16%, rgba(75, 195, 214, 0.2), transparent 28%),
-          radial-gradient(circle at 12% 86%, rgba(199, 240, 91, 0.16), transparent 30%),
-          var(--navy);
-        color: var(--white);
+          linear-gradient(135deg, rgba(37, 99, 235, 0.11), transparent 40%),
+          linear-gradient(315deg, rgba(14, 143, 159, 0.1), transparent 34%),
+          #f2f8ff;
+        color: var(--ink);
       }
 
       .slide.dark::before {
         background:
-          linear-gradient(90deg, rgba(249, 250, 246, 0.08) 1px, transparent 1px),
-          linear-gradient(rgba(249, 250, 246, 0.05) 1px, transparent 1px);
+          linear-gradient(90deg, rgba(37, 99, 235, 0.06) 1px, transparent 1px),
+          linear-gradient(rgba(14, 143, 159, 0.045) 1px, transparent 1px);
       }
 
       header,
@@ -126,7 +132,7 @@
       }
 
       .dark .kicker {
-        color: var(--lime);
+        color: var(--blue);
       }
 
       .index {
@@ -135,7 +141,7 @@
       }
 
       .dark .index {
-        color: rgba(249, 250, 246, 0.62);
+        color: var(--muted);
       }
 
       h1,
@@ -180,7 +186,7 @@
       }
 
       .dark .lead {
-        color: rgba(249, 250, 246, 0.74);
+        color: var(--muted);
       }
 
       .hero {
@@ -206,7 +212,7 @@
       .quote-mark {
         font-size: clamp(78px, 10vw, 150px);
         line-height: 0.55;
-        color: var(--lime);
+        color: var(--blue);
         font-family: Georgia, "Times New Roman", serif;
       }
 
@@ -220,7 +226,7 @@
 
       .quote-note {
         max-width: 760px;
-        color: rgba(249, 250, 246, 0.72);
+        color: var(--muted);
         font-size: clamp(18px, 1.8vw, 24px);
         line-height: 1.36;
       }
@@ -247,11 +253,11 @@
         align-items: center;
         justify-content: center;
         min-width: 210px;
-        border: 1px solid rgba(199, 240, 91, 0.54);
+        border: 1px solid rgba(37, 99, 235, 0.32);
         border-radius: 999px;
         padding: 14px 28px;
-        background: rgba(199, 240, 91, 0.12);
-        color: var(--lime);
+        background: rgba(37, 99, 235, 0.1);
+        color: var(--blue);
         font-family: var(--mono);
         font-size: clamp(18px, 2vw, 28px);
         letter-spacing: 0.08em;
@@ -300,45 +306,55 @@
       .panel {
         min-height: 132px;
         border: 1px solid var(--line);
-        background: rgba(255, 255, 255, 0.45);
+        background: rgba(255, 255, 255, 0.78);
         border-radius: 22px;
         padding: 22px;
+        box-shadow: 0 12px 34px rgba(28, 77, 114, 0.08);
       }
 
       .panel.strong {
-        background: var(--navy);
-        color: var(--white);
-      }
-
-      .panel.strong .caption {
-        color: rgba(249, 250, 246, 0.76);
-      }
-
-      .panel.strong code {
-        color: rgba(249, 250, 246, 0.9);
-      }
-
-      .panel.lime {
-        background: var(--lime);
+        background: #e8f2ff;
+        border-color: rgba(37, 99, 235, 0.26);
         color: var(--ink);
       }
 
+      .panel.strong .caption {
+        color: var(--muted);
+      }
+
+      .panel.strong code {
+        color: var(--ink);
+      }
+
+      .panel.lime {
+        background: #efffd1;
+        color: var(--ink);
+        border-color: rgba(101, 163, 13, 0.25);
+      }
+
       .panel.blue {
-        background: var(--blue);
-        color: var(--white);
+        background: #e9f1ff;
+        border-color: rgba(37, 99, 235, 0.24);
+        color: var(--ink);
       }
 
       .panel.blue .caption {
-        color: rgba(249, 250, 246, 0.78);
+        color: var(--muted);
       }
 
       .panel.warn {
         border-left: 8px solid var(--red);
       }
 
+      .middle-card,
+      .team-card {
+        display: grid;
+        align-content: center;
+      }
+
       .dark .panel {
-        border-color: rgba(249, 250, 246, 0.16);
-        background: rgba(249, 250, 246, 0.07);
+        border-color: rgba(37, 99, 235, 0.16);
+        background: rgba(255, 255, 255, 0.8);
       }
 
       .caption {
@@ -348,7 +364,7 @@
       }
 
       .dark .caption {
-        color: rgba(249, 250, 246, 0.67);
+        color: var(--muted);
       }
 
       .tag-row {
@@ -376,7 +392,7 @@
         display: grid;
         grid-template-columns: 28px 1fr;
         gap: 12px;
-        align-items: start;
+        align-items: center;
         padding-top: 12px;
         border-top: 1px solid var(--line);
       }
@@ -389,8 +405,8 @@
         width: 22px;
         height: 22px;
         border-radius: 50%;
-        background: var(--lime);
-        border: 1px solid rgba(11, 16, 20, 0.3);
+        background: var(--blue);
+        border: 1px solid rgba(37, 99, 235, 0.18);
       }
 
       .num {
@@ -400,7 +416,7 @@
       }
 
       .dark .num {
-        color: var(--cyan);
+        color: var(--blue);
       }
 
       .big-number {
@@ -411,9 +427,9 @@
       }
 
       .codebox {
-        border: 1px solid rgba(75, 195, 214, 0.32);
-        background: #08141f;
-        color: #e8fff0;
+        border: 1px solid rgba(37, 99, 235, 0.18);
+        background: #f4f8ff;
+        color: #16324f;
         border-radius: 18px;
         padding: 18px;
         font-family: var(--mono);
@@ -477,7 +493,7 @@
         min-height: 82px;
         border: 1px solid var(--line);
         border-radius: 16px;
-        background: rgba(255, 255, 255, 0.5);
+        background: rgba(255, 255, 255, 0.82);
         padding: 13px 15px;
       }
 
@@ -487,8 +503,8 @@
         width: 48px;
         height: 48px;
         border-radius: 14px;
-        background: var(--navy);
-        color: var(--lime);
+        background: var(--blue);
+        color: var(--white);
         font-family: var(--mono);
         font-size: 13px;
         font-weight: 700;
@@ -507,8 +523,8 @@
       }
 
       .head {
-        background: var(--navy);
-        color: var(--white);
+        background: #dceaff;
+        color: var(--ink);
         font-family: var(--mono);
         font-size: 12px !important;
         letter-spacing: 0.08em;
@@ -526,8 +542,8 @@
         object-fit: contain;
         border-radius: 24px;
         border: 1px solid var(--line);
-        background: rgba(255, 255, 255, 0.38);
-        box-shadow: 0 24px 60px rgba(7, 29, 46, 0.16);
+        background: rgba(255, 255, 255, 0.82);
+        box-shadow: 0 24px 60px rgba(28, 77, 114, 0.13);
       }
 
       .install-slide {
@@ -565,7 +581,7 @@
       }
 
       .dark .footer-line {
-        color: rgba(249, 250, 246, 0.65);
+        color: var(--muted);
       }
 
       .notes {
@@ -669,17 +685,17 @@
         </header>
         <main class="split">
           <div class="panel strong stack">
-            <h2>Giảng viên & hỗ trợ</h2>
+            <h2>Giảng viên hỗ trợ</h2>
             <div class="list">
-              <div class="item"><span class="dot"></span><div><h3>Trương Phước Lộc</h3><p class="caption">Giảng viên chính</p></div></div>
+              <div class="item"><span class="dot"></span><div><h3>Trần Duy Hoàng</h3><p class="caption">Giảng viên chính</p></div></div>
               <div class="item"><span class="dot"></span><div><h3>Hồ Tuấn Thanh</h3><p class="caption">Trợ giảng</p></div></div>
             </div>
           </div>
           <div class="grid-2">
-            <div class="panel"><h3>Lê Trung Kiên</h3><p class="caption mono">MSSV 23127075</p></div>
-            <div class="panel"><h3>Mai Thị Kim Duyên</h3><p class="caption mono">MSSV 23127185</p></div>
-            <div class="panel"><h3>Lâm Hữu Khánh</h3><p class="caption mono">MSSV 23127205</p></div>
-            <div class="panel"><h3>Lê Mai Hoài Bảo</h3><p class="caption mono">MSSV 23127326</p></div>
+            <div class="panel team-card"><h3>Lê Trung Kiên</h3><p class="caption mono">MSSV 23127075</p></div>
+            <div class="panel team-card"><h3>Mai Thị Kim Duyên</h3><p class="caption mono">MSSV 23127185</p></div>
+            <div class="panel team-card"><h3>Lâm Hữu Khánh</h3><p class="caption mono">MSSV 23127205</p></div>
+            <div class="panel team-card"><h3>Lê Mai Hoài Bảo</h3><p class="caption mono">MSSV 23127326</p></div>
           </div>
         </main>
         <footer class="footer-line"><span>T09 Security Testing</span><span>Seminar Software Testing</span></footer>
@@ -833,10 +849,10 @@ python -m pip install -r src/semgrep/requirements.txt
             <p class="lead">Sau ruleset bắt buộc, nhóm có thể quét thêm theo công nghệ của EShop để phân tích sâu hơn.</p>
           </div>
           <div class="grid-2">
-            <div class="panel"><h3><code>p/nodejs</code></h3><p class="caption">Backend Node.js và Express-like patterns.</p></div>
-            <div class="panel"><h3><code>p/javascript</code></h3><p class="caption">JS security rules phổ biến.</p></div>
-            <div class="panel"><h3><code>p/react</code></h3><p class="caption">Frontend React và request/browser patterns.</p></div>
-            <div class="panel"><h3>Custom rules</h3><p class="caption"><code>src/semgrep/rules/eshop-security.yml</code></p></div>
+            <div class="panel middle-card"><h3><code>p/nodejs</code></h3><p class="caption">Backend Node.js và Express-like patterns.</p></div>
+            <div class="panel middle-card"><h3><code>p/javascript</code></h3><p class="caption">JS security rules phổ biến.</p></div>
+            <div class="panel middle-card"><h3><code>p/react</code></h3><p class="caption">Frontend React và request/browser patterns.</p></div>
+            <div class="panel middle-card"><h3>Custom rules</h3><p class="caption"><code>src/semgrep/rules/eshop-security.yml</code></p></div>
           </div>
         </main>
         <footer class="footer-line"><span>Output: semgrep_results_extended.json</span><span>Coverage analysis</span></footer>
@@ -853,8 +869,8 @@ OPENROUTER_BASE_URL=https://openrouter.ai/api/v1</div>
           <div class="stack">
             <h2>AI triage cần cấu hình rõ, không phải magic report.</h2>
             <div class="grid-2">
-              <div class="panel"><h3>Không commit key</h3><p class="caption"><code>src/semgrep/.env</code> chứa API key thật.</p></div>
-              <div class="panel"><h3>Khi hết credit</h3><p class="caption">Giảm <code>AI_MAX_TOKENS</code> hoặc chạy <code>--offline</code>.</p></div>
+              <div class="panel middle-card"><h3>Không commit key</h3><p class="caption"><code>src/semgrep/.env</code> chứa API key thật.</p></div>
+              <div class="panel middle-card"><h3>Khi hết credit</h3><p class="caption">Giảm <code>AI_MAX_TOKENS</code> hoặc chạy <code>--offline</code>.</p></div>
             </div>
           </div>
         </main>
@@ -902,7 +918,7 @@ OPENROUTER_BASE_URL=https://openrouter.ai/api/v1</div>
       <section class="slide">
         <header><div class="kicker">Finding Sample</div><div class="index">13 / 27</div></header>
         <main class="split reverse">
-          <div class="panel strong stack">
+          <div class="panel strong stack middle-card">
             <h3>SEMGREP-001</h3>
             <p class="caption">Rule: <code>javascript.jsonwebtoken.security.jwt-hardcode.hardcoded-jwt-secret</code></p>
             <p class="caption">File: <code>eshop-sut/backend/server.js:51</code></p>
@@ -911,8 +927,8 @@ OPENROUTER_BASE_URL=https://openrouter.ai/api/v1</div>
           <div class="stack">
             <h2>Hardcoded JWT secret là lỗi source-code có impact rõ.</h2>
             <div class="grid-2">
-              <div class="panel"><h3>Vì sao nguy hiểm?</h3><p class="caption">Nếu secret bị lộ, attacker có thể tự ký JWT hợp lệ.</p></div>
-              <div class="panel"><h3>Ảnh hưởng demo</h3><p class="caption">Endpoint cần auth có thể bị thử bằng forged token.</p></div>
+              <div class="panel middle-card"><h3>Vì sao nguy hiểm?</h3><p class="caption">Nếu secret bị lộ, attacker có thể tự ký JWT hợp lệ.</p></div>
+              <div class="panel middle-card"><h3>Ảnh hưởng demo</h3><p class="caption">Endpoint cần auth có thể bị thử bằng forged token.</p></div>
             </div>
           </div>
         </main>
@@ -929,9 +945,9 @@ Authorization: Bearer &lt;forged_token&gt;
 # PoC helper
 node src/semgrep/exploit.js</div>
           <div class="grid-3">
-            <div class="panel"><h3>TC-SEMGREP-001</h3><p class="caption">Kiểm tra backend có chấp nhận JWT giả hay không.</p></div>
-            <div class="panel"><h3>Nếu 200 OK</h3><p class="caption">Finding được xác nhận ở runtime.</p></div>
-            <div class="panel"><h3>Nếu 401/403</h3><p class="caption">Ghi nhận không tái lập được hoặc đã bị chặn.</p></div>
+            <div class="panel middle-card"><h3>TC-SEMGREP-001</h3><p class="caption">Kiểm tra backend có chấp nhận JWT giả hay không.</p></div>
+            <div class="panel middle-card"><h3>Nếu 200 OK</h3><p class="caption">Finding được xác nhận ở runtime.</p></div>
+            <div class="panel middle-card"><h3>Nếu 401/403</h3><p class="caption">Ghi nhận không tái lập được hoặc đã bị chặn.</p></div>
           </div>
         </main>
         <footer class="footer-line"><span>src/semgrep/output/semgrep_test_cases.md</span><span>Source finding to runtime proof</span></footer>
@@ -945,9 +961,9 @@ node src/semgrep/exploit.js</div>
             <p class="lead">ZAP gửi request HTTP, crawl route, chạy passive scan và có thể active scan bằng payload kiểm thử.</p>
           </div>
           <div class="grid-3">
-            <div class="panel"><h3>Backend</h3><p class="caption mono">localhost:3000</p></div>
-            <div class="panel"><h3>User FE</h3><p class="caption mono">localhost:5173</p></div>
-            <div class="panel"><h3>Admin FE</h3><p class="caption mono">localhost:5174</p></div>
+            <div class="panel middle-card"><h3>Backend</h3><p class="caption mono">localhost:3000</p></div>
+            <div class="panel middle-card"><h3>User FE</h3><p class="caption mono">localhost:5173</p></div>
+            <div class="panel middle-card"><h3>Admin FE</h3><p class="caption mono">localhost:5174</p></div>
           </div>
         </main>
         <footer class="footer-line"><span>OWASP ZAP GUI hoặc CLI</span><span>Runtime request/response evidence</span></footer>
@@ -1033,9 +1049,9 @@ ZAP_ADMIN_PASSWORD=Admin123!</div>
 
 # Frontend SPA: thêm --ajax-spider</div>
           <div class="grid-3">
-            <div class="panel"><h3>Backend public</h3><p class="caption"><code>backend_basic.json</code></p></div>
-            <div class="panel"><h3>Frontend public</h3><p class="caption">Dùng AJAX Spider để khám phá route sau JS.</p></div>
-            <div class="panel"><h3>HTML khi đọc tay</h3><p class="caption">JSON khi đưa vào AI triage.</p></div>
+            <div class="panel middle-card"><h3>Backend public</h3><p class="caption"><code>backend_basic.json</code></p></div>
+            <div class="panel middle-card"><h3>Frontend public</h3><p class="caption">Dùng AJAX Spider để khám phá route sau JS.</p></div>
+            <div class="panel middle-card"><h3>HTML khi đọc tay</h3><p class="caption">JSON khi đưa vào AI triage.</p></div>
           </div>
         </main>
         <footer class="footer-line"><span>src/zap/scan_zap.py</span><span>Public runtime scan</span></footer>
@@ -1054,10 +1070,10 @@ ZAP_ADMIN_PASSWORD=Admin123!</div>
           <div class="stack">
             <h2>Authenticated scan phải tách role và ngân sách URL.</h2>
             <div class="grid-2">
-              <div class="panel"><h3>User</h3><p class="caption"><code>frontend_user_basic.json</code>, route user sau login.</p></div>
-              <div class="panel"><h3>Admin</h3><p class="caption"><code>frontend_admin_basic.json</code>, target <code>5174</code>.</p></div>
-              <div class="panel"><h3>Backend API</h3><p class="caption">Có thể scan <code>3000</code> với <code>--auth-role user</code>.</p></div>
-              <div class="panel"><h3>401/403</h3><p class="caption">Kiểm tra credential, login endpoint và forced user.</p></div>
+              <div class="panel middle-card"><h3>User</h3><p class="caption"><code>frontend_user_basic.json</code>, route user sau login.</p></div>
+              <div class="panel middle-card"><h3>Admin</h3><p class="caption"><code>frontend_admin_basic.json</code>, target <code>5174</code>.</p></div>
+              <div class="panel middle-card"><h3>Backend API</h3><p class="caption">Có thể scan <code>3000</code> với <code>--auth-role user</code>.</p></div>
+              <div class="panel middle-card"><h3>401/403</h3><p class="caption">Kiểm tra credential, login endpoint và forced user.</p></div>
             </div>
           </div>
         </main>
@@ -1069,9 +1085,9 @@ ZAP_ADMIN_PASSWORD=Admin123!</div>
         <main class="content">
           <h2>Report chỉ có giá trị khi đúng target, đúng session và đúng scope.</h2>
           <div class="grid-3">
-            <div class="panel"><h3>Backend</h3><p class="caption mono">src/zap/output/backend_basic.json</p></div>
-            <div class="panel"><h3>User FE</h3><p class="caption mono">src/zap/output/frontend_user_basic.json</p></div>
-            <div class="panel"><h3>Admin FE</h3><p class="caption mono">src/zap/output/frontend_admin_basic.json</p></div>
+            <div class="panel middle-card"><h3>Backend</h3><p class="caption mono">src/zap/output/backend_basic.json</p></div>
+            <div class="panel middle-card"><h3>User FE</h3><p class="caption mono">src/zap/output/frontend_user_basic.json</p></div>
+            <div class="panel middle-card"><h3>Admin FE</h3><p class="caption mono">src/zap/output/frontend_admin_basic.json</p></div>
           </div>
           <div class="table cols-3">
             <div class="head">Kiểm tra</div><div class="head">Câu hỏi</div><div class="head">Lý do</div>
@@ -1095,9 +1111,9 @@ ZAP_ADMIN_PASSWORD=Admin123!</div>
   --target-prefix http://localhost:5173 \
   --target-prefix http://localhost:5174</div>
           <div class="grid-3">
-            <div class="panel"><h3>Report</h3><p class="caption"><code>zap_triage_report.md</code></p></div>
-            <div class="panel"><h3>Test cases</h3><p class="caption"><code>zap_test_cases.md</code></p></div>
-            <div class="panel"><h3>Per alert</h3><p class="caption"><code>alerts/*_prompt.md</code> và <code>*_ai_output.md</code></p></div>
+            <div class="panel middle-card"><h3>Report</h3><p class="caption"><code>zap_triage_report.md</code></p></div>
+            <div class="panel middle-card"><h3>Test cases</h3><p class="caption"><code>zap_test_cases.md</code></p></div>
+            <div class="panel middle-card"><h3>Per alert</h3><p class="caption"><code>alerts/*_prompt.md</code> và <code>*_ai_output.md</code></p></div>
           </div>
         </main>
         <footer class="footer-line"><span>OpenAI nếu có key, OpenRouter nếu cấu hình, offline nếu cần</span><span>Runtime triage</span></footer>

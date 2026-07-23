@@ -32,5 +32,5 @@
 
 ## 3. Link Youtube demo video
 
-- Semgrep: Chưa bổ sung
-- ZAP: [www.youtube.com/watch?v=9DPEkBQXk5I](https://www.youtube.com/watch?v=9DPEkBQXk5I)
+- Semgrep: [www.youtube.com/watch?v=zu8BCDOM96k](https://www.youtube.com/watch?v=zu8BCDOM96k)
+- ZAP: [youtu.be/wK0nLvGaeSY?si=l0TNnu2AyyMdZhWW](https://youtu.be/wK0nLvGaeSY?si=l0TNnu2AyyMdZhWW)
