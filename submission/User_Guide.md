@@ -765,7 +765,7 @@ Sau khi chạy thành công, kiểm tra các output chính:
 
 ## 10. Ví dụ testcase từ Semgrep và ZAP
 
-Sau khi chạy AI triage, mỗi nhánh Semgrep và ZAP đều sinh ra test case riêng để người kiểm thử tái hiện lại finding/alert bằng evidence tương ứng. Phần này không còn dùng để đối chiếu chéo giữa hai tool; thay vào đó, nó minh họa cách đọc một testcase mẫu và phần phân tích AI gắn với testcase đó.
+Sau khi chạy AI triage, mỗi nhánh Semgrep và ZAP đều sinh ra test case riêng để người kiểm thử tái hiện lại finding/alert bằng evidence tương ứng.
 
 ### 10.1. Ví dụ testcase Semgrep
 

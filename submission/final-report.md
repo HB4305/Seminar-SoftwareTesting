@@ -30,7 +30,13 @@
 | 6  | Evidence             | [evidence/](evidence/)                             | Minh chứng thực hiện                           |
 | 7  | AI Audit             | [ai-audit/](ai-audit/)                             | Gói tài liệu audit AI                          |
 
-## 3. Link Youtube demo video
+## 3. Link
 
-- Semgrep: [www.youtube.com/watch?v=zu8BCDOM96k](https://www.youtube.com/watch?v=zu8BCDOM96k)
-- ZAP: [youtu.be/wK0nLvGaeSY?si=l0TNnu2AyyMdZhWW](https://youtu.be/wK0nLvGaeSY?si=l0TNnu2AyyMdZhWW)
+### 3.1. Youtube
+
+- Semgrep: [Hướng dẫn sử dụng Semgrep - Security Testing](https://www.youtube.com/watch?v=zu8BCDOM96k)
+- ZAP: [Hướng dẫn sử dụng ZAP - Security Testing](https://youtu.be/wK0nLvGaeSY?si=l0TNnu2AyyMdZhWW)
+
+### 3.2. Github
+
+- Repo: [Seminar-SoftwareTesting](https://github.com/HB4305/Seminar-SoftwareTesting.git)
