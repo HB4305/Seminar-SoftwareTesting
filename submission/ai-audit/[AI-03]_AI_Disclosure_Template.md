@@ -8,7 +8,7 @@ Nhóm không nộp nguyên văn output AI khi chưa kiểm chứng. Các phần 
 
 ## Thành viên 1 - Lê Trung Kiên
 
-- MSSV: Bổ sung khi ký
+- MSSV: 23127075
 - Nhóm: Group 06 - KDBK
 - Đề tài: T09 - Security Testing (DAST / SAST)
 
@@ -28,7 +28,7 @@ Tôi xác nhận các nội dung AI hỗ trợ đã được tôi đọc lại, 
 
 ## Thành viên 2 - Mai Thị Kim Duyên
 
-- MSSV: Bổ sung khi ký
+- MSSV: 23127185
 - Nhóm: Group 06 - KDBK
 - Đề tài: T09 - Security Testing (DAST / SAST)
 
@@ -48,7 +48,7 @@ Tôi xác nhận các nội dung AI hỗ trợ đã được tôi đọc lại, 
 
 ## Thành viên 3 - Lâm Hữu Khánh
 
-- MSSV: Bổ sung khi ký
+- MSSV: 23127205
 - Nhóm: Group 06 - KDBK
 - Đề tài: T09 - Security Testing (DAST / SAST)
 
@@ -68,7 +68,7 @@ Tôi xác nhận các nội dung AI hỗ trợ đã được tôi đọc lại, 
 
 ## Thành viên 4 - Lê Mai Hoài Bảo
 
-- MSSV: Bổ sung khi ký
+- MSSV: 23127326
 - Nhóm: Group 06 - KDBK
 - Đề tài: T09 - Security Testing (DAST / SAST)
 
