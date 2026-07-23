@@ -16,7 +16,7 @@ OWASP Top 10 là danh sách các nhóm rủi ro bảo mật web phổ biến và
 | A06 | Insecure Design                       | Thiết kế nghiệp vụ hoặc kiến trúc thiếu cơ chế phòng vệ ngay từ đầu.                                     |
 | A07 | Authentication Failures               | Xác thực, token, session, reset password hoặc quản lý tài khoản có lỗi.                                  |
 | A08 | Software or Data Integrity Failures   | Không kiểm chứng tính toàn vẹn của dữ liệu, update, CI/CD hoặc code được nạp vào hệ thống.               |
-| A09 | Logging and Alerting Failures         | Thiếu log, monitoring hoặc cảnh báo khiến việc phát hiện sự cố bị chậm.                                  |
+| A09 | Security Logging and Alerting Failures | Thiếu log, monitoring hoặc cảnh báo khiến việc phát hiện sự cố bị chậm.                                  |
 | A10 | Mishandling of Exceptional Conditions | Xử lý lỗi/ngoại lệ không an toàn, làm lộ thông tin hoặc tạo trạng thái hệ thống khó kiểm soát.           |
 
 Lưu ý: OWASP Top 10 là nhóm rủi ro, không phải một checklist tự động hoàn chỉnh. Một tool có nhãn OWASP vẫn có thể bỏ sót lỗi thật hoặc báo lỗi cần kiểm chứng thủ công.
@@ -450,9 +450,23 @@ cd ZAP_<version>
 ./zap.sh
 ```
 
-Với Windows/macOS, trang Download cũng có installer riêng cho từng hệ điều hành. Windows và Linux package cần Java 17+ đã cài sẵn; macOS installer đã bundle Java.
+Với Windows/macOS, trang Download cũng có installer riêng cho từng hệ điều hành (.exe cho Windows và .dmg cho macOS). Windows và Linux package cần Java 17+ đã cài sẵn; macOS installer đã bundle Java.
 
-Nếu ZAP GUI trên Linux báo môi trường headless hoặc cửa sổ trắng, kiểm tra lại Java bản đầy đủ và dùng hướng dẫn chi tiết trong `src/zap/installation.md`.
+#### Các lỗi giao diện và môi trường thường gặp khi cài ZAP GUI (theo `src/zap/installation.md`):
+- **Lỗi Headless Java (`FATAL GuiBootstrap - ZAP GUI is not supported on a headless environment`)**:
+  Xảy ra khi Linux sử dụng Java headless làm mặc định. Khắc phục bằng cách cài gói Java đầy đủ (có hỗ trợ đồ họa) và cấu hình lại Java mặc định:
+  ```bash
+  sudo dnf install java-25-openjdk -y  # Hoặc sudo apt install openjdk-17-jre
+  sudo alternatives --config java      # Chọn phiên bản không chứa chữ 'headless'
+  ```
+- **Lỗi hiển thị cửa sổ trắng / không tương tác được trên Wayland (Linux)**:
+  Ứng dụng Java AWT/Swing bị lỗi khi chạy native trên Wayland. Ép ZAP chạy qua XWayland bằng lệnh:
+  ```bash
+  _JAVA_AWT_WM_NONREPARENTING=1 GDK_BACKEND=x11 ./zap.sh
+  ```
+- **Cảnh báo bảo mật khi tải và mở ứng dụng**:
+  - Windows: Trên trình duyệt click `...` -> Chọn `Keep` -> `Show more` -> `Keep anyway`.
+  - macOS: Nếu báo "ZAP.app cannot be opened", vào **System Preferences** > **Security & Privacy** > bấm **Open Anyway**.
 
 ### 6.2. Cài dependency cho CLI flow
 
@@ -652,6 +666,7 @@ Khi thấy log dạng `URL budget: discovered 13055/300 URLs for active scan`, n
 | `--forced-user`   | Bật Forced User Mode để scan dưới user đã cấu hình.                                               |
 | `--ajax-spider`   | Dùng AJAX Spider, cần thiết cho frontend React/SPA.                                               |
 | `--max-urls`      | Giới hạn số URL trước active scan; nếu vượt giới hạn thì bỏ qua active scan để tránh quá tải RAM. |
+| `--scan-mode`     | Mode scan:`default` (mặc định) hoặc `owasp-top10-2025` (chỉ bật scanners thuộc OWASP Top 10 2025). |
 | `--report-format` | `html` để đọc thủ công, `json` để pipeline/AI xử lý.                                              |
 | `--output-file`   | Đường dẫn file report đầu ra.                                                                     |
 
@@ -944,6 +959,8 @@ Tóm lại, tester chịu trách nhiệm tìm và chứng minh lỗi, developer 
 | Semgrep không tìm thấy source | Lệnh scan báo không có `./eshop-sut` hoặc `$SOURCE_ROOT` | Source EShop nằm khác vị trí mặc định hoặc biến `SOURCE_ROOT` sai | Kiểm tra `ls ./eshop-sut`; nếu source nằm nơi khác, đặt lại `SOURCE_ROOT` bằng đường dẫn source thật. |
 | OpenRouter trả `402` | AI triage dừng với exit code `1` | Hết credit hoặc model/request quá tốn token | Giảm `AI_MAX_TOKENS`, dùng model nhẹ hơn, nạp credit hoặc chạy `--offline` để tạo prompt/skeleton đọc thủ công. |
 | ZAP không khởi động | Docker unavailable hoặc image pull lỗi | Docker chưa chạy, thiếu quyền, mạng chậm | Kiểm tra Docker daemon, pull trước image ZAP hoặc dùng ZAP GUI/daemon tự chạy tại `localhost:8090`. |
+| ZAP GUI bị crash headless | `FATAL GuiBootstrap - ZAP GUI is not supported on a headless environment` | Môi trường Linux dùng Java headless làm mặc định | Cài package Java GUI (`java-25-openjdk` hoặc `openjdk-17-jre`), gõ `sudo alternatives --config java` chọn bản non-headless. |
+| ZAP GUI trắng xóa / đơ | Cửa sổ ZAP mở lên trắng xóa hoặc không click được | Lỗi ứng dụng Java AWT/Swing khi chạy native trên Wayland | Chạy ZAP bằng lệnh:`_JAVA_AWT_WM_NONREPARENTING=1 GDK_BACKEND=x11 ./zap.sh`. |
 | Authenticated ZAP scan lỗi `401/403` | Login hoặc `/api/users/me` fail | Sai credential, account bị khóa, backend chưa chạy | Reset dữ liệu test, đổi credential trong `.env`, kiểm tra backend `3000`. |
 | Report backend lẫn frontend | JSON/HTML có nhiều `site` khác target | ZAP daemon giữ session cũ hoặc output file đặt nhầm | Tạo session mới/clear history trong ZAP, hoặc dùng file output riêng cho từng target. |
 
