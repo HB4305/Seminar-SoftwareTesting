@@ -17,7 +17,7 @@ Source template: `resources/2022-2023-HK2-GroupXX-Project Contribution.xlsx`
 | Number of students working in the project |     4 | Input                                  |
 | Number of tasks                           |    45 | Calculated from student task counts    |
 | Number of task hours                      | 137.5 | Calculated from student task hours     |
-| Number of Git commits                     |   142 | Calculated from student Git commits    |
+| Number of Git commits                     |   144 | Calculated from student Git commits    |
 | Max student percentage                    |   25% | Calculated from Percent column         |
 | Project score                             |       | Entered by TA or estimated by students |
 
@@ -33,8 +33,8 @@ Source template: `resources/2022-2023-HK2-GroupXX-Project Contribution.xlsx`
 | --- | ---------- | ----------------- | ----- | --------------- | ---------- | -------------------- | ----------- | ------------- | ------- | --------------- | ---------- |
 | 1   | 23127075   | Lê Trung Kiên     | 12    | 27%             | 35         | 25%                  | 54          | 38%           | 25%     | 10              |            |
 | 2   | 23127185   | Mai Thị Kim Duyên | 10    | 22%             | 32.5       | 24%                  | 21          | 15%           | 25%     | 10              |            |
-| 3   | 23127205   | Lâm Hữu Khánh     | 10    | 22%             | 35         | 25%                  | 26          | 18%           | 25%     | 10              |            |
-| 4   | 23127326   | Lê Mai Hoài Bảo   | 13    | 29%             | 35         | 25%                  | 41          | 29%           | 25%     | 10              |            |
+| 3   | 23127205   | Lâm Hữu Khánh     | 10    | 22%             | 35         | 25%                  | 28          | 19%           | 25%     | 10              |            |
+| 4   | 23127326   | Lê Mai Hoài Bảo   | 13    | 29%             | 35         | 25%                  | 41          | 28%           | 25%     | 10              |            |
 
 ## Original Formula Reference
 
