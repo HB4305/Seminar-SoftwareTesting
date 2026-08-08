@@ -494,19 +494,21 @@
 
       .main-agenda-list {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 16px;
+        grid-template-columns: 1fr;
+        gap: 14px;
       }
 
       .main-agenda-item {
         display: grid;
-        align-content: space-between;
-        min-height: 176px;
-        padding: 24px;
+        grid-template-columns: 62px 1fr;
+        align-items: center;
+        min-height: 92px;
+        gap: 18px;
+        padding: 18px 20px;
         border: 1px solid rgba(22, 32, 51, 0.1);
-        border-radius: 24px;
+        border-radius: 22px;
         background: rgba(255, 255, 255, 0.84);
-        box-shadow: 0 20px 52px rgba(28, 77, 114, 0.1);
+        box-shadow: 0 16px 40px rgba(28, 77, 114, 0.09);
       }
 
       .main-agenda-item:nth-child(2) {
@@ -522,19 +524,19 @@
       .main-agenda-no {
         display: grid;
         place-items: center;
-        width: 48px;
-        height: 48px;
+        width: 52px;
+        height: 52px;
         border-radius: 16px;
         background: #2563eb;
         color: var(--white);
         font-family: var(--mono);
-        font-size: 15px;
+        font-size: 16px;
         font-weight: 800;
       }
 
       .main-agenda-item h3 {
-        font-size: clamp(30px, 2.65vw, 42px);
-        line-height: 1;
+        font-size: clamp(28px, 2.4vw, 38px);
+        line-height: 1.02;
         letter-spacing: -0.04em;
       }
 
@@ -1763,6 +1765,13 @@
         .dast-agenda-list,
         .dast-detail,
         .dast-flow-strip,
+        .security-kpi-grid,
+        .principles-grid,
+        .reason-grid,
+        .types-grid,
+        .tool-layout,
+        .security-definition-layout,
+        .security-definition-note,
         .zap-use-card,
         .testcase-grid,
         .triage-grid,
@@ -1776,6 +1785,8 @@
         }
 
         .section-opener::after,
+        .security-opener::after,
+        .tools-opener::after,
         .dast-opener::after {
           display: none;
         }
@@ -1923,6 +1934,476 @@
         font-size: clamp(15px, 1.25vw, 18px);
         line-height: 1.32;
       }
+
+      .security-opener::after {
+        content: "SEC";
+        position: absolute;
+        left: -8px;
+        bottom: 52px;
+        color: rgba(220, 59, 50, 0.08);
+        font-size: clamp(124px, 16vw, 232px);
+        line-height: 0.75;
+        letter-spacing: -0.08em;
+        font-weight: 900;
+        pointer-events: none;
+        z-index: -1;
+      }
+
+      .tools-opener::after {
+        content: "APP";
+        position: absolute;
+        left: -8px;
+        bottom: 52px;
+        color: rgba(28, 77, 114, 0.07);
+        font-size: clamp(124px, 16vw, 232px);
+        line-height: 0.75;
+        letter-spacing: -0.08em;
+        font-weight: 900;
+        pointer-events: none;
+        z-index: -1;
+      }
+
+      .security-kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .security-kpi {
+        display: grid;
+        gap: 10px;
+        min-height: 188px;
+        padding: 18px;
+        border: 1px solid rgba(22, 32, 51, 0.1);
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.84);
+        box-shadow: 0 16px 42px rgba(28, 77, 114, 0.09);
+      }
+
+      .security-kpi strong {
+        display: inline-grid;
+        place-items: center;
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        background: #dc3b32;
+        color: var(--white);
+        font-family: var(--mono);
+        font-size: 14px;
+        letter-spacing: 0.04em;
+      }
+
+      .security-kpi h3 {
+        font-size: clamp(21px, 1.8vw, 28px);
+        line-height: 1.08;
+      }
+
+      .security-kpi p {
+        color: var(--muted);
+        font-size: clamp(16px, 1.35vw, 20px);
+        line-height: 1.36;
+      }
+
+      .principles-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .principle-card {
+        display: grid;
+        grid-template-columns: 62px 1fr;
+        gap: 16px;
+        align-items: start;
+        min-height: 148px;
+        padding: 20px;
+        border: 1px solid rgba(22, 32, 51, 0.1);
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.86);
+        box-shadow: 0 16px 44px rgba(28, 77, 114, 0.08);
+      }
+
+      .principle-mark {
+        display: grid;
+        place-items: center;
+        width: 56px;
+        height: 56px;
+        border-radius: 18px;
+        background: #e8f2ff;
+        color: var(--blue);
+        font-family: var(--mono);
+        font-size: 14px;
+        font-weight: 800;
+      }
+
+      .principle-copy {
+        display: grid;
+        gap: 8px;
+      }
+
+      .principle-copy h3 {
+        font-size: clamp(22px, 1.9vw, 31px);
+        line-height: 1.05;
+      }
+
+      .principle-copy p {
+        color: var(--muted);
+        font-size: clamp(16px, 1.38vw, 20px);
+        line-height: 1.36;
+      }
+
+      .reason-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .reason-card {
+        display: grid;
+        gap: 10px;
+        min-height: 172px;
+        padding: 22px;
+        border: 1px solid rgba(22, 32, 51, 0.1);
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.86);
+        box-shadow: 0 16px 44px rgba(28, 77, 114, 0.08);
+      }
+
+      .reason-card:nth-child(2n) {
+        background: #eefafc;
+        border-color: rgba(14, 143, 159, 0.2);
+      }
+
+      .reason-card h3 {
+        font-size: clamp(22px, 1.9vw, 30px);
+        line-height: 1.06;
+      }
+
+      .reason-card p {
+        color: var(--muted);
+        font-size: clamp(16.5px, 1.42vw, 20px);
+        line-height: 1.38;
+      }
+
+      .types-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .type-card {
+        display: grid;
+        gap: 10px;
+        min-height: 188px;
+        padding: 22px;
+        border: 1px solid rgba(22, 32, 51, 0.1);
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.86);
+        box-shadow: 0 16px 44px rgba(28, 77, 114, 0.08);
+      }
+
+      .type-card:nth-child(2),
+      .type-card:nth-child(4) {
+        background: #e8f2ff;
+        border-color: rgba(37, 99, 235, 0.2);
+      }
+
+      .type-card h3 {
+        font-size: clamp(22px, 1.9vw, 30px);
+        line-height: 1.05;
+      }
+
+      .type-card p {
+        color: var(--muted);
+        font-size: clamp(16px, 1.36vw, 19px);
+        line-height: 1.36;
+      }
+
+      .mini-note {
+        display: inline-flex;
+        align-items: center;
+        width: fit-content;
+        min-height: 34px;
+        border-radius: 999px;
+        background: rgba(220, 59, 50, 0.1);
+        color: #aa2c25;
+        padding: 6px 12px;
+        font-family: var(--mono);
+        font-size: 13px;
+        letter-spacing: 0.04em;
+      }
+
+      .tool-layout {
+        display: grid;
+        grid-template-columns: 0.9fr 1.1fr;
+        align-items: center;
+        gap: 28px;
+      }
+
+      .tool-points {
+        display: grid;
+        gap: 12px;
+      }
+
+      .tool-point {
+        display: grid;
+        grid-template-columns: 42px 1fr;
+        gap: 12px;
+        align-items: start;
+        padding: 14px 16px;
+        border: 1px solid rgba(22, 32, 51, 0.1);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.82);
+      }
+
+      .tool-point span {
+        display: grid;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 12px;
+        background: #2563eb;
+        color: var(--white);
+        font-family: var(--mono);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .tool-point p {
+        color: var(--muted);
+        font-size: clamp(16px, 1.36vw, 19px);
+        line-height: 1.36;
+      }
+
+      .tool-side-card {
+        display: grid;
+        gap: 16px;
+        padding: 28px;
+        border: 1px solid rgba(37, 99, 235, 0.18);
+        border-radius: 28px;
+        background:
+          linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(232, 242, 255, 0.88)),
+          var(--surface);
+        box-shadow: 0 24px 62px rgba(28, 77, 114, 0.12);
+      }
+
+      .tool-side-card h3 {
+        display: inline-flex;
+        align-items: center;
+        width: fit-content;
+        min-height: 46px;
+        border-radius: 16px;
+        background: #e8f2ff;
+        color: #174b8f;
+        padding: 8px 14px;
+      }
+
+      .tool-side-card p,
+      .tool-side-card li {
+        color: var(--muted);
+        font-size: clamp(17px, 1.45vw, 20px);
+        line-height: 1.38;
+      }
+
+      .tool-side-card ul {
+        margin: 0;
+        padding-left: 22px;
+        display: grid;
+        gap: 10px;
+      }
+
+      .security-definition-slide main.content {
+        gap: 26px;
+      }
+
+      .security-definition-slide h2 {
+        max-width: none;
+        white-space: nowrap;
+        font-size: clamp(34px, 3.55vw, 54px);
+        line-height: 1;
+      }
+
+      .security-definition-layout {
+        display: grid;
+        grid-template-columns: 1.08fr 0.92fr;
+        gap: 28px;
+        align-items: stretch;
+      }
+
+      .security-definition-hero,
+      .security-purpose-card {
+        position: relative;
+        overflow: hidden;
+        border-radius: 30px;
+      }
+
+      .security-definition-hero {
+        display: grid;
+        gap: 22px;
+        min-height: 430px;
+        padding: 32px;
+        border: 1px solid rgba(37, 99, 235, 0.16);
+        background:
+          linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(232, 242, 255, 0.9)),
+          var(--surface);
+        box-shadow: 0 28px 72px rgba(28, 77, 114, 0.12);
+      }
+
+      .security-definition-hero::after {
+        content: "RISK";
+        position: absolute;
+        right: -10px;
+        bottom: -8px;
+        color: rgba(37, 99, 235, 0.07);
+        font-size: clamp(92px, 10vw, 158px);
+        line-height: 0.8;
+        letter-spacing: -0.08em;
+        font-weight: 900;
+        pointer-events: none;
+      }
+
+      .security-definition-label,
+      .security-purpose-label {
+        display: inline-flex;
+        align-items: center;
+        width: fit-content;
+        min-height: 38px;
+        border-radius: 999px;
+        padding: 7px 13px;
+        font-family: var(--mono);
+        font-size: 13px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .security-definition-label {
+        background: rgba(37, 99, 235, 0.1);
+        color: #174b8f;
+      }
+
+      .security-purpose-label {
+        background: rgba(220, 59, 50, 0.1);
+        color: #aa2c25;
+      }
+
+      .security-definition-hero h3,
+      .security-purpose-card h3 {
+        font-size: clamp(30px, 2.7vw, 42px);
+        line-height: 1;
+        letter-spacing: -0.04em;
+      }
+
+      .security-definition-hero p {
+        max-width: 34ch;
+        color: var(--muted);
+        font-size: clamp(22px, 1.95vw, 28px);
+        line-height: 1.42;
+      }
+
+      .security-definition-note {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-top: auto;
+      }
+
+      .security-note-card {
+        padding: 16px 18px;
+        border: 1px solid rgba(22, 32, 51, 0.08);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.76);
+      }
+
+      .security-note-card strong {
+        display: block;
+        margin-bottom: 6px;
+        font-size: clamp(17px, 1.42vw, 21px);
+        line-height: 1.15;
+      }
+
+      .security-note-card p {
+        max-width: none;
+        font-size: clamp(15px, 1.2vw, 17px);
+        line-height: 1.35;
+      }
+
+      .security-purpose-shell {
+        padding: 1.5px;
+        border-radius: 32px;
+        background: linear-gradient(180deg, rgba(220, 59, 50, 0.22), rgba(37, 99, 235, 0.14));
+        box-shadow: 0 28px 72px rgba(28, 77, 114, 0.12);
+      }
+
+      .security-purpose-card {
+        display: grid;
+        gap: 18px;
+        min-height: 430px;
+        padding: 30px;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 251, 255, 0.95)),
+          var(--surface);
+      }
+
+      .security-purpose-card::after {
+        content: "04";
+        position: absolute;
+        right: 24px;
+        top: 22px;
+        color: rgba(220, 59, 50, 0.08);
+        font-size: 84px;
+        line-height: 1;
+        letter-spacing: -0.06em;
+        font-weight: 900;
+        pointer-events: none;
+      }
+
+      .security-purpose-list {
+        display: grid;
+        gap: 12px;
+      }
+
+      .security-purpose-item {
+        display: grid;
+        grid-template-columns: 44px 1fr;
+        gap: 14px;
+        align-items: start;
+        padding: 14px 0;
+        border-top: 1px solid rgba(22, 32, 51, 0.08);
+      }
+
+      .security-purpose-item:first-child {
+        border-top: 0;
+        padding-top: 0;
+      }
+
+      .security-purpose-no {
+        display: grid;
+        place-items: center;
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        background: #dc3b32;
+        color: var(--white);
+        font-family: var(--mono);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .security-purpose-copy {
+        display: grid;
+        gap: 4px;
+      }
+
+      .security-purpose-copy strong {
+        font-size: clamp(18px, 1.55vw, 23px);
+        line-height: 1.14;
+      }
+
+      .security-purpose-copy p {
+        color: var(--muted);
+        font-size: clamp(15px, 1.22vw, 18px);
+        line-height: 1.35;
+      }
     </style>
   </head>
   <body>
@@ -1986,12 +2467,12 @@
               <span class="section-chip">SAST + DAST</span>
             </div>
             <h2>Nội dung trình bày</h2>
-            <p class="lead">Bốn phần chính đi từ khung kiểm thử tổng thể đến hai nhánh công cụ của nhóm.</p>
+            <p class="lead">Năm phần chính đi từ tổng quan kiểm thử bảo mật đến hai nhánh công cụ mà nhóm dùng để tạo evidence.</p>
           </div>
           <div class="main-agenda-list" aria-label="Agenda seminar">
             <article class="main-agenda-item">
               <span class="main-agenda-no">01</span>
-              <h3>Workflow</h3>
+              <h3>Tổng quan Security Testing</h3>
             </article>
             <article class="main-agenda-item">
               <span class="main-agenda-no">02</span>
@@ -1999,30 +2480,318 @@
             </article>
             <article class="main-agenda-item">
               <span class="main-agenda-no">03</span>
-              <h3>SAST và Semgrep</h3>
+              <h3>Workflow</h3>
             </article>
             <article class="main-agenda-item">
               <span class="main-agenda-no">04</span>
+              <h3>SAST và Semgrep</h3>
+            </article>
+            <article class="main-agenda-item">
+              <span class="main-agenda-no">05</span>
               <h3>DAST và ZAP</h3>
             </article>
           </div>
         </main>
-        <footer class="footer-line"><span>Agenda</span><span>Workflow, OWASP Top 10, SAST, DAST</span></footer>
+        <footer class="footer-line"><span>Agenda</span><span>Tổng quan, OWASP Top 10, Workflow, SAST, DAST</span></footer>
       </section>
 
-      <section class="slide">
-        <header>
-          <div class="kicker">Security Testing Workflow</div>
-          <div class="index">03 / 33</div>
-        </header>
-        <main class="workflow-slide">
-          <img class="workflow-photo" src="./image/workflow-diagram.png" alt="Workflow diagram của nhóm cho Security Testing" />
+      <section class="slide dark">
+        <header><div class="kicker">Security Testing Overview</div><div class="index">04 / 34</div></header>
+        <main class="section-opener security-opener">
+          <div class="section-title-block">
+            <div class="section-labels">
+              <span class="section-chip">Nền tảng khái niệm</span>
+              <span class="section-chip">Phi chức năng</span>
+              <span class="section-chip">Risk driven</span>
+            </div>
+            <h2>Tổng quan Security Testing</h2>
+            <p class="lead">Trước khi đi vào OWASP, workflow và tool, cần thống nhất mục tiêu, nguyên tắc và phạm vi của kiểm thử bảo mật.</p>
+          </div>
+          <div class="section-agenda" aria-label="Nội dung phần tổng quan Security Testing">
+            <div class="agenda-row"><span class="agenda-no">01</span><p class="agenda-title">Security Testing là gì?</p></div>
+            <div class="agenda-row"><span class="agenda-no">02</span><p class="agenda-title">Nguyên tắc cốt lõi</p></div>
+            <div class="agenda-row"><span class="agenda-no">03</span><p class="agenda-title">Vì sao cần làm?</p></div>
+            <div class="agenda-row"><span class="agenda-no">04</span><p class="agenda-title">Loại kiểm thử và nhóm công cụ</p></div>
+          </div>
         </main>
-        <footer class="footer-line"><span>Nguồn: submission/slide/image/workflow-diagram.png</span><span>SAST + DAST + AI Triage</span></footer>
+        <footer class="footer-line"><span>Phần mở đầu</span><span>Khái niệm, nguyên tắc, lý do, phân loại</span></footer>
+      </section>
+
+      <section class="slide sast-brief-slide security-definition-slide">
+        <header><div class="kicker">Security Testing Definition</div><div class="index">05 / 34</div></header>
+        <main class="content">
+          <h2>Bản chất và mục đích của Security Testing</h2>
+          <div class="security-definition-layout">
+            <div class="security-definition-hero">
+              <span class="security-definition-label">Bản chất</span>
+              <h3>Kiểm thử phi chức năng tập trung vào bề mặt tấn công của hệ thống.</h3>
+              <p>Security Testing là một dạng kiểm thử phi chức năng nhằm phát hiện lỗ hổng, mối đe dọa và rủi ro trong ứng dụng phần mềm. Nó không hỏi ứng dụng có chạy đúng nghiệp vụ hay không, mà hỏi hệ thống có thể bị lạm dụng, truy cập trái phép hoặc khai thác ở đâu.</p>
+              <div class="security-definition-note">
+                <div class="security-note-card">
+                  <strong>Góc nhìn kiểm thử</strong>
+                  <p>Ưu tiên xác minh điểm yếu trong thiết kế, code, cấu hình và hành vi runtime.</p>
+                </div>
+                <div class="security-note-card">
+                  <strong>Kết quả cần tìm</strong>
+                  <p>Lỗ hổng có thể khai thác, điều kiện gây rủi ro và bằng chứng đủ để remediation.</p>
+                </div>
+              </div>
+            </div>
+            <div class="security-purpose-shell">
+              <div class="security-purpose-card">
+                <span class="security-purpose-label">Mục đích</span>
+                <h3>Bốn đích đến chính của Security Testing</h3>
+                <div class="security-purpose-list">
+                  <div class="security-purpose-item">
+                    <span class="security-purpose-no">01</span>
+                    <div class="security-purpose-copy">
+                      <strong>Xác định tài sản</strong>
+                      <p>Biết rõ dữ liệu, tài khoản, API, phiên đăng nhập và hạ tầng nào thực sự cần bảo vệ.</p>
+                    </div>
+                  </div>
+                  <div class="security-purpose-item">
+                    <span class="security-purpose-no">02</span>
+                    <div class="security-purpose-copy">
+                      <strong>Nhận diện đe dọa và lỗ hổng</strong>
+                      <p>Tìm ra điểm yếu trong thiết kế, mã nguồn, cấu hình và hành vi runtime của ứng dụng.</p>
+                    </div>
+                  </div>
+                  <div class="security-purpose-item">
+                    <span class="security-purpose-no">03</span>
+                    <div class="security-purpose-copy">
+                      <strong>Xác định mức rủi ro</strong>
+                      <p>Đánh giá tác động và khả năng khai thác để biết vấn đề nào cần ưu tiên xử lý trước.</p>
+                    </div>
+                  </div>
+                  <div class="security-purpose-item">
+                    <span class="security-purpose-no">04</span>
+                    <div class="security-purpose-copy">
+                      <strong>Thực hiện khắc phục</strong>
+                      <p>Chuyển kết quả kiểm thử thành hành động remediation, hardening và kiểm tra lại sau sửa lỗi.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+        <footer class="footer-line"><span>Bản chất và mục đích</span><span>Định nghĩa ở trái, mục đích ở phải</span></footer>
       </section>
 
       <section class="slide">
-        <header><div class="kicker">Risk Frame</div><div class="index">04 / 33</div></header>
+        <header><div class="kicker">Key Principles</div><div class="index">06 / 34</div></header>
+        <main class="content">
+          <h2>Nguyên tắc cốt lõi của Security Testing</h2>
+          <div class="principles-grid" aria-label="Các nguyên tắc chính của Security Testing">
+            <article class="principle-card"><div class="principle-mark">C</div><div class="principle-copy"><h3>Tính bảo mật</h3><p>Giới hạn quyền truy cập vào dữ liệu và tài nguyên nhạy cảm, chỉ cho đúng người và đúng ngữ cảnh.</p></div></article>
+            <article class="principle-card"><div class="principle-mark">I</div><div class="principle-copy"><h3>Tính toàn vẹn</h3><p>Đảm bảo dữ liệu nhất quán, chính xác, đáng tin cậy và không bị chỉnh sửa bởi thực thể trái phép.</p></div></article>
+            <article class="principle-card"><div class="principle-mark">Au</div><div class="principle-copy"><h3>Xác thực</h3><p>Xác minh danh tính của người dùng hoặc hệ thống trước khi cho phép truy cập tài nguyên nhạy cảm.</p></div></article>
+            <article class="principle-card"><div class="principle-mark">Az</div><div class="principle-copy"><h3>Phân quyền</h3><p>Kiểm soát người dùng đã xác thực được phép làm gì, dựa trên vai trò, quyền hạn hoặc chính sách.</p></div></article>
+            <article class="principle-card"><div class="principle-mark">A</div><div class="principle-copy"><h3>Tính sẵn sàng</h3><p>Đảm bảo hệ thống và dữ liệu quan trọng luôn phục vụ được người dùng khi cần.</p></div></article>
+            <article class="principle-card"><div class="principle-mark">NR</div><div class="principle-copy"><h3>Không thể chối bỏ</h3><p>Bảo đảm các hành động gửi, nhận hoặc thay đổi dữ liệu có thể được truy vết bằng bằng chứng xác thực và dấu thời gian.</p></div></article>
+          </div>
+        </main>
+        <footer class="footer-line"><span>Key principles</span><span>Confidentiality, Integrity, Authentication, Authorization, Availability, Non-repudiation</span></footer>
+      </section>
+
+      <section class="slide">
+        <header><div class="kicker">Why Security Testing</div><div class="index">07 / 34</div></header>
+        <main class="content">
+          <h2>Vì sao cần làm Security Testing?</h2>
+          <div class="reason-grid">
+            <article class="reason-card"><h3>Bảo vệ thông tin nhạy cảm</h3><p>Thông tin cá nhân, tài khoản, token, dữ liệu thanh toán hoặc dữ liệu nội bộ đều có giá trị và cần được bảo vệ đúng mức.</p></article>
+            <article class="reason-card"><h3>Ngăn chặn truy cập trái phép</h3><p>Kiểm thử giúp phát hiện lỗ hổng xác thực, phân quyền, session hoặc cấu hình khiến kẻ tấn công có thể vượt quyền.</p></article>
+            <article class="reason-card"><h3>Duy trì niềm tin của khách hàng</h3><p>Một sự cố rò rỉ dữ liệu có thể làm mất uy tín rất nhanh và khiến người dùng không còn tin vào sản phẩm.</p></article>
+            <article class="reason-card"><h3>Tuân thủ quy định</h3><p>Nhiều lĩnh vực yêu cầu tổ chức phải chứng minh có biện pháp bảo vệ dữ liệu và kiểm soát an toàn thông tin.</p></article>
+          </div>
+        </main>
+        <footer class="footer-line"><span>Why to do Security Testing</span><span>Bảo vệ dữ liệu, quyền truy cập, niềm tin và tuân thủ</span></footer>
+      </section>
+
+      <section class="slide">
+        <header><div class="kicker">Security Value</div><div class="index">08 / 34</div></header>
+        <main class="content">
+          <h2>Security Testing còn giúp doanh nghiệp giữ được nhịp vận hành.</h2>
+          <div class="reason-grid">
+            <article class="reason-card"><h3>Giảm tổn thất tài chính</h3><p>Chi phí xử lý sự cố, downtime, bồi thường, khắc phục hậu quả và ảnh hưởng thương hiệu thường lớn hơn rất nhiều so với chi phí kiểm thử sớm.</p></article>
+            <article class="reason-card"><h3>Đảm bảo tính liên tục kinh doanh</h3><p>Kiểm thử bảo mật góp phần giảm nguy cơ gián đoạn dịch vụ, mất dữ liệu hoặc ngừng vận hành của hệ thống quan trọng.</p></article>
+            <article class="reason-card"><h3>Thích ứng với mối đe dọa thay đổi liên tục</h3><p>Lỗ hổng mới, kỹ thuật tấn công mới và dependency mới xuất hiện liên tục; kiểm thử bảo mật phải được làm lặp lại, không phải một lần là xong.</p></article>
+            <article class="reason-card"><h3>Tạo cơ sở ưu tiên sửa lỗi</h3><p>Kết quả kiểm thử giúp nhóm phát triển biết nên sửa vấn đề nào trước, vấn đề nào cần theo dõi hoặc hardening thêm.</p></article>
+          </div>
+        </main>
+        <footer class="footer-line"><span>Business impact</span><span>Chi phí, liên tục kinh doanh, ưu tiên remediation</span></footer>
+      </section>
+
+      <section class="slide dark">
+        <header><div class="kicker">Types of Security Testing</div><div class="index">09 / 34</div></header>
+        <main class="section-opener security-opener">
+          <div class="section-title-block">
+            <div class="section-labels">
+              <span class="section-chip">Scanning</span>
+              <span class="section-chip">Assessment</span>
+              <span class="section-chip">Attack simulation</span>
+            </div>
+            <h2>Các loại Security Testing</h2>
+            <p class="lead">Không có một kỹ thuật duy nhất đủ cho mọi tình huống. Mỗi loại kiểm thử trả lời một câu hỏi khác nhau về mức độ an toàn của hệ thống.</p>
+          </div>
+          <div class="section-agenda" aria-label="Các nhóm loại kiểm thử bảo mật">
+            <div class="agenda-row"><span class="agenda-no">01</span><p class="agenda-title">Quét lỗ hổng và quét bảo mật</p></div>
+            <div class="agenda-row"><span class="agenda-no">02</span><p class="agenda-title">Đánh giá rủi ro và đánh giá tư thế an toàn</p></div>
+            <div class="agenda-row"><span class="agenda-no">03</span><p class="agenda-title">Penetration testing và ethical hacking</p></div>
+            <div class="agenda-row"><span class="agenda-no">04</span><p class="agenda-title">Security auditing</p></div>
+          </div>
+        </main>
+        <footer class="footer-line"><span>Types of Security Testing</span><span>Nhiều kỹ thuật cho nhiều góc nhìn bảo mật</span></footer>
+      </section>
+
+      <section class="slide">
+        <header><div class="kicker">Testing Types I</div><div class="index">10 / 34</div></header>
+        <main class="content">
+          <h2>Bốn loại đầu tập trung vào việc nhận diện điểm yếu và xếp hạng rủi ro.</h2>
+          <div class="types-grid">
+            <article class="type-card"><h3>Vulnerability Scanning</h3><p>Dùng công cụ tự động để quét hệ thống theo tập lỗ hổng đã biết trước, từ đó phát hiện nhanh các điểm yếu phổ biến.</p></article>
+            <article class="type-card"><h3>Risk Assessment</h3><p>Phân tích rủi ro bảo mật trong ứng dụng, phần mềm hoặc mạng; sau khi nhận diện sẽ phân loại mức độ thấp, trung bình, cao hoặc nghiêm trọng để ưu tiên giảm thiểu.</p></article>
+            <article class="type-card"><h3>Security Scanning</h3><p>Có thể thực hiện thủ công hoặc tự động nhằm tìm điểm yếu trong hệ thống hoặc mạng, thường rộng hơn quét lỗ hổng đơn thuần.</p></article>
+            <article class="type-card"><h3>Penetration Testing</h3><p>Mô phỏng cuộc tấn công từ phía đối thủ để xác định rõ lỗ hổng nghiêm trọng nào thật sự có thể bị khai thác.</p></article>
+          </div>
+        </main>
+        <footer class="footer-line"><span>Types 1</span><span>Scanning, risk assessment, security scanning, pentest</span></footer>
+      </section>
+
+      <section class="slide">
+        <header><div class="kicker">Testing Types II</div><div class="index">11 / 34</div></header>
+        <main class="content">
+          <h2>Ba loại còn lại giúp nhìn hệ thống theo góc kiểm toán và bức tranh tổng thể.</h2>
+          <div class="types-grid">
+            <article class="type-card"><h3>Security Auditing</h3><p>Kiểm tra nội bộ các hệ điều hành, ứng dụng và cấu hình để tìm lỗi bảo mật; kết quả audit được chuyển cho các nhóm liên quan để sửa và theo dõi.</p></article>
+            <article class="type-card"><h3>Ethical Hacking</h3><p>Chuyên gia được ủy quyền cố gắng xâm nhập hệ thống hoặc mạng nhằm phơi bày các khoảng trống trong biện pháp bảo vệ hiện tại.</p></article>
+            <article class="type-card"><h3>Posture Assessment</h3><p>Kết hợp ethical hacking, security scanning và risk assessment để cho một ảnh chụp nhanh về mức độ an toàn tổng thể của tổ chức.</p></article>
+            <article class="type-card"><span class="mini-note">Góc nhìn thực hành</span><p>Trong thực tế, nhiều dự án sẽ phối hợp các loại kiểm thử này theo chu kỳ phát triển, mức độ rủi ro và nguồn lực của nhóm.</p></article>
+          </div>
+        </main>
+        <footer class="footer-line"><span>Types 2</span><span>Audit, ethical hacking, posture assessment</span></footer>
+      </section>
+
+      <section class="slide dark">
+        <header><div class="kicker">Security Testing Tools</div><div class="index">12 / 34</div></header>
+        <main class="section-opener tools-opener">
+          <div class="section-title-block">
+            <div class="section-labels">
+              <span class="section-chip">Source code</span>
+              <span class="section-chip">Runtime</span>
+              <span class="section-chip">Dependency</span>
+            </div>
+            <h2>Công cụ kiểm thử bảo mật cho ứng dụng</h2>
+            <p class="lead">Bốn nhóm công cụ dưới đây thường xuất hiện cùng nhau trong pipeline hiện đại vì chúng quan sát ứng dụng ở các thời điểm khác nhau.</p>
+          </div>
+          <div class="section-agenda" aria-label="Các nhóm công cụ kiểm thử bảo mật ứng dụng">
+            <div class="agenda-row"><span class="agenda-no">01</span><p class="agenda-title">SAST: kiểm tra code tĩnh</p></div>
+            <div class="agenda-row"><span class="agenda-no">02</span><p class="agenda-title">DAST: kiểm tra khi đang chạy</p></div>
+            <div class="agenda-row"><span class="agenda-no">03</span><p class="agenda-title">IAST: kết hợp tĩnh và động</p></div>
+            <div class="agenda-row"><span class="agenda-no">04</span><p class="agenda-title">SCA: quản lý thư viện nguồn mở</p></div>
+          </div>
+        </main>
+        <footer class="footer-line"><span>Security Testing Tools</span><span>SAST, DAST, IAST, SCA</span></footer>
+      </section>
+
+      <section class="slide">
+        <header><div class="kicker">SAST Overview</div><div class="index">13 / 34</div></header>
+        <main class="tool-layout">
+          <div class="stack">
+            <h2>Static Application Security Testing (SAST)</h2>
+            <p class="lead">SAST đánh giá mã nguồn khi ứng dụng đang ở trạng thái tĩnh, trước khi chạy thật.</p>
+            <div class="tool-points">
+              <div class="tool-point"><span>01</span><p>Phân tích source code hoặc compiled code để phát hiện điểm yếu có thể bị khai thác.</p></div>
+              <div class="tool-point"><span>02</span><p>Tìm các vấn đề như kiểm tra đầu vào kém, lỗi số học, path traversal, race condition hoặc API nguy hiểm.</p></div>
+              <div class="tool-point"><span>03</span><p>Phù hợp để đưa vào sớm trong SDLC vì không cần deploy hay chạy ứng dụng.</p></div>
+            </div>
+          </div>
+          <div class="tool-side-card">
+            <h3>SAST tập trung vào gì?</h3>
+            <ul>
+              <li>Đọc cấu trúc code, luồng dữ liệu và pattern rủi ro ngay tại thời điểm code đang “at rest”.</li>
+              <li>Phát hiện sớm lỗi bảo mật trước khi chúng đi tới môi trường test hoặc production.</li>
+              <li>Rất hiệu quả với hardcoded secret, injection pattern, config nguy hiểm và coding anti-pattern.</li>
+            </ul>
+          </div>
+        </main>
+        <footer class="footer-line"><span>SAST</span><span>Source code at rest, exploitable flaws, secure coding issues</span></footer>
+      </section>
+
+      <section class="slide">
+        <header><div class="kicker">DAST Overview</div><div class="index">14 / 34</div></header>
+        <main class="tool-layout">
+          <div class="stack">
+            <h2>Dynamic Application Security Testing (DAST)</h2>
+            <p class="lead">DAST kiểm tra ứng dụng trong lúc đang chạy để xem hành vi runtime có điểm khai thác nào hay không.</p>
+            <div class="tool-points">
+              <div class="tool-point"><span>01</span><p>Quan sát ứng dụng từ bên ngoài bằng request và response, không cần đọc source code.</p></div>
+              <div class="tool-point"><span>02</span><p>Thường dùng fuzzing: ném nhiều input sai, bất thường hoặc payload kiểm thử vào ứng dụng để lộ điều kiện có thể bị khai thác.</p></div>
+              <div class="tool-point"><span>03</span><p>Quét được nhiều thành phần như script, session, data injection, xác thực, interface, response và request.</p></div>
+            </div>
+          </div>
+          <div class="tool-side-card">
+            <h3>DAST phù hợp khi nào?</h3>
+            <ul>
+              <li>Khi cần kiểm tra hành vi thực tế sau khi hệ thống đã deploy và có thể tương tác qua HTTP hoặc giao diện.</li>
+              <li>Khi muốn xác nhận lỗ hổng có thật sự lộ ra ở runtime hay không.</li>
+              <li>Khi cần tạo evidence dạng request, response và alert để kiểm chứng sâu hơn.</li>
+            </ul>
+          </div>
+        </main>
+        <footer class="footer-line"><span>DAST</span><span>Runtime testing, fuzzing, requests and responses</span></footer>
+      </section>
+
+      <section class="slide">
+        <header><div class="kicker">IAST Overview</div><div class="index">15 / 34</div></header>
+        <main class="tool-layout">
+          <div class="stack">
+            <h2>Interactive Application Security Testing (IAST)</h2>
+            <p class="lead">IAST kết hợp góc nhìn tĩnh và động để tạo ra quy trình kiểm thử lai, bám được cả code lẫn hành vi runtime.</p>
+            <div class="tool-points">
+              <div class="tool-point"><span>01</span><p>Dùng thông tin đã thu thập về luồng dữ liệu và luồng ứng dụng để xem lỗ hổng trong source có thật sự khai thác được khi chạy hay không.</p></div>
+              <div class="tool-point"><span>02</span><p>Giảm số lượng false positive so với chỉ dùng kiểm tra tĩnh đơn lẻ.</p></div>
+              <div class="tool-point"><span>03</span><p>Có thể tạo nhiều kịch bản tấn công nâng cao và phân tích động theo cách đệ quy.</p></div>
+            </div>
+          </div>
+          <div class="tool-side-card">
+            <h3>Điểm mạnh của IAST</h3>
+            <ul>
+              <li>Kết nối lỗ hổng trong code với bối cảnh thực thi thật của ứng dụng.</li>
+              <li>Cho kết quả có tính hành động cao hơn vì vừa biết vị trí code, vừa biết mức độ khai thác được.</li>
+              <li>Hữu ích với hệ thống cần giảm noise nhưng vẫn muốn giữ độ phủ tốt.</li>
+            </ul>
+          </div>
+        </main>
+        <footer class="footer-line"><span>IAST</span><span>Hybrid testing, runtime exploitability, fewer false positives</span></footer>
+      </section>
+
+      <section class="slide">
+        <header><div class="kicker">SCA Overview</div><div class="index">16 / 34</div></header>
+        <main class="tool-layout">
+          <div class="stack">
+            <h2>Software Composition Analysis (SCA)</h2>
+            <p class="lead">SCA là công nghệ dùng để quản lý và bảo vệ các thành phần nguồn mở được đưa vào dự án.</p>
+            <div class="tool-points">
+              <div class="tool-point"><span>01</span><p>Theo dõi và phân tích toàn bộ thành phần nguồn mở đang được deploy hoặc dùng trong build.</p></div>
+              <div class="tool-point"><span>02</span><p>Phát hiện thư viện, package, dependency trực tiếp và gián tiếp có liên quan tới ứng dụng.</p></div>
+              <div class="tool-point"><span>03</span><p>Nhận diện lỗ hổng đã biết và gợi ý remediation như nâng version, thay package hoặc hardening quy trình build.</p></div>
+            </div>
+          </div>
+          <div class="tool-side-card">
+            <h3>SCA trả lời câu hỏi gì?</h3>
+            <ul>
+              <li>Dự án đang kéo theo những thư viện nào và nguồn gốc của chúng là gì?</li>
+              <li>Dependency nào đang chứa CVE hoặc license risk cần xử lý?</li>
+              <li>Nâng cấp ở đâu để giảm rủi ro chuỗi cung ứng phần mềm?</li>
+            </ul>
+          </div>
+        </main>
+        <footer class="footer-line"><span>SCA</span><span>Open-source components, dependency tracking, remediation</span></footer>
+      </section>
+
+      <section class="slide">
+        <header><div class="kicker">Risk Frame</div><div class="index">03 / 33</div></header>
         <main class="content">
           <h2 class="owasp-title">OWASP Top 10 2025 dùng làm khung chọn ruleset và scan policy.</h2>
           <div class="owasp-grid">
@@ -2069,6 +2838,17 @@
           </div>
         </main>
         <footer class="footer-line"><span>OWASP Top 10 2025 trong User_Guide.md</span><span>Ruleset + scan policy</span></footer>
+      </section>
+
+      <section class="slide">
+        <header>
+          <div class="kicker">Security Testing Workflow</div>
+          <div class="index">04 / 33</div>
+        </header>
+        <main class="workflow-slide">
+          <img class="workflow-photo" src="./image/workflow-diagram.png" alt="Workflow diagram của nhóm cho Security Testing" />
+        </main>
+        <footer class="footer-line"><span>Nguồn: submission/slide/image/workflow-diagram.png</span><span>SAST + DAST + AI Triage</span></footer>
       </section>
 
       <section class="slide dark">
