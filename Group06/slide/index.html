@@ -518,6 +518,14 @@
     }
 
     .overview-agenda-item strong {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      min-height: 52px;
+      padding: 8px 14px;
+      border: 1px solid rgba(37, 99, 235, 0.24);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.72);
       font-size: clamp(25px, 2.25vw, 34px);
       line-height: 1.15;
     }
@@ -2135,6 +2143,32 @@
       line-height: 1.36;
     }
 
+    .security-types-detail .content {
+      gap: 0;
+    }
+
+    .security-types-detail .types-grid {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .security-types-detail .type-card {
+      grid-column: auto;
+      min-height: 238px;
+      padding: 20px;
+      gap: 10px;
+    }
+
+    .security-types-detail .type-card h3 {
+      font-size: clamp(20px, 1.72vw, 26px);
+      line-height: 1.08;
+    }
+
+    .security-types-detail .type-card p {
+      font-size: clamp(14px, 1.18vw, 17px);
+      line-height: 1.32;
+    }
+
     .mini-note {
       display: inline-flex;
       align-items: center;
@@ -2731,89 +2765,66 @@
           <p class="lead">Không có một kỹ thuật duy nhất đủ cho mọi tình huống. Mỗi loại kiểm thử trả lời một câu hỏi
             khác nhau về mức độ an toàn của hệ thống.</p>
         </div>
-        <div class="section-agenda" aria-label="Các nhóm loại kiểm thử bảo mật">
-          <div class="agenda-row"><span class="agenda-no">01</span>
-            <p class="agenda-title">Quét lỗ hổng và quét bảo mật</p>
-          </div>
-          <div class="agenda-row"><span class="agenda-no">02</span>
-            <p class="agenda-title">Đánh giá rủi ro và đánh giá tư thế an toàn</p>
-          </div>
-          <div class="agenda-row"><span class="agenda-no">03</span>
-            <p class="agenda-title">Penetration testing và ethical hacking</p>
-          </div>
-          <div class="agenda-row"><span class="agenda-no">04</span>
-            <p class="agenda-title">Security auditing</p>
-          </div>
-        </div>
       </main>
       <footer class="footer-line"><span>Types of Security Testing</span><span>Nhiều kỹ thuật cho nhiều góc nhìn bảo
           mật</span></footer>
     </section>
 
-    <section class="slide">
+    <section class="slide security-types-detail">
       <header>
-        <div class="kicker">Testing Types I</div>
+        <div class="kicker">Testing Types</div>
         <div class="index">10 / 34</div>
       </header>
       <main class="content">
-        <h2>Bốn loại đầu tập trung vào việc nhận diện điểm yếu và xếp hạng rủi ro.</h2>
         <div class="types-grid">
           <article class="type-card">
             <h3>Vulnerability Scanning</h3>
-            <p>Dùng công cụ tự động để quét hệ thống theo tập lỗ hổng đã biết trước, từ đó phát hiện nhanh các điểm yếu
-              phổ biến.</p>
-          </article>
-          <article class="type-card">
-            <h3>Risk Assessment</h3>
-            <p>Phân tích rủi ro bảo mật trong ứng dụng, phần mềm hoặc mạng; sau khi nhận diện sẽ phân loại mức độ thấp,
-              trung bình, cao hoặc nghiêm trọng để ưu tiên giảm thiểu.</p>
+            <p>Dùng công cụ tự động để phát hiện các lỗ hổng đã biết và hỗ trợ khắc phục trước khi chúng bị khai thác.
+            </p>
           </article>
           <article class="type-card">
             <h3>Security Scanning</h3>
-            <p>Có thể thực hiện thủ công hoặc tự động nhằm tìm điểm yếu trong hệ thống hoặc mạng, thường rộng hơn quét
-              lỗ hổng đơn thuần.</p>
+            <p>Xác định các điểm yếu trong hệ thống hoặc mạng và đề xuất giải pháp khắc phục phù hợp.</p>
           </article>
           <article class="type-card">
             <h3>Penetration Testing</h3>
-            <p>Mô phỏng cuộc tấn công từ phía đối thủ để xác định rõ lỗ hổng nghiêm trọng nào thật sự có thể bị khai
-              thác.</p>
+            <p>Mô phỏng các cuộc tấn công mạng trong thực tế để xác định lỗ hổng có thể bị khai thác trong ứng dụng, hệ
+              thống hoặc mạng.</p>
           </article>
-        </div>
-      </main>
-      <footer class="footer-line"><span>Types 1</span><span>Scanning, risk assessment, security scanning, pentest</span>
-      </footer>
-    </section>
-
-    <section class="slide">
-      <header>
-        <div class="kicker">Testing Types II</div>
-        <div class="index">11 / 34</div>
-      </header>
-      <main class="content">
-        <h2>Ba loại còn lại giúp nhìn hệ thống theo góc kiểm toán và bức tranh tổng thể.</h2>
-        <div class="types-grid">
+          <article class="type-card">
+            <h3>Risk Assessment</h3>
+            <p>Phân tích và phân loại rủi ro bảo mật để xác định thứ tự ưu tiên cho các biện pháp giảm thiểu.</p>
+          </article>
           <article class="type-card">
             <h3>Security Auditing</h3>
-            <p>Kiểm tra nội bộ các hệ điều hành, ứng dụng và cấu hình để tìm lỗi bảo mật; kết quả audit được chuyển cho
-              các nhóm liên quan để sửa và theo dõi.</p>
+            <p>Rà soát cấu hình hệ thống, mã nguồn và chính sách để bảo đảm tuân thủ các tiêu chuẩn bảo mật.</p>
           </article>
           <article class="type-card">
             <h3>Ethical Hacking</h3>
-            <p>Chuyên gia được ủy quyền cố gắng xâm nhập hệ thống hoặc mạng nhằm phơi bày các khoảng trống trong biện
-              pháp bảo vệ hiện tại.</p>
+            <p>Chuyên gia được ủy quyền dùng kỹ thuật hacking để tìm, phân tích và hỗ trợ sửa lỗ hổng; có thể bao gồm
+              penetration testing.</p>
           </article>
           <article class="type-card">
             <h3>Posture Assessment</h3>
-            <p>Kết hợp ethical hacking, security scanning và risk assessment để cho một ảnh chụp nhanh về mức độ an toàn
-              tổng thể của tổ chức.</p>
+            <p>Kết hợp nhiều kỹ thuật kiểm thử để đánh giá tư thế bảo mật tổng thể của hệ thống.</p>
           </article>
-          <article class="type-card"><span class="mini-note">Góc nhìn thực hành</span>
-            <p>Trong thực tế, nhiều dự án sẽ phối hợp các loại kiểm thử này theo chu kỳ phát triển, mức độ rủi ro và
-              nguồn lực của nhóm.</p>
+          <article class="type-card">
+            <h3>Application Security Testing</h3>
+            <p>Đánh giá mã nguồn và cấu hình ứng dụng để phát hiện và ngăn ngừa lỗ hổng.</p>
+          </article>
+          <article class="type-card">
+            <h3>Network Security Testing</h3>
+            <p>Kiểm tra hạ tầng mạng như router và firewall nhằm phát hiện các điểm yếu.</p>
+          </article>
+          <article class="type-card">
+            <h3>Social Engineering Testing</h3>
+            <p>Mô phỏng tấn công nhắm vào con người, ví dụ phishing, để kiểm tra nhận thức bảo mật của người dùng.</p>
           </article>
         </div>
       </main>
-      <footer class="footer-line"><span>Types 2</span><span>Audit, ethical hacking, posture assessment</span></footer>
+      <footer class="footer-line"><span>10 Security Testing Types</span><span>System · Application · Network ·
+          People</span>
+      </footer>
     </section>
 
     <section class="slide dark">
