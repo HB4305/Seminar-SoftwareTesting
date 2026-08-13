@@ -52,10 +52,10 @@ Dựa vào kết quả của ZAP, hãy liệt kê 5 alert đại diện (gồm 3
 
 **Yêu cầu:** Cho danh sách 5 lỗi được trích ra từ report. Hãy sử dụng AI (Prompting LLM) để sinh ra testcase chi tiết và PoC (câu lệnh `curl` / HTTP Replay/ Sử dụng Postman). Tiến hành kiểm chứng thủ công (Manual Verify) trên hệ thống web đang khởi chạy để điền kết quả thực tế vào bảng:
 
-| ID | Mục tiêu (PoC & Alert) | Đầu vào (URL / Payload) | Tiền điều kiện | Thao tác (Replay Step) | Kết quả mong muốn (AI Gen) | Kết quả thực tế (Manual Verify) | Kết luận |
-| -- | ------------------------ | -------------------------- | ------------------ | ----------------------- | ----------------------------- | ----------------------------------- | ---------- |
-|    |                          |                            |                    |                         |                               |                                     |            |
-|    |                          |                            |                    |                         |                               |                                     |            |
-|    |                          |                            |                    |                         |                               |                                     |            |
-|    |                          |                            |                    |                         |                               |                                     |            |
-|    |                          |                            |                    |                         |                               |                                     |            |
+| ID | Mục tiêu (PoC & Alert) | Đầu vào (URL / Payload) | Thao tác (Replay Step) | Kết quả mong muốn (AI Gen) | Kết quả thực tế (Manual Verify) |
+| -- | ------------------------ | -------------------------- | ----------------------- | ----------------------------- | ----------------------------------- |
+|    |                          |                            |                         |                               |                                     |
+|    |                          |                            |                         |                               |                                     |
+|    |                          |                            |                         |                               |                                     |
+|    |                          |                            |                         |                               |                                     |
+|    |                          |                            |                         |                               |                                     |
