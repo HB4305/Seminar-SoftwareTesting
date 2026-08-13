@@ -2097,11 +2097,6 @@
       box-shadow: 0 16px 44px rgba(28, 77, 114, 0.08);
     }
 
-    .reason-card:nth-child(2n) {
-      background: #eefafc;
-      border-color: rgba(14, 143, 159, 0.2);
-    }
-
     .reason-card h3 {
       font-size: clamp(22px, 1.9vw, 30px);
       line-height: 1.06;
@@ -2111,6 +2106,29 @@
       color: var(--muted);
       font-size: clamp(16.5px, 1.42vw, 20px);
       line-height: 1.38;
+    }
+
+    .why-security-slide .reason-grid {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .why-security-slide .reason-card {
+      grid-column: span 3;
+      min-height: 210px;
+      padding: 20px;
+    }
+
+    .why-security-slide .reason-card:nth-child(5) {
+      grid-column: 2 / span 3;
+    }
+
+    .why-security-slide .reason-card:nth-child(6) {
+      grid-column: 5 / span 3;
+    }
+
+    .why-security-slide .reason-card:nth-child(7) {
+      grid-column: 8 / span 3;
     }
 
     .types-grid {
@@ -2170,13 +2188,13 @@
     }
 
     .security-types-detail .type-card h3 {
-      font-size: clamp(20px, 1.72vw, 26px);
+      font-size: clamp(24px, 1.95vw, 30px);
       line-height: 1.08;
     }
 
     .security-types-detail .type-card p {
-      font-size: clamp(14px, 1.18vw, 17px);
-      line-height: 1.32;
+      font-size: clamp(17px, 1.38vw, 20px);
+      line-height: 1.35;
     }
 
     .mini-note {
@@ -2691,7 +2709,7 @@
           Authorization, Availability, Non-repudiation</span></footer>
     </section>
 
-    <section class="slide">
+    <section class="slide why-security-slide">
       <header>
         <div class="kicker">Why Security Testing</div>
         <div class="index">07 / 34</div>
@@ -2719,44 +2737,22 @@
             <p>Nhiều lĩnh vực yêu cầu tổ chức phải chứng minh có biện pháp bảo vệ dữ liệu và kiểm soát an toàn thông
               tin.</p>
           </article>
-        </div>
-      </main>
-      <footer class="footer-line"><span>Why to do Security Testing</span><span>Bảo vệ dữ liệu, quyền truy cập, niềm tin
-          và tuân thủ</span></footer>
-    </section>
-
-    <section class="slide">
-      <header>
-        <div class="kicker">Security Value</div>
-        <div class="index">08 / 34</div>
-      </header>
-      <main class="content">
-        <h2>Security Testing còn giúp doanh nghiệp giữ được nhịp vận hành.</h2>
-        <div class="reason-grid">
           <article class="reason-card">
-            <h3>Giảm tổn thất tài chính</h3>
-            <p>Chi phí xử lý sự cố, downtime, bồi thường, khắc phục hậu quả và ảnh hưởng thương hiệu thường lớn hơn rất
-              nhiều so với chi phí kiểm thử sớm.</p>
+            <h3>Ngăn ngừa tổn thất tài chính</h3>
+            <p>Phát hiện lỗ hổng sớm giúp giảm chi phí xử lý sự cố, gián đoạn dịch vụ, bồi thường và khắc phục hậu quả.</p>
           </article>
           <article class="reason-card">
-            <h3>Đảm bảo tính liên tục kinh doanh</h3>
-            <p>Kiểm thử bảo mật góp phần giảm nguy cơ gián đoạn dịch vụ, mất dữ liệu hoặc ngừng vận hành của hệ thống
-              quan trọng.</p>
+            <h3>Đảm bảo hoạt động kinh doanh liên tục</h3>
+            <p>Giảm nguy cơ dịch vụ bị gián đoạn, mất dữ liệu hoặc hệ thống quan trọng phải ngừng hoạt động.</p>
           </article>
           <article class="reason-card">
-            <h3>Thích ứng với mối đe dọa thay đổi liên tục</h3>
-            <p>Lỗ hổng mới, kỹ thuật tấn công mới và dependency mới xuất hiện liên tục; kiểm thử bảo mật phải được làm
-              lặp lại, không phải một lần là xong.</p>
-          </article>
-          <article class="reason-card">
-            <h3>Tạo cơ sở ưu tiên sửa lỗi</h3>
-            <p>Kết quả kiểm thử giúp nhóm phát triển biết nên sửa vấn đề nào trước, vấn đề nào cần theo dõi hoặc
-              hardening thêm.</p>
+            <h3>Thích ứng với các mối đe dọa mới</h3>
+            <p>Lỗ hổng và cách tấn công luôn thay đổi, vì vậy việc kiểm thử bảo mật cần được thực hiện thường xuyên.</p>
           </article>
         </div>
       </main>
-      <footer class="footer-line"><span>Business impact</span><span>Chi phí, liên tục kinh doanh, ưu tiên
-          remediation</span></footer>
+      <footer class="footer-line"><span>7 lý do cần Security Testing</span><span>Dữ liệu · Truy cập · Niềm tin ·
+          Tuân thủ · Tài chính · Liên tục · Thích ứng</span></footer>
     </section>
 
     <section class="slide dark">
