@@ -11,10 +11,44 @@
 
 ## Số lượng finding/alert
 
-| Công cụ           | Output dùng để tổng hợp | Số lượng |
-| ------------------- | ---------------------------- | ----------- |
-| Semgrep             |                              |             |
-| ZAP automation scan |                              |             |
+| Công cụ           | Output dùng để tổng hợp                | Số lượng |
+| ------------------- | ------------------------------------------- | ----------- |
+| Semgrep             | `src/semgrep/output/semgrep_results.json` |             |
+| ZAP automation scan |                                             |             |
+
+## Thực hành Semgrep
+
+### Thực hành quá trình chạy Semgrep và tổng hợp Alert
+
+Dựa vào kết quả của Semgrep (file `src/semgrep/output/semgrep_results.json` hoặc chạy lệnh scan), hãy liệt kê 5 alert đại diện:
+
+| STT | Quy tắc (Rule ID) | File & Dòng lỗi | Mức độ (Severity) | Tag lỗi / CWE / OWASP |
+| --- | ------------------ | ----------------- | -------------------- | ---------------------- |
+| 1   |                    |                   |                      |                        |
+| 2   |                    |                   |                      |                        |
+| 3   |                    |                   |                      |                        |
+| 4   |                    |                   |                      |                        |
+| 5   |                    |                   |                      |                        |
+
+### Thực hành quá trình phân loại và thẩm định Cảnh báo (Semgrep Triage)
+
+Dựa vào mã nguồn và tài liệu hướng dẫn (Guideline), hãy tiến hành phân loại các alert đại diện (gồm True Positive - Lỗi thật, False Positive - Cảnh báo giả, Duplicate - Trùng lặp):
+
+| STT | Quy tắc (Rule ID)         | File & Dòng lỗi     | Phân loại (TP / FP / Duplicate) | Lý do đánh giá |
+| --- | -------------------------- | --------------------- | --------------------------------- | ------------------ |
+| 1   | `hardcoded-jwt-secret`   | `server.js:51`      |                                   |                    |
+| 2   | `hardcoded-jwt-secret`   | `test_profile.js:4` |                                   |                    |
+| 3   | `hardcoded-jwt-secret`   | `server.js:105`     |                                   |                    |
+| 4   | `react-insecure-request` | `App.js:174`        |                                   |                    |
+| 5   | `react-insecure-request` | `App.js:189`        |                                   |                    |
+
+### Thực hành quá trình kiểm chứng lỗ hổng bằng PoC
+
+Dựa vào kết quả AI Triage cho lỗi `hardcoded-jwt-secret`, hãy dùng script PoC (`exploit.js`) để kiểm chứng thủ công trên hệ thống đang chạy:
+
+| ID | Alert / Lỗi kiểm chứng               | Đầu vào (Payload / Script PoC)          | Thao tác thực hiện (Replay Step)                                             | Kết quả thực tế | Kết luận |
+| -- | --------------------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------- | ------------------- | ---------- |
+| 1  | Hardcoded JWT Secret (`server.js:51`) | Script`exploit.js` sinh admin token giả | Gửi request`GET /api/users/me` kèm Header `Authorization: Bearer <token>` |                     |            |
 
 ## Thực hành ZAP
 
