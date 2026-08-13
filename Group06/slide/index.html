@@ -511,6 +511,13 @@
     }
 
     .overview-agenda-item span {
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      border: 1px solid rgba(37, 99, 235, 0.3);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.72);
       color: var(--blue);
       font-family: var(--mono);
       font-size: 14px;
@@ -523,9 +530,6 @@
       width: fit-content;
       min-height: 52px;
       padding: 8px 14px;
-      border: 1px solid rgba(37, 99, 235, 0.24);
-      border-radius: 14px;
-      background: rgba(255, 255, 255, 0.72);
       font-size: clamp(25px, 2.25vw, 34px);
       line-height: 1.15;
     }
