@@ -2130,12 +2130,6 @@
       box-shadow: 0 16px 44px rgba(28, 77, 114, 0.08);
     }
 
-    .type-card:nth-child(2),
-    .type-card:nth-child(4) {
-      background: #e8f2ff;
-      border-color: rgba(37, 99, 235, 0.2);
-    }
-
     .type-card h3 {
       font-size: clamp(22px, 1.9vw, 30px);
       line-height: 1.05;
@@ -2152,15 +2146,27 @@
     }
 
     .security-types-detail .types-grid {
-      grid-template-columns: repeat(5, minmax(0, 1fr));
+      grid-template-columns: repeat(12, minmax(0, 1fr));
       gap: 12px;
     }
 
     .security-types-detail .type-card {
-      grid-column: auto;
-      min-height: 238px;
+      grid-column: span 3;
+      min-height: 220px;
       padding: 20px;
       gap: 10px;
+    }
+
+    .security-types-detail .type-card:nth-child(5) {
+      grid-column: 2 / span 3;
+    }
+
+    .security-types-detail .type-card:nth-child(6) {
+      grid-column: 5 / span 3;
+    }
+
+    .security-types-detail .type-card:nth-child(7) {
+      grid-column: 8 / span 3;
     }
 
     .security-types-detail .type-card h3 {
@@ -2563,7 +2569,7 @@
 
     <section class="slide sast-brief-slide security-definition-slide">
       <header>
-        <div class="kicker">Security Testing Definition</div>
+        <div class="kicker">Khái niệm Security Testing</div>
         <div class="index">05 / 34</div>
       </header>
       <main class="content">
@@ -2571,52 +2577,52 @@
         <div class="security-definition-layout">
           <div class="security-definition-hero">
             <span class="security-definition-label">Bản chất</span>
-            <h3>Kiểm thử phi chức năng tập trung vào bề mặt tấn công của hệ thống.</h3>
-            <p>Security Testing là một dạng kiểm thử phi chức năng nhằm phát hiện lỗ hổng, mối đe dọa và rủi ro trong
-              ứng dụng phần mềm. Nó không hỏi ứng dụng có chạy đúng nghiệp vụ hay không, mà hỏi hệ thống có thể bị lạm
-              dụng, truy cập trái phép hoặc khai thác ở đâu.</p>
+            <h3>Kiểm thử phi chức năng, tập trung tìm những điểm yếu có thể bị tấn công.</h3>
+            <p>Security Testing giúp phát hiện lỗ hổng và rủi ro bảo mật trong phần mềm. Khác với kiểm thử
+              chức năng, nó không chỉ xem ứng dụng có chạy đúng hay không, mà còn xem hệ thống có thể bị truy cập trái
+              phép, lạm dụng hoặc khai thác hay không.</p>
             <div class="security-definition-note">
               <div class="security-note-card">
                 <strong>Góc nhìn kiểm thử</strong>
-                <p>Ưu tiên xác minh điểm yếu trong thiết kế, code, cấu hình và hành vi runtime.</p>
+                <p>Xem xét điểm yếu trong thiết kế, mã nguồn, cấu hình và cách ứng dụng hoạt động.</p>
               </div>
               <div class="security-note-card">
                 <strong>Kết quả cần tìm</strong>
-                <p>Lỗ hổng có thể khai thác, điều kiện gây rủi ro và bằng chứng đủ để remediation.</p>
+                <p>Chỉ ra lỗ hổng, khả năng bị khai thác và bằng chứng để nhóm phát triển sửa lỗi.</p>
               </div>
             </div>
           </div>
           <div class="security-purpose-shell">
             <div class="security-purpose-card">
               <span class="security-purpose-label">Mục đích</span>
-              <h3>Bốn đích đến chính của Security Testing</h3>
+              <h3>Bốn mục tiêu chính của Security Testing</h3>
               <div class="security-purpose-list">
                 <div class="security-purpose-item">
                   <span class="security-purpose-no">01</span>
                   <div class="security-purpose-copy">
-                    <strong>Xác định tài sản</strong>
-                    <p>Biết rõ dữ liệu, tài khoản, API, phiên đăng nhập và hạ tầng nào thực sự cần bảo vệ.</p>
+                    <strong>Xác định những gì cần bảo vệ</strong>
+                    <p>Làm rõ dữ liệu, tài khoản, API, phiên đăng nhập và hạ tầng quan trọng.</p>
                   </div>
                 </div>
                 <div class="security-purpose-item">
                   <span class="security-purpose-no">02</span>
                   <div class="security-purpose-copy">
-                    <strong>Nhận diện đe dọa và lỗ hổng</strong>
-                    <p>Tìm ra điểm yếu trong thiết kế, mã nguồn, cấu hình và hành vi runtime của ứng dụng.</p>
+                    <strong>Tìm đe dọa và lỗ hổng</strong>
+                    <p>Kiểm tra điểm yếu trong thiết kế, mã nguồn, cấu hình và khi ứng dụng đang chạy.</p>
                   </div>
                 </div>
                 <div class="security-purpose-item">
                   <span class="security-purpose-no">03</span>
                   <div class="security-purpose-copy">
-                    <strong>Xác định mức rủi ro</strong>
-                    <p>Đánh giá tác động và khả năng khai thác để biết vấn đề nào cần ưu tiên xử lý trước.</p>
+                    <strong>Đánh giá mức độ rủi ro</strong>
+                    <p>Xem lỗ hổng gây ảnh hưởng ra sao và có dễ bị khai thác không để ưu tiên xử lý.</p>
                   </div>
                 </div>
                 <div class="security-purpose-item">
                   <span class="security-purpose-no">04</span>
                   <div class="security-purpose-copy">
-                    <strong>Thực hiện khắc phục</strong>
-                    <p>Chuyển kết quả kiểm thử thành hành động remediation, hardening và kiểm tra lại sau sửa lỗi.</p>
+                    <strong>Khắc phục và kiểm tra lại</strong>
+                    <p>Sửa các lỗ hổng đã phát hiện, tăng cường bảo mật và kiểm tra lại sau khi sửa.</p>
                   </div>
                 </div>
               </div>
@@ -2787,6 +2793,10 @@
             </p>
           </article>
           <article class="type-card">
+            <h3>Risk Assessment</h3>
+            <p>Phân tích và phân loại rủi ro bảo mật để xác định thứ tự ưu tiên cho các biện pháp giảm thiểu.</p>
+          </article>
+          <article class="type-card">
             <h3>Security Scanning</h3>
             <p>Xác định các điểm yếu trong hệ thống hoặc mạng và đề xuất giải pháp khắc phục phù hợp.</p>
           </article>
@@ -2794,10 +2804,6 @@
             <h3>Penetration Testing</h3>
             <p>Mô phỏng các cuộc tấn công mạng trong thực tế để xác định lỗ hổng có thể bị khai thác trong ứng dụng, hệ
               thống hoặc mạng.</p>
-          </article>
-          <article class="type-card">
-            <h3>Risk Assessment</h3>
-            <p>Phân tích và phân loại rủi ro bảo mật để xác định thứ tự ưu tiên cho các biện pháp giảm thiểu.</p>
           </article>
           <article class="type-card">
             <h3>Security Auditing</h3>
@@ -2812,22 +2818,10 @@
             <h3>Posture Assessment</h3>
             <p>Kết hợp nhiều kỹ thuật kiểm thử để đánh giá tư thế bảo mật tổng thể của hệ thống.</p>
           </article>
-          <article class="type-card">
-            <h3>Application Security Testing</h3>
-            <p>Đánh giá mã nguồn và cấu hình ứng dụng để phát hiện và ngăn ngừa lỗ hổng.</p>
-          </article>
-          <article class="type-card">
-            <h3>Network Security Testing</h3>
-            <p>Kiểm tra hạ tầng mạng như router và firewall nhằm phát hiện các điểm yếu.</p>
-          </article>
-          <article class="type-card">
-            <h3>Social Engineering Testing</h3>
-            <p>Mô phỏng tấn công nhắm vào con người, ví dụ phishing, để kiểm tra nhận thức bảo mật của người dùng.</p>
-          </article>
         </div>
       </main>
-      <footer class="footer-line"><span>10 Security Testing Types</span><span>System · Application · Network ·
-          People</span>
+      <footer class="footer-line"><span>7 loại Security Testing</span><span>Scanning · Assessment · Auditing ·
+          Hacking</span>
       </footer>
     </section>
 
